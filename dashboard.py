@@ -63,14 +63,14 @@ save_previous_actions(previous_actions)
 
 # Show chart
 if os.path.exists(chart_path):
-    st.image(chart_path, caption="Sentiment by Coin and Source", use_column_width=True)
+    st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
 # Filter table by coin
 coin_filter = st.selectbox("Select a coin to view details:", ["All"] + sorted(data["Coin"].unique()))
 filtered = data if coin_filter == "All" else data[data["Coin"] == coin_filter]
 
 # Safe display
-expected_columns = ["Source", "Sentiment", "SuggestedAction", "Text", "Link"]
+expected_columns = ["Source", "Sentiment", "Action", "Text", "Link"]
 available_columns = [col for col in expected_columns if col in filtered.columns]
 
 if available_columns:
