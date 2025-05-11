@@ -33,22 +33,26 @@ def save_previous_actions(data):
     with open(json_path, "w") as f:
         json.dump(data, f)
 
+def load_history():
+    if os.path.exists(history_path):
+        return pd.read_csv(history_path)
+    else:
+        return pd.DataFrame()
+
+# Load current and past data
 data = load_data()
 previous_actions = load_previous_actions()
+history = load_history()
 
-# Sidebar summary
+# Sidebar: current summary
 st.sidebar.header("📌 Sentiment Summary")
-
 overall_sentiments = data.groupby("Coin")["Sentiment"].mean()
-summary_table = []
 
 for coin, sentiment in overall_sentiments.items():
     action = "📈 Buy" if sentiment > 0.2 else "📉 Sell" if sentiment < -0.2 else "🤝 Hold"
     timestamp = datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S UTC")
     st.sidebar.write(f"**{coin}**: {sentiment:.2f} → {action}")
     st.sidebar.caption(f"_Updated: {timestamp}_")
-
-    summary_table.append({"Coin": coin, "Sentiment": sentiment, "Action": action, "Time": timestamp})
 
     toggle_key = f"alert_toggle_{coin}"
     if st.sidebar.checkbox(f"🔔 Alert for {coin}", key=toggle_key):
@@ -60,10 +64,10 @@ for coin, sentiment in overall_sentiments.items():
 
 save_previous_actions(previous_actions)
 
-# Tabs for layout
-tab1, tab2 = st.tabs(["📈 Current Sentiment", "📉 Trends"])
+# Tabs for content
+selected_tab = st.selectbox("Choose a view:", ["📋 Current Sentiment", "📈 Trends"])
 
-with tab1:
+if selected_tab == "📋 Current Sentiment":
     if os.path.exists(chart_path):
         st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
@@ -78,24 +82,24 @@ with tab1:
     else:
         st.warning("No matching columns available to display.")
 
-with tab2:
-    st.subheader("📊 Historical Sentiment Trends")
-    if os.path.exists(history_path):
-        history_df = pd.read_csv(history_path)
-        history_df['Timestamp'] = pd.to_datetime(history_df['Timestamp'])
-        last_year = datetime.utcnow().year - 1
-        one_year_df = history_df[history_df['Timestamp'].dt.year >= last_year]
-
-        for coin in sorted(one_year_df['Coin'].unique()):
-            st.markdown(f"### {coin}")
-            fig, ax = plt.subplots()
-            for source in one_year_df['Source'].unique():
-                subset = one_year_df[(one_year_df['Coin'] == coin) & (one_year_df['Source'] == source)]
-                ax.plot(subset['Timestamp'], subset['Sentiment'], marker='o', label=source)
-            ax.set_title(f"Sentiment Trend for {coin} (Past Year)")
-            ax.set_ylabel("Sentiment Score")
-            ax.axhline(0, color='gray', linestyle='--')
-            ax.legend()
-            st.pyplot(fig)
+elif selected_tab == "📈 Trends":
+    st.header("📈 Historical Sentiment Trends")
+    if history.empty:
+        st.warning("No historical sentiment data found yet. Run analyze.py at least once.")
     else:
-        st.warning("No historical sentiment data found. Run analyze.py regularly to build history.")
+        history["Timestamp"] = pd.to_datetime(history["Timestamp"])
+        coins = sorted(history["Coin"].unique())
+        selected_coin = st.selectbox("Choose a coin to view trend:", coins)
+
+        filtered_history = history[history["Coin"] == selected_coin].copy()
+        filtered_history = filtered_history.groupby("Timestamp")["Sentiment"].mean().reset_index()
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+        ax.plot(filtered_history["Timestamp"], filtered_history["Sentiment"], marker="o", linestyle="-")
+        ax.axhline(0, color="gray", linestyle="--")
+        ax.set_title(f"Sentiment Trend for {selected_coin}")
+        ax.set_ylabel("Average Sentiment")
+        ax.set_xlabel("Timestamp")
+        plt.xticks(rotation=45)
+        plt.tight_layout()
+        st.pyplot(fig)
