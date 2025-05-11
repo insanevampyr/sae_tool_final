@@ -1,3 +1,4 @@
+# analyze.py
 import os
 import csv
 from datetime import datetime
@@ -10,8 +11,8 @@ import pandas as pd
 
 coins = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
 output_file = "sentiment_output.csv"
-history_file = "sentiment_history.csv"
 chart_file = "sentiment_chart.png"
+history_file = "sentiment_history.csv"
 
 def suggest_action(score):
     if score > 0.2:
@@ -22,6 +23,7 @@ def suggest_action(score):
         return "🤝 Hold / Watch"
 
 sentiment_data = []
+sentiment_summary = {}
 
 print("\U0001F9E0 Fetching Reddit sentiment...\n")
 for keyword in coins:
@@ -52,29 +54,30 @@ for keyword in coins:
             "Sentiment": sentiment,
             "SuggestedAction": action,
             "Timestamp": datetime.utcnow().isoformat(),
-            "Link": post.get("link") or post.get("url", "")
+            "Link": post["link"]
         })
 
-# Save current output
+# Save to sentiment_output.csv (overwrite with latest results)
 with open(output_file, "w", newline='', encoding='utf-8') as f:
     writer = csv.DictWriter(f, fieldnames=sentiment_data[0].keys())
     writer.writeheader()
     writer.writerows(sentiment_data)
+
 print(f"\n✅ Sentiment results saved to {output_file}")
 
-# Append to historical sentiment file
-history_exists = os.path.isfile(history_file)
+# Append to sentiment_history.csv (keep old data)
+history_exists = os.path.exists(history_file)
 with open(history_file, "a", newline='', encoding='utf-8') as f:
     writer = csv.DictWriter(f, fieldnames=sentiment_data[0].keys())
     if not history_exists:
         writer.writeheader()
     writer.writerows(sentiment_data)
-print(f"📅 Appended sentiment history to {history_file}")
 
 # Aggregate & visualize
 df = pd.DataFrame(sentiment_data)
 summary = df.groupby(["Coin", "Source"])["Sentiment"].mean().reset_index()
 summary["SuggestedAction"] = summary["Sentiment"].apply(suggest_action)
+sentiment_summary = summary
 
 fig, ax = plt.subplots(figsize=(10, 6))
 for source in summary["Source"].unique():
@@ -88,6 +91,7 @@ plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
 plt.savefig(chart_file)
 plt.show()
+
 print(f"📈 Chart saved to {chart_file}")
 
 # Telegram alerts
