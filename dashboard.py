@@ -1,75 +1,31 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
-from datetime import datetime
 
-# Set page config at the top
 st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
 
-# Load sentiment data
 st.title("📊 Crypto Sentiment Dashboard")
 
-try:
-    df = pd.read_csv("sentiment_output.csv")
-except FileNotFoundError:
-    st.error("Sentiment data not found. Run analyze.py first.")
-    st.stop()
+# Load CSV data
+df = pd.read_csv("sentiment_output.csv")
 
-# Format timestamp
-df["Timestamp"] = pd.to_datetime(df["Timestamp"])
+# Coin selection
+coins = df["Coin"].unique()
+selected_coin = st.selectbox("Choose a coin to view sentiment analysis:", coins)
 
-# Sidebar filters
-coins = df["Coin"].unique().tolist()
-sources = df["Source"].unique().tolist()
+# Filter data
+filtered = df[df["Coin"] == selected_coin]
 
-st.sidebar.header("🔍 Filter Data")
-selected_coin = st.sidebar.selectbox("Select Coin", ["All"] + coins)
-selected_source = st.sidebar.selectbox("Select Source", ["All"] + sources)
-sentiment_range = st.sidebar.slider("Sentiment Threshold", -1.0, 1.0, (-1.0, 1.0))
-
-# Apply filters
-filtered = df.copy()
-if selected_coin != "All":
-    filtered = filtered[filtered["Coin"] == selected_coin]
-if selected_source != "All":
-    filtered = filtered[filtered["Source"] == selected_source]
-filtered = filtered[(filtered["Sentiment"] >= sentiment_range[0]) & (filtered["Sentiment"] <= sentiment_range[1])]
-
-# Format SuggestedAction column
-if "SuggestedAction" not in filtered.columns and "Action" in filtered.columns:
-    filtered["SuggestedAction"] = filtered["Action"]
-
-# Conditional formatting
-def highlight_sentiment(val):
-    if val > 0.2:
-        return "color: green"
-    elif val < -0.2:
-        return "color: red"
-    return ""
-
-def bold_action(val):
-    return "font-weight: bold"
-
-# Display filtered data
-st.subheader("📄 Filtered Sentiment Data")
-st.dataframe(
-    filtered[["Coin", "Source", "Sentiment", "SuggestedAction"]]
-    .style.applymap(highlight_sentiment, subset=["Sentiment"])
-    .applymap(bold_action, subset=["SuggestedAction"])
-)
-
-# Grouped sentiment chart
-st.subheader("📈 Average Sentiment per Coin")
-grouped = filtered.groupby("Coin")["Sentiment"].mean().reset_index()
-fig, ax = plt.subplots(figsize=(10, 5))
-ax.bar(grouped["Coin"], grouped["Sentiment"], color="skyblue")
-ax.axhline(0, color="gray", linestyle="--")
-ax.set_ylabel("Avg Sentiment")
-ax.set_title("Average Sentiment per Coin")
-plt.xticks(rotation=45)
+# Plot bar chart (average sentiment by source)
+st.subheader(f"📈 Sentiment Chart for {selected_coin}")
+fig, ax = plt.subplots(figsize=(8, 5))
+avg_sentiment = filtered.groupby("Source")["Sentiment"].mean()
+colors = ['green' if s > 0 else 'red' for s in avg_sentiment]
+ax.bar(avg_sentiment.index, avg_sentiment.values, color=colors)
+ax.set_title(f"Average Sentiment by Source for {selected_coin}")
+ax.set_ylabel("Sentiment Score")
 st.pyplot(fig)
 
-# Footer
-st.markdown(f"---")
-st.caption(f"Updated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M UTC')}")
-st.caption("Data sourced from Reddit and top crypto news feeds.")
+# Show sentiment table
+st.subheader(f"📋 Sentiment Entries for {selected_coin}")
+st.dataframe(filtered[["Source", "Sentiment", "SuggestedAction", "Text", "Link"]].sort_values(by="Sentiment", ascending=False))
