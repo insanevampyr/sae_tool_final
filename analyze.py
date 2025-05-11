@@ -74,9 +74,12 @@ for keyword in coins:
         })
 
 # Save latest sentiment snapshot
-with open(output_file, "w", newline='', encoding='utf-8') as f:
+file_exists = os.path.isfile(output_file)
+
+with open(output_file, "a", newline='', encoding='utf-8') as f:
     writer = csv.DictWriter(f, fieldnames=sentiment_data[0].keys())
-    writer.writeheader()
+    if not file_exists:
+        writer.writeheader()
     writer.writerows(sentiment_data)
 
 print(f"\n✅ Sentiment results saved to {output_file}")
