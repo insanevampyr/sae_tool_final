@@ -1,28 +1,34 @@
-# This is the enhanced version of analyze.py that includes price data alongside sentiment
-# and appends it to sentiment_history.csv for trend analysis
-
+# analyze.py
 import os
 import csv
 from datetime import datetime
-import requests
 from analyze_sentiment import analyze_sentiment
 from reddit_fetch import fetch_reddit_posts
 from rss_fetch import fetch_rss_articles
 from send_telegram import send_telegram_message
 import matplotlib.pyplot as plt
 import pandas as pd
+import requests
 
 coins = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
-coin_ids = {
+output_file = "sentiment_output.csv"
+history_file = "sentiment_history.csv"
+chart_file = "sentiment_chart.png"
+
+coin_price_ids = {
     "Bitcoin": "bitcoin",
     "Ethereum": "ethereum",
     "Solana": "solana",
     "Dogecoin": "dogecoin"
 }
 
-output_file = "sentiment_output.csv"
-chart_file = "sentiment_chart.png"
-history_file = "sentiment_history.csv"
+def get_price(coin_id):
+    try:
+        url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd"
+        res = requests.get(url)
+        return res.json()[coin_id]["usd"]
+    except:
+        return None
 
 def suggest_action(score):
     if score > 0.2:
@@ -32,17 +38,10 @@ def suggest_action(score):
     else:
         return "🤝 Hold / Watch"
 
-def get_price(coin_id):
-    try:
-        url = f"https://api.coingecko.com/api/v3/simple/price?ids={coin_id}&vs_currencies=usd"
-        response = requests.get(url)
-        return response.json()[coin_id]['usd']
-    except:
-        return None
-
 sentiment_data = []
 sentiment_summary = {}
-print("\U0001F9E0 Fetching Reddit sentiment...\n")
+
+print("🧠 Fetching Reddit sentiment...\n")
 for keyword in coins:
     reddit_results = fetch_reddit_posts("CryptoCurrency", keyword, 5)
     for post in reddit_results:
@@ -55,11 +54,10 @@ for keyword in coins:
             "Sentiment": sentiment,
             "SuggestedAction": action,
             "Timestamp": datetime.utcnow().isoformat(),
-            "Link": post.get("link") or post.get("url", ""),
-            "Price": get_price(coin_ids[keyword])
+            "Link": post.get("url", "")
         })
 
-print("\n\U0001F4F0 Fetching Crypto News sentiment...\n")
+print("\n📰 Fetching Crypto News sentiment...\n")
 for keyword in coins:
     rss_results = fetch_rss_articles(keyword, 5)
     for post in rss_results:
@@ -72,28 +70,44 @@ for keyword in coins:
             "Sentiment": sentiment,
             "SuggestedAction": action,
             "Timestamp": datetime.utcnow().isoformat(),
-            "Link": post.get("link") or post.get("url", ""),
-            "Price": get_price(coin_ids[keyword])
+            "Link": post.get("link") or post.get("url", "")
         })
 
-# Save to main CSV
+# Save latest sentiment snapshot
 with open(output_file, "w", newline='', encoding='utf-8') as f:
     writer = csv.DictWriter(f, fieldnames=sentiment_data[0].keys())
     writer.writeheader()
     writer.writerows(sentiment_data)
+
 print(f"\n✅ Sentiment results saved to {output_file}")
 
-# Append to history
-if not os.path.exists(history_file):
-    with open(history_file, "w", newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=sentiment_data[0].keys())
-        writer.writeheader()
-with open(history_file, "a", newline='', encoding='utf-8') as f:
-    writer = csv.DictWriter(f, fieldnames=sentiment_data[0].keys())
-    writer.writerows(sentiment_data)
-print(f"🕓 Historical sentiment appended to {history_file}")
+# Add to historical log
+timestamp = datetime.utcnow().isoformat()
+rows = []
 
-# Visual summary
+for coin in coins:
+    coin_data = [d for d in sentiment_data if d["Coin"] == coin]
+    avg_sentiment = sum(d["Sentiment"] for d in coin_data) / len(coin_data)
+    action = suggest_action(avg_sentiment)
+    price = get_price(coin_price_ids[coin])
+    rows.append({
+        "Timestamp": timestamp,
+        "Coin": coin,
+        "Sentiment": avg_sentiment,
+        "PriceUSD": price,
+        "SuggestedAction": action
+    })
+
+header = ["Timestamp", "Coin", "Sentiment", "PriceUSD", "SuggestedAction"]
+exists = os.path.exists(history_file)
+
+with open(history_file, "a", newline='', encoding='utf-8') as f:
+    writer = csv.DictWriter(f, fieldnames=header)
+    if not exists:
+        writer.writeheader()
+    writer.writerows(rows)
+
+# Plot chart
 df = pd.DataFrame(sentiment_data)
 summary = df.groupby(["Coin", "Source"])["Sentiment"].mean().reset_index()
 summary["SuggestedAction"] = summary["Sentiment"].apply(suggest_action)
@@ -111,9 +125,10 @@ plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
 plt.savefig(chart_file)
 plt.show()
+
 print(f"📈 Chart saved to {chart_file}")
 
-# Telegram alerts for each coin
+# Telegram alerts
 for coin in coins:
     avg_sent = df[df["Coin"] == coin]["Sentiment"].mean()
     action = suggest_action(avg_sent)
