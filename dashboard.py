@@ -72,7 +72,7 @@ with open(previous_actions_file, "w") as f:
 st.markdown("### 🔍 Sentiment Entries")
 selected_coin = st.selectbox("Select a coin to filter", ["All"] + list(summary["Coin"]))
 filtered = sentiment_data[sentiment_data["Coin"] == selected_coin] if selected_coin != "All" else sentiment_data
-st.dataframe(filtered[["Source", "Sentiment", "SuggestedAction", "Text", "Link"]].sort_values(by="Sentiment", ascending=False))
+st.dataframe(filtered[["Source", "Sentiment", "Action", "Text", "Link"]].sort_values(by="Sentiment", ascending=False))
 
 # --- Chart ---
 st.markdown("### 📈 Average Sentiment by Coin and Source")
