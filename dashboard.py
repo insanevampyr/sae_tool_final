@@ -12,102 +12,91 @@ from analyze_sentiment import analyze_sentiment
 st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
 
 st.title("📊 Crypto Sentiment Dashboard")
-st.markdown("Track live sentiment and price trends for top cryptocurrencies.")
+st.markdown("Live crypto sentiment analysis from Reddit and crypto news + historical trends.")
 
-# Load data
 csv_file = "sentiment_output.csv"
 history_file = "sentiment_history.csv"
-json_path = "previous_actions.json"
+chart_file = "sentiment_chart.png"
+previous_actions_file = "previous_actions.json"
 
-# Sidebar toggle
-st.sidebar.title("⚙️ Settings")
-alert_toggle = st.sidebar.checkbox("🔔 Enable Telegram Alerts", value=True)
+coins = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
 
-# Load current data
-if os.path.exists(csv_file):
-    df = pd.read_csv(csv_file)
-else:
-    st.error("sentiment_output.csv not found. Run analyze.py first.")
+# Load sentiment data
+if not os.path.exists(csv_file):
+    st.error("No sentiment data found. Please run analyze.py first.")
     st.stop()
 
-# Load historical data
-if os.path.exists(history_file):
-    history = pd.read_csv(history_file)
-else:
-    history = pd.DataFrame()
+data = pd.read_csv(csv_file)
 
-# Load previous action state
-if os.path.exists(json_path):
-    with open(json_path, "r") as f:
+# ---------------- Sidebar Setup ---------------- #
+st.sidebar.header("📌 Alerts & Summary")
+if os.path.exists(previous_actions_file):
+    with open(previous_actions_file, "r") as f:
         previous_actions = json.load(f)
 else:
     previous_actions = {}
 
-# ─────────────────────────────────────────────────────────────
-# 📈 TRENDS OVER TIME SECTION
-# ─────────────────────────────────────────────────────────────
-st.header("📈 Trends Over Time")
-if not history.empty:
-    coin_options = sorted(history["Coin"].unique())
-    selected_coin = st.selectbox("Choose a coin:", coin_options)
-    coin_history = history[history["Coin"] == selected_coin]
+for coin in coins:
+    coin_df = data[data["Coin"] == coin]
+    avg_sentiment = coin_df["Sentiment"].mean()
+    action = "📈 Buy" if avg_sentiment > 0.2 else "📉 Sell" if avg_sentiment < -0.2 else "🤝 Hold"
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
 
-    fig, ax1 = plt.subplots(figsize=(10, 5))
-    ax1.plot(pd.to_datetime(coin_history["Timestamp"]), coin_history["Sentiment"], label="Sentiment", color="blue")
-    ax1.set_ylabel("Sentiment", color="blue")
-    ax1.tick_params(axis='y', labelcolor='blue')
+    alert_toggle = st.sidebar.checkbox(f"🔔 Alert for {coin}", key=f"alert_toggle_{coin}")
 
-    if "PriceUSD" in coin_history.columns:
-        ax2 = ax1.twinx()
-        ax2.plot(pd.to_datetime(coin_history["Timestamp"]), coin_history["PriceUSD"], color="green", linestyle="--", label="Price (USD)")
-        ax2.set_ylabel("Price (USD)", color="green")
-        ax2.tick_params(axis='y', labelcolor='green')
-
-    fig.autofmt_xdate()
-    st.pyplot(fig)
-else:
-    st.info("No historical sentiment data found.")
-
-# ─────────────────────────────────────────────────────────────
-# 📌 CURRENT SENTIMENT SUMMARY
-# ─────────────────────────────────────────────────────────────
-st.header("📌 Current Sentiment Summary")
-st.image("sentiment_chart.png", caption="Sentiment by Coin and Source", use_container_width=True)
-
-summary = df.groupby(["Coin", "Source"])["Sentiment"].mean().reset_index()
-summary["SuggestedAction"] = summary["Sentiment"].apply(
-    lambda s: "📈 Buy" if s > 0.2 else "📉 Sell" if s < -0.2 else "🤝 Hold"
-)
-
-st.dataframe(summary.sort_values(by="Sentiment", ascending=False), use_container_width=True)
-
-# ─────────────────────────────────────────────────────────────
-# 🔔 TELEGRAM ALERTS (ONLY IF ENABLED)
-# ─────────────────────────────────────────────────────────────
-if alert_toggle:
-    for coin in df["Coin"].unique():
-        avg_sent = df[df["Coin"] == coin]["Sentiment"].mean()
-        action = "📈 Buy" if avg_sent > 0.2 else "📉 Sell" if avg_sent < -0.2 else "🤝 Hold"
+    if alert_toggle:
         last = previous_actions.get(coin)
         if last != action:
-            msg = f"⚠️ {coin} action changed\nSentiment: {avg_sent:.2f}\nAction: {action}"
+            msg = f"⚠️ {coin} Action Changed\nNew Sentiment: {avg_sentiment:.2f}\n**Action:** {action}"
             send_telegram_message(msg)
             previous_actions[coin] = action
 
-    with open(json_path, "w") as f:
-        json.dump(previous_actions, f)
+    st.sidebar.write(f"**{coin}** → `{avg_sentiment:.2f}` → **{action}**")
+    st.sidebar.caption(f"_Updated: {timestamp}_")
 
-# ─────────────────────────────────────────────────────────────
-# 🔎 BREAKDOWN TABLE
-# ─────────────────────────────────────────────────────────────
-st.header("🔍 Breakdown by Posts")
-coin_filter = st.selectbox("Filter by coin:", ["All"] + sorted(df["Coin"].unique()))
-filtered = df if coin_filter == "All" else df[df["Coin"] == coin_filter]
+with open(previous_actions_file, "w") as f:
+    json.dump(previous_actions, f)
 
-expected_cols = ["Source", "Sentiment", "SuggestedAction", "Text", "Link"]
-available_cols = [col for col in expected_cols if col in filtered.columns]
+# ---------------- Trends Over Time ---------------- #
+st.subheader("📈 Trends Over Time")
+if os.path.exists(history_file):
+    history = pd.read_csv(history_file)
+    for coin in coins:
+        coin_history = history[history["Coin"] == coin]
+        if coin_history.empty:
+            continue
+        coin_history["Timestamp"] = pd.to_datetime(coin_history["Timestamp"])
 
-if available_cols:
-    st.dataframe(filtered[available_cols].sort_values(by="Sentiment", ascending=False), use_container_width=True)
+        fig, ax1 = plt.subplots(figsize=(8, 4))
+        ax1.plot(coin_history["Timestamp"], coin_history["Sentiment"], label="Sentiment", color="blue")
+        ax1.set_ylabel("Sentiment", color="blue")
+        ax1.tick_params(axis='y', labelcolor="blue")
+
+        if "PriceUSD" in coin_history.columns:
+            ax2 = ax1.twinx()
+            ax2.plot(coin_history["Timestamp"], coin_history["PriceUSD"], color="green", linestyle="--", label="Price")
+            ax2.set_ylabel("Price (USD)", color="green")
+            ax2.tick_params(axis='y', labelcolor="green")
+
+        plt.title(f"{coin} - Sentiment & Price Over Time")
+        st.pyplot(fig)
 else:
-    st.warning("No valid columns to display.")
+    st.warning("No sentiment history found. Run `analyze.py` at least once.")
+
+# ---------------- Sentiment Chart ---------------- #
+st.subheader("📊 Current Sentiment Breakdown")
+if os.path.exists(chart_file):
+    st.image(chart_file, caption="Sentiment by Coin and Source", use_column_width=True)
+
+# ---------------- Data Table ---------------- #
+st.subheader("📋 Raw Sentiment Data")
+coin_filter = st.selectbox("Filter by coin:", ["All"] + coins)
+filtered = data if coin_filter == "All" else data[data["Coin"] == coin_filter]
+
+cols_to_show = ["Source", "Sentiment", "SuggestedAction", "Text", "Link"]
+available = [col for col in cols_to_show if col in filtered.columns]
+
+if available:
+    st.dataframe(filtered[available].sort_values(by="Sentiment", ascending=False))
+else:
+    st.warning("No matching columns found.")
