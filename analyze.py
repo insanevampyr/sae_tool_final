@@ -12,6 +12,7 @@ import pandas as pd
 coins = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
 output_file = "sentiment_output.csv"
 chart_file = "sentiment_chart.png"
+history_file = "sentiment_history.csv"
 
 def suggest_action(score):
     if score > 0.2:
@@ -22,7 +23,6 @@ def suggest_action(score):
         return "🤝 Hold / Watch"
 
 sentiment_data = []
-sentiment_summary = {}
 
 print("\U0001F9E0 Fetching Reddit sentiment...\n")
 for keyword in coins:
@@ -35,7 +35,7 @@ for keyword in coins:
             "Coin": keyword,
             "Text": post["text"],
             "Sentiment": sentiment,
-            "Action": action,
+            "SuggestedAction": action,
             "Timestamp": datetime.utcnow().isoformat(),
             "Link": post["url"]
         })
@@ -51,12 +51,12 @@ for keyword in coins:
             "Coin": keyword,
             "Text": post["text"],
             "Sentiment": sentiment,
-            "Action": action,
+            "SuggestedAction": action,
             "Timestamp": datetime.utcnow().isoformat(),
             "Link": post["url"]
         })
 
-# Save to CSV
+# Save to output CSV
 with open(output_file, "w", newline='', encoding='utf-8') as f:
     writer = csv.DictWriter(f, fieldnames=sentiment_data[0].keys())
     writer.writeheader()
@@ -64,11 +64,18 @@ with open(output_file, "w", newline='', encoding='utf-8') as f:
 
 print(f"\n✅ Sentiment results saved to {output_file}")
 
+# Append to sentiment history
+history_exists = os.path.exists(history_file)
+with open(history_file, "a", newline='', encoding='utf-8') as hf:
+    writer = csv.DictWriter(hf, fieldnames=sentiment_data[0].keys())
+    if not history_exists:
+        writer.writeheader()
+    writer.writerows(sentiment_data)
+
 # Aggregate & visualize
 df = pd.DataFrame(sentiment_data)
 summary = df.groupby(["Coin", "Source"])["Sentiment"].mean().reset_index()
-summary["Action"] = summary["Sentiment"].apply(suggest_action)
-sentiment_summary = summary
+summary["SuggestedAction"] = summary["Sentiment"].apply(suggest_action)
 
 fig, ax = plt.subplots(figsize=(10, 6))
 for source in summary["Source"].unique():
@@ -85,7 +92,7 @@ plt.show()
 
 print(f"📈 Chart saved to {chart_file}")
 
-# Telegram alerts for each coin
+# Telegram alerts
 for coin in coins:
     avg_sent = df[df["Coin"] == coin]["Sentiment"].mean()
     action = suggest_action(avg_sent)
