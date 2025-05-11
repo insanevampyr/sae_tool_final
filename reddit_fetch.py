@@ -1,13 +1,18 @@
 import praw
+import os
+from dotenv import load_dotenv
 from analyze_sentiment import analyze_sentiment
+
+# Load .env variables
+load_dotenv()
 
 def fetch_reddit_posts(subreddit_name, keyword, limit=5):
     reddit = praw.Reddit(
-        client_id="Inj8JZXelE1yOPEi6Qi03Q",
-        client_secret="T6od45R8ysAresMsZBTleNhJKkPYjw",
-        user_agent="cryptoSentimentApp by /u/Either-Scientist-626",
-        username="Either-Scientist-626",
-        password="Freepot1!"
+        client_id=os.getenv("REDDIT_CLIENT_ID"),
+        client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
+        user_agent="cryptoSentimentApp by /u/" + os.getenv("REDDIT_USERNAME"),
+        username=os.getenv("REDDIT_USERNAME"),
+        password=os.getenv("REDDIT_PASSWORD")
     )
 
     subreddit = reddit.subreddit(subreddit_name)
