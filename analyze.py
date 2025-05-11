@@ -45,16 +45,16 @@ print("\n\U0001F4F0 Fetching Crypto News sentiment...\n")
 for keyword in coins:
     rss_results = fetch_rss_articles(keyword, 5)
     for post in rss_results:
-        sentiment = analyze_sentiment(post["text"])
+        sentiment = analyze_sentiment(post.text)
         action = suggest_action(sentiment)
         sentiment_data.append({
             "Source": "News",
             "Coin": keyword,
-            "Text": post["text"],
+            "Text": post.text,
             "Sentiment": sentiment,
             "SuggestedAction": action,
             "Timestamp": datetime.utcnow().isoformat(),
-            "Link": post.get("link") or post.get("url", "")
+            "Link": getattr(post, "link", "") or getattr(post, "url", "")
         })
 
 # Save to sentiment_output.csv (overwrite with latest results)
