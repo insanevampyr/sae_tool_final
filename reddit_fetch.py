@@ -10,7 +10,7 @@ def fetch_reddit_posts(subreddit_name, keyword, limit=5):
     reddit = praw.Reddit(
         client_id=os.getenv("REDDIT_CLIENT_ID"),
         client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
-        user_agent="cryptoSentimentApp by /u/" + os.getenv("REDDIT_USERNAME"),
+        user_agent="cryptoSentimentApp by /u/" + (os.getenv("REDDIT_USERNAME") or "unknown_user"),
         username=os.getenv("REDDIT_USERNAME"),
         password=os.getenv("REDDIT_PASSWORD")
     )
