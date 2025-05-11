@@ -1,59 +1,86 @@
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
+import json
+import os
 from datetime import datetime
+from send_telegram import send_telegram_message
 
 st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
+
 st.title("📊 Crypto Sentiment Dashboard")
 
-# Load CSV
-try:
-    df = pd.read_csv("sentiment_output.csv")
-except FileNotFoundError:
-    st.error("❌ sentiment_output.csv not found!")
+# Load sentiment data
+csv_file = "sentiment_output.csv"
+if not os.path.exists(csv_file):
+    st.error("Sentiment data not found. Please run analyze.py first.")
     st.stop()
 
-# Ensure required columns exist
-required_cols = ["Coin", "Source", "Sentiment"]
-if not all(col in df.columns for col in required_cols):
-    st.error("❌ Required columns missing from sentiment_output.csv")
-    st.write("Expected columns:", required_cols)
-    st.write("Found columns:", df.columns.tolist())
-    st.stop()
+sentiment_data = pd.read_csv(csv_file)
 
-# Sidebar summary by coin
-st.sidebar.title("📌 Summary Overview")
-summary = df.groupby("Coin")["Sentiment"].mean().reset_index()
-summary["SuggestedAction"] = summary["Sentiment"].apply(
-    lambda s: "📈 Buy" if s > 0.2 else ("📉 Sell" if s < -0.2 else "🤝 Hold")
-)
+# --- Sidebar: Coin sentiment summary with alerts toggle ---
+st.sidebar.header("📌 Summary")
+
+# Initialize session state to remember toggle value
+if "telegram_alerts_enabled" not in st.session_state:
+    st.session_state.telegram_alerts_enabled = True
+
+st.sidebar.checkbox("Enable Telegram alerts for action changes", 
+                    value=st.session_state.telegram_alerts_enabled,
+                    key="telegram_alerts_enabled")
+
+summary = sentiment_data.groupby("Coin")["Sentiment"].mean().reset_index()
+summary["SuggestedAction"] = summary["Sentiment"].apply(lambda x: 
+    "📈 Buy" if x > 0.2 else "📉 Sell" if x < -0.2 else "🤝 Hold")
 
 now = datetime.utcnow().strftime("%Y-%m-%d %H:%M UTC")
+st.sidebar.markdown(f"**Last updated:** {now}")
+
+# Track previous actions for alert comparison
+previous_actions_file = "previous_actions.json"
+previous_actions = {}
+if os.path.exists(previous_actions_file):
+    with open(previous_actions_file, "r") as f:
+        previous_actions = json.load(f)
+
+# Show and check for changes
 for _, row in summary.iterrows():
-    st.sidebar.markdown(
-        f"**{row['Coin']}**\n- Sentiment: `{row['Sentiment']:.2f}`\n- Action: `{row['SuggestedAction']}`"
-    )
-st.sidebar.caption(f"Last updated: {now}")
+    coin = row["Coin"]
+    sentiment = round(row["Sentiment"], 2)
+    action = row["SuggestedAction"]
+    st.sidebar.write(f"**{coin}**: {sentiment} → {action}")
 
-# Coin selection
-coins = df["Coin"].unique()
-selected_coin = st.selectbox("Choose a coin:", coins)
+    # Alert if action changed
+    prev = previous_actions.get(coin)
+    if prev is None or prev["action"] != action:
+        if st.session_state.telegram_alerts_enabled:
+            msg = (
+                f"🔔 *Suggested Action Changed for {coin}*\n"
+                f"Previous: {prev['action'] if prev else 'N/A'}\n"
+                f"Now: {action}\n"
+                f"Sentiment Score: {sentiment}"
+            )
+            send_telegram_message(msg)
 
-# Filter
-filtered = df[df["Coin"] == selected_coin]
+        previous_actions[coin] = {"action": action, "sentiment": sentiment}
 
-# Chart
-st.subheader(f"📈 Sentiment Chart for {selected_coin}")
-fig, ax = plt.subplots(figsize=(8, 5))
-avg_sent = filtered.groupby("Source")["Sentiment"].mean()
-colors = ['green' if x > 0 else 'red' for x in avg_sent]
-ax.bar(avg_sent.index, avg_sent.values, color=colors)
-ax.set_title(f"Average Sentiment by Source")
+# Save updated actions
+with open(previous_actions_file, "w") as f:
+    json.dump(previous_actions, f)
+
+# --- Main Table ---
+st.markdown("### 🔍 Sentiment Entries")
+selected_coin = st.selectbox("Select a coin to filter", ["All"] + list(summary["Coin"]))
+filtered = sentiment_data[sentiment_data["Coin"] == selected_coin] if selected_coin != "All" else sentiment_data
+st.dataframe(filtered[["Source", "Sentiment", "SuggestedAction", "Text", "Link"]].sort_values(by="Sentiment", ascending=False))
+
+# --- Chart ---
+st.markdown("### 📈 Average Sentiment by Coin and Source")
+fig, ax = plt.subplots(figsize=(10, 6))
+plot_data = sentiment_data.groupby(["Coin", "Source"])["Sentiment"].mean().unstack()
+plot_data.plot(kind="bar", ax=ax)
 ax.set_ylabel("Sentiment Score")
+ax.set_title("Sentiment Breakdown by Coin and Source")
+plt.xticks(rotation=45, ha='right')
+plt.tight_layout()
 st.pyplot(fig)
-
-# Table
-st.subheader(f"📋 Detailed Entries for {selected_coin}")
-optional_cols = ["SuggestedAction", "Text", "Link"]
-columns_to_show = ["Source", "Sentiment"] + [col for col in optional_cols if col in filtered.columns]
-st.dataframe(filtered[columns_to_show].sort_values(by="Sentiment", ascending=False))
