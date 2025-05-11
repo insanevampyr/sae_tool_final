@@ -3,29 +3,45 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
-
 st.title("📊 Crypto Sentiment Dashboard")
 
-# Load CSV data
-df = pd.read_csv("sentiment_output.csv")
+# Load CSV
+try:
+    df = pd.read_csv("sentiment_output.csv")
+except FileNotFoundError:
+    st.error("❌ sentiment_output.csv not found!")
+    st.stop()
+
+# Ensure required columns exist
+required_cols = ["Coin", "Source", "Sentiment"]
+if not all(col in df.columns for col in required_cols):
+    st.error("❌ Required columns missing from sentiment_output.csv")
+    st.write("Expected columns:", required_cols)
+    st.write("Found columns:", df.columns.tolist())
+    st.stop()
 
 # Coin selection
 coins = df["Coin"].unique()
-selected_coin = st.selectbox("Choose a coin to view sentiment analysis:", coins)
+selected_coin = st.selectbox("Choose a coin:", coins)
 
-# Filter data
+# Filter
 filtered = df[df["Coin"] == selected_coin]
 
-# Plot bar chart (average sentiment by source)
+# Chart
 st.subheader(f"📈 Sentiment Chart for {selected_coin}")
 fig, ax = plt.subplots(figsize=(8, 5))
-avg_sentiment = filtered.groupby("Source")["Sentiment"].mean()
-colors = ['green' if s > 0 else 'red' for s in avg_sentiment]
-ax.bar(avg_sentiment.index, avg_sentiment.values, color=colors)
-ax.set_title(f"Average Sentiment by Source for {selected_coin}")
+avg_sent = filtered.groupby("Source")["Sentiment"].mean()
+colors = ['green' if x > 0 else 'red' for x in avg_sent]
+ax.bar(avg_sent.index, avg_sent.values, color=colors)
+ax.set_title(f"Average Sentiment by Source")
 ax.set_ylabel("Sentiment Score")
 st.pyplot(fig)
 
-# Show sentiment table
-st.subheader(f"📋 Sentiment Entries for {selected_coin}")
-st.dataframe(filtered[["Source", "Sentiment", "SuggestedAction", "Text", "Link"]].sort_values(by="Sentiment", ascending=False))
+# Table
+st.subheader(f"📋 Detailed Entries for {selected_coin}")
+
+# Only show available columns
+optional_cols = ["SuggestedAction", "Text", "Link"]
+columns_to_show = ["Source", "Sentiment"] + [col for col in optional_cols if col in filtered.columns]
+
+st.dataframe(filtered[columns_to_show].sort_values(by="Sentiment", ascending=False))
