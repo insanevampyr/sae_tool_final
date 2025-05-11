@@ -54,7 +54,7 @@ for keyword in coins:
             "Sentiment": sentiment,
             "SuggestedAction": action,
             "Timestamp": datetime.utcnow().isoformat(),
-            "Link": post["link"]
+            "Link": post.get("link") or post.get("url", "")
         })
 
 # Save to sentiment_output.csv (overwrite with latest results)
