@@ -1,4 +1,3 @@
-# analyze.py
 import os
 import csv
 from datetime import datetime
@@ -11,8 +10,8 @@ import pandas as pd
 
 coins = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
 output_file = "sentiment_output.csv"
-chart_file = "sentiment_chart.png"
 history_file = "sentiment_history.csv"
+chart_file = "sentiment_chart.png"
 
 def suggest_action(score):
     if score > 0.2:
@@ -53,24 +52,24 @@ for keyword in coins:
             "Sentiment": sentiment,
             "SuggestedAction": action,
             "Timestamp": datetime.utcnow().isoformat(),
-            "Link": post["url"]
+            "Link": post["link"]
         })
 
-# Save to output CSV
+# Save current output
 with open(output_file, "w", newline='', encoding='utf-8') as f:
     writer = csv.DictWriter(f, fieldnames=sentiment_data[0].keys())
     writer.writeheader()
     writer.writerows(sentiment_data)
-
 print(f"\n✅ Sentiment results saved to {output_file}")
 
-# Append to sentiment history
-history_exists = os.path.exists(history_file)
-with open(history_file, "a", newline='', encoding='utf-8') as hf:
-    writer = csv.DictWriter(hf, fieldnames=sentiment_data[0].keys())
+# Append to historical sentiment file
+history_exists = os.path.isfile(history_file)
+with open(history_file, "a", newline='', encoding='utf-8') as f:
+    writer = csv.DictWriter(f, fieldnames=sentiment_data[0].keys())
     if not history_exists:
         writer.writeheader()
     writer.writerows(sentiment_data)
+print(f"📅 Appended sentiment history to {history_file}")
 
 # Aggregate & visualize
 df = pd.DataFrame(sentiment_data)
@@ -89,7 +88,6 @@ plt.xticks(rotation=45, ha='right')
 plt.tight_layout()
 plt.savefig(chart_file)
 plt.show()
-
 print(f"📈 Chart saved to {chart_file}")
 
 # Telegram alerts
