@@ -1,112 +1,72 @@
+import streamlit as st
+import pandas as pd
+import matplotlib.pyplot as plt
+from datetime import datetime, timezone
 import os
-import csv
-from datetime import datetime
 from analyze_sentiment import analyze_sentiment
 from reddit_fetch import fetch_reddit_posts
 from rss_fetch import fetch_rss_articles
 from send_telegram import send_telegram_message
-from fetch_prices import fetch_prices
-import matplotlib.pyplot as plt
-import pandas as pd
 
-coins = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
-output_file = "sentiment_output.csv"
-chart_file = "sentiment_chart.png"
-history_file = "sentiment_history.csv"
+st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
+st.title("📊 Crypto Sentiment Dashboard")
+st.markdown("Live sentiment and trend analysis for top cryptocurrencies.")
 
-def suggest_action(score):
-    if score > 0.2:
-        return "📈 Consider Buying"
-    elif score < -0.2:
-        return "📉 Consider Selling"
-    else:
-        return "🤝 Hold / Watch"
+# --- Paths ---
+csv_path = "sentiment_output.csv"
+chart_path = "sentiment_chart.png"
+history_path = "sentiment_history.csv"
 
-sentiment_data = []
-print("\U0001F9E0 Fetching Reddit sentiment...\n")
-for keyword in coins:
-    reddit_results = fetch_reddit_posts("CryptoCurrency", keyword, 5)
-    for post in reddit_results:
-        sentiment = analyze_sentiment(post["text"])
-        action = suggest_action(sentiment)
-        sentiment_data.append({
-            "Source": "Reddit",
-            "Coin": keyword,
-            "Text": post["text"],
-            "Sentiment": sentiment,
-            "SuggestedAction": action,
-            "Timestamp": datetime.utcnow().isoformat(),
-            "Link": post.get("link") or post.get("url", "")
-        })
+# --- Load latest sentiment CSV ---
+if not os.path.exists(csv_path):
+    st.error("sentiment_output.csv not found. Please run analyze.py first.")
+    st.stop()
 
-print("\n\U0001F4F0 Fetching Crypto News sentiment...\n")
-for keyword in coins:
-    rss_results = fetch_rss_articles(keyword, 5)
-    for post in rss_results:
-        sentiment = analyze_sentiment(post["text"])
-        action = suggest_action(sentiment)
-        sentiment_data.append({
-            "Source": "News",
-            "Coin": keyword,
-            "Text": post["text"],
-            "Sentiment": sentiment,
-            "SuggestedAction": action,
-            "Timestamp": datetime.utcnow().isoformat(),
-            "Link": post.get("link") or post.get("url", "")
-        })
+latest_data = pd.read_csv(csv_path)
 
-# Save current session to CSV
-with open(output_file, "w", newline='', encoding='utf-8') as f:
-    writer = csv.DictWriter(f, fieldnames=sentiment_data[0].keys())
-    writer.writeheader()
-    writer.writerows(sentiment_data)
-
-print(f"\n✅ Sentiment results saved to {output_file}")
-
-# Append to history safely
-temp_history = "_temp_history.csv"
-append_mode = os.path.exists(history_file)
-with open(temp_history, "w", newline='', encoding="utf-8") as f:
-    writer = csv.DictWriter(f, fieldnames=sentiment_data[0].keys())
-    if not append_mode:
-        writer.writeheader()
-    writer.writerows(sentiment_data)
-
-if append_mode:
-    with open(history_file, "a", newline='', encoding="utf-8") as dest, open(temp_history, "r", encoding="utf-8") as src:
-        next(src)  # Skip header in temp
-        dest.writelines(src.readlines())
+# --- Load historical sentiment CSV ---
+if os.path.exists(history_path):
+    history = pd.read_csv(history_path)
 else:
-    os.replace(temp_history, history_file)
+    history = pd.DataFrame()
 
-print(f"🕘 Historical data appended to {history_file}")
+# --- Sidebar Summary ---
+st.sidebar.header("📌 Sentiment Summary")
+summary = latest_data.groupby("Coin")["Sentiment"].mean()
+for coin, score in summary.items():
+    action = "📈 Buy" if score > 0.2 else "📉 Sell" if score < -0.2 else "🤝 Hold"
+    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    st.sidebar.markdown(f"**{coin}**\n→ Sentiment: `{score:.2f}`\n→ Suggestion: `{action}`\n→ _{timestamp}_")
 
-# Aggregate & visualize
-df = pd.DataFrame(sentiment_data)
-summary = df.groupby(["Coin", "Source"])["Sentiment"].mean().reset_index()
-summary["SuggestedAction"] = summary["Sentiment"].apply(suggest_action)
+# --- Trends Over Time ---
+st.subheader("📈 Trends Over Time")
+coin_list = latest_data["Coin"].unique().tolist()
+selected = st.selectbox("Choose a coin to view trend: ", coin_list)
 
-fig, ax = plt.subplots(figsize=(10, 6))
-for source in summary["Source"].unique():
-    subset = summary[summary["Source"] == source]
-    ax.bar(subset["Coin"] + " (" + source + ")", subset["Sentiment"], label=source)
-ax.set_ylabel("Avg Sentiment")
-ax.set_title("Crypto Sentiment Summary")
-ax.axhline(0, color='gray', linestyle='--')
-ax.legend()
-plt.xticks(rotation=45, ha='right')
-plt.tight_layout()
-plt.savefig(chart_file)
-plt.show()
+if selected and not history.empty:
+    coin_data = history[history["Coin"] == selected].copy()
+    coin_data["Timestamp"] = pd.to_datetime(coin_data["Timestamp"])
 
-print(f"📈 Chart saved to {chart_file}")
+    fig, ax1 = plt.subplots(figsize=(10, 4))
+    ax1.plot(coin_data["Timestamp"], coin_data["Sentiment"], label="Sentiment", color="blue")
+    ax1.set_ylabel("Sentiment")
 
-# Telegram alerts
-for coin in coins:
-    avg_sent = df[df["Coin"] == coin]["Sentiment"].mean()
-    action = suggest_action(avg_sent)
-    message = f"\n🚨 Sentiment Alert for {coin}\nAvg Sentiment: {avg_sent:.2f}\nAction: {action}"
-    try:
-        send_telegram_message(message)
-    except Exception as e:
-        print(f"❌ Failed to send alert for {coin}: {e}")
+    if "PriceUSD" in coin_data.columns:
+        ax2 = ax1.twinx()
+        ax2.plot(coin_data["Timestamp"], coin_data["PriceUSD"], color="green", linestyle="--", label="Price (USD)")
+        ax2.set_ylabel("Price (USD)")
+
+    ax1.set_title(f"Sentiment & Price Over Time: {selected}")
+    fig.autofmt_xdate()
+    fig.tight_layout()
+    st.pyplot(fig)
+else:
+    st.warning("No historical data available.")
+
+# --- Sentiment Breakdown Table ---
+st.subheader("📊 Latest Sentiment Breakdown")
+columns = ["Coin", "Source", "Sentiment", "SuggestedAction", "Text", "Link"]
+if all(col in latest_data.columns for col in columns):
+    st.dataframe(latest_data[columns].sort_values(by="Sentiment", ascending=False), use_container_width=True)
+else:
+    st.warning("Some expected columns are missing in sentiment_output.csv")
