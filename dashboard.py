@@ -13,61 +13,53 @@ from fetch_prices import fetch_prices
 
 st.set_page_config(page_title="AlphaPulse | Sentiment Dashboard", layout="wide")
 
-# --- HEADER & BRANDING ---
+# ─── HEADER & LOGO ─────────────────────────────────────────────────────────────
 st.image("alpha_logo.jpg", use_container_width=True)
 st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 st.markdown("Live crypto sentiment analysis from Reddit and news + historical trends.")
 
-# --- FILE PATHS ---
-csv_path       = "sentiment_output.csv"
-chart_path     = "sentiment_chart.png"
-history_file   = "sentiment_history.csv"
-json_path      = "previous_actions.json"
+# ─── PATHS ─────────────────────────────────────────────────────────────────────
+csv_path     = "sentiment_output.csv"
+chart_path   = "sentiment_chart.png"
+history_path = "sentiment_history.csv"
+json_path    = "previous_actions.json"
 
-# --- DATA LOADER WITH MALFORMED-LINE SKIP ---
+# ─── HELPERS ───────────────────────────────────────────────────────────────────
 def load_data(path):
     if not os.path.exists(path):
         return pd.DataFrame()
     try:
-        return pd.read_csv(
-            path,
-            engine="python",
-            on_bad_lines="skip",       # skip malformed rows
-            quotechar='"',
-            skip_blank_lines=True
-        )
+        return pd.read_csv(path, engine="python", on_bad_lines="skip")
     except Exception as e:
         st.error(f"Failed to load {path}: {e}")
         return pd.DataFrame()
 
-def load_previous_actions():
-    if os.path.exists(json_path):
-        with open(json_path, "r") as f:
+def load_json(path):
+    if os.path.exists(path):
+        with open(path,"r") as f:
             return json.load(f)
     return {}
 
-def save_previous_actions(data):
-    with open(json_path, "w") as f:
+def save_json(path, data):
+    with open(path,"w") as f:
         json.dump(data, f)
 
-# --- LOAD & CLEAN DATA ---
+# ─── LOAD & CLEAN ────────────────────────────────────────────────────────────────
 data             = load_data(csv_path)
-history          = load_data(history_file)
-previous_actions = load_previous_actions()
+history          = load_data(history_path)
+previous_actions = load_json(json_path)
 prices           = fetch_prices()
 
-# ensure numeric
-if "Sentiment" in data.columns:
-    data["Sentiment"] = pd.to_numeric(data["Sentiment"], errors="coerce")
-if "Sentiment" in history.columns:
-    history["Sentiment"] = pd.to_numeric(history["Sentiment"], errors="coerce")
-if "PriceUSD" in history.columns:
-    history["PriceUSD"] = pd.to_numeric(history["PriceUSD"], errors="coerce")
+# coerce numeric & drop bad
+for col in ("Sentiment","PriceUSD"):
+    if col in history.columns:
+        history[col] = pd.to_numeric(history[col], errors="coerce")
+history = history.dropna(subset=["Coin"])  # get rid of float-NaNs in coin column
 
-# --- SIDEBAR: SUMMARY & ALERTS ---
+# ─── SIDEBAR: SUMMARY & ALERTS ─────────────────────────────────────────────────
 st.sidebar.header("📌 Sentiment Summary")
 
-if not data.empty and {"Coin","Sentiment"}.issubset(data.columns):
+if {"Coin","Sentiment"}.issubset(data.columns) and not data.empty:
     overall = data.groupby("Coin")["Sentiment"].mean()
     for coin, sentiment in overall.items():
         action    = "📈 Buy" if sentiment > 0.2 else "📉 Sell" if sentiment < -0.2 else "🤝 Hold"
@@ -75,51 +67,60 @@ if not data.empty and {"Coin","Sentiment"}.issubset(data.columns):
         st.sidebar.write(f"**{coin}**: {sentiment:.2f} → {action}")
         st.sidebar.caption(f"_Updated: {timestamp}_")
 
-        toggle_key = f"alert_toggle_{coin}"
-        if st.sidebar.checkbox(f"🔔 Alert for {coin}", key=toggle_key):
+        key = f"alert_{coin}"
+        if st.sidebar.checkbox(f"🔔 Alert for {coin}", key=key):
             last = previous_actions.get(coin)
             if last != action:
-                msg = f"⚠️ **{coin} Action Changed**\nNew Avg Sentiment: {sentiment:.2f}\n**Suggested Action:** {action}"
+                msg = f"⚠️ **{coin} Action Changed**\nAvg Sentiment: {sentiment:.2f}\nAction: {action}"
                 send_telegram_message(msg)
                 previous_actions[coin] = action
 else:
     st.sidebar.warning("No sentiment data to summarize.")
 
-save_previous_actions(previous_actions)
+save_json(json_path, previous_actions)
 
-# --- BAR CHART ---
+# ─── BAR CHART ─────────────────────────────────────────────────────────────────
 if os.path.exists(chart_path):
     st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
-# --- TRENDS OVER TIME ---
-st.markdown("<h2 style='color:#FF8C00;'>📈 Trends Over Time</h2>", unsafe_allow_html=True)
+# ─── TRENDS OVER TIME ───────────────────────────────────────────────────────────
+st.markdown("<h2 style='color: var(--primary-color) !important;'>📈 Trends Over Time</h2>", unsafe_allow_html=True)
 
 if not history.empty and {"Timestamp","Coin","Sentiment"}.issubset(history.columns):
-    last_update  = pd.to_datetime(history["Timestamp"], errors="coerce").max()
-    total_days   = history["Timestamp"].str[:10].nunique()
-    avg_sent_all = history["Sentiment"].mean()
+    # parse timestamps
+    history["Timestamp"] = pd.to_datetime(history["Timestamp"], errors="coerce")
+    valid_times = history["Timestamp"].dropna()
+    last_update = valid_times.max() if not valid_times.empty else None
+    days = valid_times.dt.date.nunique()
+
+    avg_all = history["Sentiment"].mean()
+    if pd.isna(avg_all):
+        avg_all = 0.0
+
+    # summary card
     st.markdown(f"""
-    <div style='margin:1rem 0;padding:1rem;border:1px solid #444;border-radius:8px;
-                background-color:rgba(255,255,255,0.1);'>
-      <strong>📅 Last Updated:</strong> {last_update}<br>
-      <strong>📊 Days of History:</strong> {total_days}<br>
-      <strong>📈 Avg Sentiment (All):</strong> {avg_sent_all:.2f}
+    <div style='padding:1rem;border:1px solid #444;border-radius:8px;
+                background-color:rgba(255,255,255,0.1);margin-bottom:1rem;'>
+      <strong>📅 Last Updated:</strong> {last_update or "No data yet"}<br>
+      <strong>📊 Days of History:</strong> {days}<br>
+      <strong>📈 Avg Sentiment (All):</strong> {avg_all:.2f}
     </div>
     """, unsafe_allow_html=True)
 
-    coin_sel  = st.selectbox("Select coin for trend view:", sorted(history["Coin"].unique()))
-    coin_hist = history[history["Coin"] == coin_sel]
+    coins = sorted(history["Coin"].astype(str).unique())
+    coin_sel = st.selectbox("Select coin for trend view:", coins)
+    ch = history[history["Coin"]==coin_sel]
 
-    if not coin_hist.empty:
+    if not ch.empty:
         fig, ax1 = plt.subplots(figsize=(10,4))
-        ax1.plot(coin_hist["Timestamp"], coin_hist["Sentiment"],
+        ax1.plot(ch["Timestamp"], ch["Sentiment"],
                  marker="o", color="#1f77b4", label="Sentiment")
         ax1.set_ylabel("Sentiment", color="#1f77b4")
         ax1.tick_params(axis='y', labelcolor="#1f77b4")
 
-        if "PriceUSD" in coin_hist.columns:
+        if "PriceUSD" in ch.columns:
             ax2 = ax1.twinx()
-            ax2.plot(coin_hist["Timestamp"], coin_hist["PriceUSD"],
+            ax2.plot(ch["Timestamp"], ch["PriceUSD"],
                      linestyle="--", color="#2ca02c", label="Price")
             ax2.set_ylabel("Price (USD)", color="#2ca02c")
             ax2.tick_params(axis='y', labelcolor="#2ca02c")
@@ -133,15 +134,18 @@ if not history.empty and {"Timestamp","Coin","Sentiment"}.issubset(history.colum
 else:
     st.warning("📉 No historical trend data available.")
 
-# --- DETAILS TABLE ---
+# ─── DETAILS TABLE ──────────────────────────────────────────────────────────────
 st.subheader("📋 Sentiment Details")
-coins = ["All"] + sorted(data["Coin"].unique()) if "Coin" in data.columns else ["All"]
-sel   = st.selectbox("Filter by coin:", coins)
+if {"Coin","Sentiment"}.issubset(data.columns):
+    coins = ["All"] + sorted(data["Coin"].astype(str).unique())
+else:
+    coins = ["All"]
+sel = st.selectbox("Filter by coin:", coins)
 filtered = data if sel=="All" else data[data["Coin"]==sel]
-cols     = ["Source","Sentiment","SuggestedAction","Text","Link"]
-show     = [c for c in cols if c in filtered.columns]
+
+cols = ["Source","Sentiment","SuggestedAction","Text","Link"]
+show = [c for c in cols if c in filtered.columns]
 if not filtered.empty and show:
-    st.dataframe(filtered[show].sort_values("Sentiment",ascending=False),
-                 use_container_width=True)
+    st.dataframe(filtered[show].sort_values("Sentiment",ascending=False), use_container_width=True)
 else:
     st.info("No sentiment data to display.")
