@@ -1,4 +1,4 @@
-# dashboard.py (UPDATED with summary card)
+# dashboard.py (Updated with Trends Header Color + Logo Branding)
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,9 +11,14 @@ from rss_fetch import fetch_rss_articles
 from analyze_sentiment import analyze_sentiment
 from fetch_prices import fetch_prices
 
-st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
+st.set_page_config(page_title="AlphaPulse - Crypto Sentiment Dashboard", layout="wide")
 
-st.title("📊 Crypto Sentiment Dashboard")
+# Branding + Logo
+col1, col2 = st.columns([0.15, 0.85])
+with col1:
+    st.image("alpha_logo.jpg", width=80)
+with col2:
+    st.title("AlphaPulse - Crypto Sentiment Dashboard")
 st.markdown("Live crypto sentiment analysis from Reddit and crypto news + historical trends.")
 
 csv_path = "sentiment_output.csv"
@@ -76,7 +81,7 @@ if os.path.exists(chart_path):
     st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
 # --- Trends Section ---
-st.subheader("📈 Trends Over Time")
+st.markdown("<h3 style='color: #00B0F0;'>📈 Trends Over Time</h3>", unsafe_allow_html=True)
 
 if not history.empty:
     # 🔹 Summary Card
