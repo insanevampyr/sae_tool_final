@@ -11,10 +11,11 @@ from rss_fetch import fetch_rss_articles
 from analyze_sentiment import analyze_sentiment
 from fetch_prices import fetch_prices
 
-st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
-
-st.title("📊 Crypto Sentiment Dashboard")
-st.markdown("Live crypto sentiment analysis from Reddit and crypto news + historical trends.")
+# Branding
+st.set_page_config(page_title="AlphaPulse", layout="wide")
+st.image("alpha_logo.jpg", width=200)
+st.title("👁️ AlphaPulse")
+st.markdown("Next-gen crypto intelligence: Real-time sentiment, price trends, and behavioral alerts.")
 
 csv_path = "sentiment_output.csv"
 chart_path = "sentiment_chart.png"
