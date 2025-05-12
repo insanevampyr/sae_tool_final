@@ -1,4 +1,4 @@
-# dashboard.py (UPDATED for synced sentiment_history.csv chart)
+# dashboard.py
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,11 +11,11 @@ from rss_fetch import fetch_rss_articles
 from analyze_sentiment import analyze_sentiment
 from fetch_prices import fetch_prices
 
-st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
+st.set_page_config(page_title="AlphaPulse | Sentiment Dashboard", layout="wide")
 
+st.image("alpha_logo.jpg", use_column_width=True)
 st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
-st.image("alpha_logo.jpg", width=150)
-st.markdown("Live crypto sentiment analysis from Reddit and crypto news + historical trends.")
+st.markdown("Live crypto sentiment analysis from Reddit and news + historical trends.")
 
 csv_path = "sentiment_output.csv"
 chart_path = "sentiment_chart.png"
@@ -48,19 +48,15 @@ history = load_data(history_file)
 previous_actions = load_previous_actions()
 prices = fetch_prices()
 
-# Sidebar Summary & Alerts
+# --- Sidebar Summary & Alerts ---
 st.sidebar.header("📌 Sentiment Summary")
 
 overall_sentiments = data.groupby("Coin")["Sentiment"].mean()
-summary_table = []
-
 for coin, sentiment in overall_sentiments.items():
     action = "📈 Buy" if sentiment > 0.2 else "📉 Sell" if sentiment < -0.2 else "🤝 Hold"
     timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
     st.sidebar.write(f"**{coin}**: {sentiment:.2f} → {action}")
     st.sidebar.caption(f"_Updated: {timestamp}_")
-
-    summary_table.append({"Coin": coin, "Sentiment": sentiment, "Action": action, "Time": timestamp})
 
     toggle_key = f"alert_toggle_{coin}"
     if st.sidebar.checkbox(f"🔔 Alert for {coin}", key=toggle_key):
@@ -72,23 +68,21 @@ for coin, sentiment in overall_sentiments.items():
 
 save_previous_actions(previous_actions)
 
-# Chart
+# --- Sentiment Bar Chart ---
 if os.path.exists(chart_path):
     st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
-# Trends Section
-st.markdown("""
-<h3 style='color: var(--text-color);'>📈 Trends Over Time</h3>
-""", unsafe_allow_html=True)
+# --- Trends Over Time (Always visible)
+st.markdown("<h3 style='color: var(--text-color);'>📈 Trends Over Time</h3>", unsafe_allow_html=True)
 
 if not history.empty:
-    # Summary Card
+    # Quick Summary Card
     last_update = pd.to_datetime(history["Timestamp"]).max()
     total_days = history["Timestamp"].str[:10].nunique()
     avg_sentiment_all = history["Sentiment"].mean()
 
     st.markdown(f"""
-    <div style='padding: 1rem; border: 1px solid #ccc; border-radius: 10px; margin-bottom: 1rem; background-color: #f9f9f9;'>
+    <div style='padding: 1rem; border: 1px solid #444; border-radius: 10px; margin-bottom: 1rem; background-color: rgba(255,255,255,0.05);'>
         <b>📅 Last Updated:</b> {last_update}<br>
         <b>📊 Days of Data:</b> {total_days}<br>
         <b>📈 Avg Sentiment (All):</b> {avg_sentiment_all:.2f}
@@ -96,33 +90,31 @@ if not history.empty:
     """, unsafe_allow_html=True)
 
     selected_coin = st.selectbox("Select coin for trend view:", sorted(history["Coin"].unique()))
-    coin_history = history[history["Coin"] == selected_coin].copy()
-
-    # Ensure Timestamp is datetime
-    coin_history["Timestamp"] = pd.to_datetime(coin_history["Timestamp"])
+    coin_history = history[history["Coin"] == selected_coin]
 
     if not coin_history.empty:
         fig, ax1 = plt.subplots(figsize=(10, 5))
-        ax1.plot(coin_history["Timestamp"], coin_history["Sentiment"], marker="o", label="Sentiment", color="blue")
-        ax1.set_ylabel("Sentiment", color="blue")
-        ax1.tick_params(axis='y', labelcolor="blue")
+        ax1.plot(coin_history["Timestamp"], coin_history["Sentiment"], marker="o", color="#1f77b4", label="Sentiment")
+        ax1.set_ylabel("Sentiment", color="#1f77b4")
+        ax1.tick_params(axis='y', labelcolor="#1f77b4")
 
         if "PriceUSD" in coin_history.columns:
             ax2 = ax1.twinx()
-            ax2.plot(coin_history["Timestamp"], coin_history["PriceUSD"], linestyle="--", color="green", label="Price")
-            ax2.set_ylabel("Price (USD)", color="green")
-            ax2.tick_params(axis='y', labelcolor="green")
+            ax2.plot(coin_history["Timestamp"], coin_history["PriceUSD"], linestyle="--", color="#2ca02c", label="Price")
+            ax2.set_ylabel("Price (USD)", color="#2ca02c")
+            ax2.tick_params(axis='y', labelcolor="#2ca02c")
 
-        plt.title(f"{selected_coin} - Sentiment and Price Over Time")
+        ax1.set_xlabel("Time")
         fig.autofmt_xdate()
+        plt.title(f"{selected_coin} - Sentiment and Price Over Time")
         st.pyplot(fig)
     else:
         st.info("No historical data yet for this coin.")
 else:
     st.warning("📉 No historical trend data available.")
 
-# Sentiment Table
-st.markdown("<h3 style='color: var(--text-color);'>📈 Trends Over Time</h3>", unsafe_allow_html=True)
+# --- Sentiment Details Table ---
+st.subheader("📋 Sentiment Details")
 coin_filter = st.selectbox("Filter by coin:", ["All"] + sorted(data["Coin"].unique()))
 filtered = data if coin_filter == "All" else data[data["Coin"] == coin_filter]
 cols = ["Source", "Sentiment", "SuggestedAction", "Text", "Link"]
