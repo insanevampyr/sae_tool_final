@@ -1,117 +1,100 @@
 # analyze.py
+
 import os
 import csv
-import json
-from datetime import datetime
-import pandas as pd
-import matplotlib.pyplot as plt
-
+from datetime import datetime, timezone
 from analyze_sentiment import analyze_sentiment
-from reddit_fetch    import fetch_reddit_posts
-from rss_fetch       import fetch_rss_articles
-from fetch_prices    import fetch_prices
-from send_telegram   import send_telegram_message
+from reddit_fetch import fetch_reddit_posts
+from rss_fetch import fetch_rss_articles
+from fetch_prices import fetch_prices
+from send_telegram import send_telegram_message
+import pandas as pd
 
-# --- Configuration ---
-coins         = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
-output_file   = "sentiment_output.csv"
-chart_file    = "sentiment_chart.png"
-history_file  = "sentiment_history.csv"
-telegram_chat = os.getenv("TELEGRAM_CHAT_ID")
+# --- CONFIG ---
+coins = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
+output_file  = "sentiment_output.csv"
+history_file = "sentiment_history.csv"
 
 def suggest_action(score):
-    if score > 0.2:   return "📈 Consider Buying"
-    if score < -0.2:  return "📉 Consider Selling"
+    if score > 0.2:
+        return "📈 Consider Buying"
+    if score < -0.2:
+        return "📉 Consider Selling"
     return "🤝 Hold / Watch"
 
-sentiment_rows = []
 
+# 1) Fetch raw posts
+sentiment_rows = []
 print("🧠 Fetching Reddit sentiment...\n")
 for coin in coins:
     for post in fetch_reddit_posts("CryptoCurrency", coin, 5):
         score  = analyze_sentiment(post["text"])
-        action = suggest_action(score)
         sentiment_rows.append({
             "Source":    "Reddit",
             "Coin":       coin,
             "Text":       post["text"],
             "Sentiment":  score,
-            "Action":     action,
-            "Timestamp":  datetime.utcnow().isoformat(),
-            "Link":       post["url"]
+            "Action":     suggest_action(score),
+            "Timestamp":  datetime.now(timezone.utc).isoformat(),
+            "Link":       post["url"],
         })
 
 print("\n📰 Fetching Crypto News sentiment...\n")
 for coin in coins:
     for post in fetch_rss_articles(coin, 5):
         score  = analyze_sentiment(post["text"])
-        action = suggest_action(score)
         sentiment_rows.append({
             "Source":    "News",
             "Coin":       coin,
             "Text":       post["text"],
             "Sentiment":  score,
-            "Action":     action,
-            "Timestamp":  datetime.utcnow().isoformat(),
-            "Link":       post.get("link", "")
+            "Action":     suggest_action(score),
+            "Timestamp":  datetime.now(timezone.utc).isoformat(),
+            "Link":       post.get("link", ""),
         })
 
-# --- Save full dump ---
-df = pd.DataFrame(sentiment_rows)
-df.to_csv(output_file, index=False, encoding="utf-8")
-print(f"✅ Sentiment results saved to {output_file}")
-
-# --- Bar chart by coin & source ---
-summary = df.groupby(["Coin", "Source"])["Sentiment"].mean().reset_index()
-fig, ax = plt.subplots(figsize=(10,6))
-for src in summary["Source"].unique():
-    sub = summary[summary["Source"]==src]
-    ax.bar(sub["Coin"]+" ("+src+")", sub["Sentiment"], label=src)
-ax.axhline(0, color="gray", linestyle="--")
-ax.set_ylabel("Avg Sentiment")
-ax.set_title("Crypto Sentiment by Source")
-ax.legend()
-plt.xticks(rotation=45, ha="right")
-plt.tight_layout()
-plt.savefig(chart_file)
-plt.show()
-print(f"📈 Chart saved to {chart_file}")
-
-# --- Telegram Alerts (per‐coin average across sources) ---
-prices = fetch_prices()  # dict e.g. {"Bitcoin":56000,...}
-coin_summary = (
-    df.groupby("Coin")["Sentiment"]
-      .mean()
-      .reset_index()
-      .assign(Action=lambda d: d["Sentiment"].apply(suggest_action))
-)
-
-for _, row in coin_summary.iterrows():
-    msg = (
-        f"🚨 Sentiment Alert for {row.Coin}\n"
-        f"Avg Sentiment: {row.Sentiment:.2f}\n"
-        f"Action: {row.Action}"
-    )
-    send_telegram_message(msg)
-
-# --- Append to history CSV ---
-hist_fields = ["Timestamp","Coin","Sentiment","PriceUSD","Action"]
-new_rows = []
-for _, row in coin_summary.iterrows():
-    new_rows.append({
-        "Timestamp":  datetime.utcnow().isoformat(),
-        "Coin":       row.Coin,
-        "Sentiment":  row.Sentiment,
-        "PriceUSD":   prices.get(row.Coin, ""),
-        "Action":     row.Action
-    })
-
-# ensure history file exists and has header
-write_header = not os.path.exists(history_file)
-with open(history_file, "a", newline="", encoding="utf-8") as hf:
-    writer = csv.DictWriter(hf, fieldnames=hist_fields)
+# 2) Write or append raw output CSV
+write_header = not os.path.exists(output_file)
+with open(output_file, "a", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=sentiment_rows[0].keys())
     if write_header:
         writer.writeheader()
-    writer.writerows(new_rows)
+    writer.writerows(sentiment_rows)
+print(f"✅ Sentiment results {'created' if write_header else 'appended to'} {output_file}")
 
-print(f"✅ Appended {len(new_rows)} rows into {history_file}")
+# 3) Build summary rows for history
+prices = fetch_prices()  # returns e.g. {"Bitcoin": 12345.67, ...}
+
+summary_rows = []
+now = datetime.now(timezone.utc).isoformat()
+for source in ("Reddit", "News"):
+    df = pd.DataFrame([r for r in sentiment_rows if r["Source"] == source])
+    if df.empty:
+        continue
+    grouped = df.groupby("Coin")["Sentiment"].mean().round(4)
+    for coin, avg in grouped.items():
+        summary_rows.append({
+            "Timestamp":       now,
+            "Coin":            coin,
+            "Source":          source,
+            "Sentiment":       avg,
+            "PriceUSD":        prices.get(coin, ""),
+            "SuggestedAction": suggest_action(avg),
+        })
+
+# 4) Write or append history CSV
+history_header = ["Timestamp","Coin","Source","Sentiment","PriceUSD","SuggestedAction"]
+write_hist_header = not os.path.exists(history_file)
+with open(history_file, "a", newline="", encoding="utf-8") as f:
+    writer = csv.DictWriter(f, fieldnames=history_header)
+    if write_hist_header:
+        writer.writeheader()
+    writer.writerows(summary_rows)
+print(f"✅ History {'created' if write_hist_header else 'appended to'} {history_file}")
+
+# 5) Telegram alerts for overall avg per coin (across both sources)
+for coin in coins:
+    all_avg = pd.DataFrame(summary_rows).query("Coin==@coin")["Sentiment"].mean()
+    action = suggest_action(all_avg)
+    msg = f"🚨 {coin} overall avg sentiment: {all_avg:.2f}\nSuggested: {action}"
+    send_telegram_message(msg)
