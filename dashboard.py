@@ -1,4 +1,4 @@
-# dashboard.py (UPDATED with theme-safe Trends header + branding)
+# dashboard.py (UPDATED for synced sentiment_history.csv chart)
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,16 +11,11 @@ from rss_fetch import fetch_rss_articles
 from analyze_sentiment import analyze_sentiment
 from fetch_prices import fetch_prices
 
-st.set_page_config(page_title="AlphaPulse - Crypto Sentiment Dashboard", layout="wide")
+st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
 
-# Logo + Title
-col1, col2 = st.columns([1, 6])
-with col1:
-    if os.path.exists("alpha_logo.jpg"):
-        st.image("alpha_logo.jpg", width=100)
-with col2:
-    st.title("AlphaPulse - Crypto Sentiment Dashboard")
-    st.caption("Live crypto sentiment analysis from Reddit and crypto news + historical trends.")
+st.title("📊 Crypto Sentiment Dashboard")
+st.image("alpha_logo.jpg", width=150)
+st.markdown("Live crypto sentiment analysis from Reddit and crypto news + historical trends.")
 
 csv_path = "sentiment_output.csv"
 chart_path = "sentiment_chart.png"
@@ -53,7 +48,7 @@ history = load_data(history_file)
 previous_actions = load_previous_actions()
 prices = fetch_prices()
 
-# --- Sidebar Summary & Alerts ---
+# Sidebar Summary & Alerts
 st.sidebar.header("📌 Sentiment Summary")
 
 overall_sentiments = data.groupby("Coin")["Sentiment"].mean()
@@ -77,22 +72,23 @@ for coin, sentiment in overall_sentiments.items():
 
 save_previous_actions(previous_actions)
 
-# --- Chart (Bar Graph) ---
+# Chart
 if os.path.exists(chart_path):
     st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
-# --- Trends Section ---
+# Trends Section
 st.markdown("""
-    <h3 style='color: var(--text-color);'>📈 Trends Over Time</h3>
+<h3 style='color: var(--text-color);'>📈 Trends Over Time</h3>
 """, unsafe_allow_html=True)
 
 if not history.empty:
+    # Summary Card
     last_update = pd.to_datetime(history["Timestamp"]).max()
     total_days = history["Timestamp"].str[:10].nunique()
     avg_sentiment_all = history["Sentiment"].mean()
 
     st.markdown(f"""
-    <div style='padding: 1rem; border: 1px solid #ccc; border-radius: 10px; margin-bottom: 1rem; background-color: rgba(255, 255, 255, 0.05);'>
+    <div style='padding: 1rem; border: 1px solid #ccc; border-radius: 10px; margin-bottom: 1rem; background-color: #f9f9f9;'>
         <b>📅 Last Updated:</b> {last_update}<br>
         <b>📊 Days of Data:</b> {total_days}<br>
         <b>📈 Avg Sentiment (All):</b> {avg_sentiment_all:.2f}
@@ -100,7 +96,10 @@ if not history.empty:
     """, unsafe_allow_html=True)
 
     selected_coin = st.selectbox("Select coin for trend view:", sorted(history["Coin"].unique()))
-    coin_history = history[history["Coin"] == selected_coin]
+    coin_history = history[history["Coin"] == selected_coin].copy()
+
+    # Ensure Timestamp is datetime
+    coin_history["Timestamp"] = pd.to_datetime(coin_history["Timestamp"])
 
     if not coin_history.empty:
         fig, ax1 = plt.subplots(figsize=(10, 5))
@@ -122,7 +121,7 @@ if not history.empty:
 else:
     st.warning("📉 No historical trend data available.")
 
-# --- Sentiment Details Table ---
+# Sentiment Table
 st.subheader("📋 Sentiment Details")
 coin_filter = st.selectbox("Filter by coin:", ["All"] + sorted(data["Coin"].unique()))
 filtered = data if coin_filter == "All" else data[data["Coin"] == coin_filter]
