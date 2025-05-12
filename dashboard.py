@@ -1,10 +1,9 @@
-# dashboard.py (AlphaPulse with KPI Cards + Refresh Button)
+# dashboard.py
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import json
 import os
-import subprocess
 from datetime import datetime, timezone
 from send_telegram import send_telegram_message
 from reddit_fetch import fetch_reddit_posts
@@ -14,16 +13,18 @@ from fetch_prices import fetch_prices
 
 st.set_page_config(page_title="AlphaPulse | Sentiment Dashboard", layout="wide")
 
+# Logo and header
 st.image("alpha_logo.jpg", use_container_width=True)
 st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 st.markdown("Live crypto sentiment analysis from Reddit and news + historical trends.")
 
+# File paths
 csv_path = "sentiment_output.csv"
 chart_path = "sentiment_chart.png"
 history_file = "sentiment_history.csv"
 json_path = "previous_actions.json"
 
-# --- Loaders ---
+# Utility to load CSVs safely
 def load_data(path):
     if os.path.exists(path):
         try:
@@ -31,89 +32,81 @@ def load_data(path):
         except Exception as e:
             st.error(f"Failed to load {path}: {e}")
             return pd.DataFrame()
-    else:
-        return pd.DataFrame()
+    return pd.DataFrame()
 
-def load_previous_actions():
-    if os.path.exists(json_path):
-        with open(json_path, "r") as f:
-            return json.load(f)
-    return {}
-
-def save_previous_actions(data):
-    with open(json_path, "w") as f:
-        json.dump(data, f)
-
-# --- Refresh Button ---
-if st.button("🔄 Run Sentiment Refresh"):
-    with st.spinner("Re-analyzing sentiment and updating files..."):
-        result = subprocess.run(["python", "analyze.py"], capture_output=True, text=True)
-        st.success("Data refreshed!")
-        st.code(result.stdout)
-
-# --- Load Data ---
+# Load data & previous alert actions
 data = load_data(csv_path)
 history = load_data(history_file)
-previous_actions = load_previous_actions()
-prices = fetch_prices()
+previous_actions = {}
+if os.path.exists(json_path):
+    with open(json_path, "r") as f:
+        previous_actions = json.load(f)
 
-# --- Animated KPI Cards ---
-if not history.empty:
-    st.markdown("""
-    <div style='display: flex; gap: 2rem;'>
-        <div style='padding: 1rem; border-radius: 10px; background-color: #f0f8ff; box-shadow: 0 0 10px rgba(0,0,0,0.1);'>
-            <h4 style='margin: 0;'>📅 Last Updated</h4>
-            <p style='font-size: 1.2rem;'>""" + pd.to_datetime(history['Timestamp']).max().strftime("%Y-%m-%d %H:%M:%S UTC") + "</p></div>" +
-        f"<div style='padding: 1rem; border-radius: 10px; background-color: #e8f5e9; box-shadow: 0 0 10px rgba(0,0,0,0.1);'>\n<h4 style='margin: 0;'>📊 Days of History</h4><p style='font-size: 1.2rem;'>{history['Timestamp'].str[:10].nunique()}</p></div>" +
-        f"<div style='padding: 1rem; border-radius: 10px; background-color: #fff3e0; box-shadow: 0 0 10px rgba(0,0,0,0.1);'>\n<h4 style='margin: 0;'>📈 Avg Sentiment</h4><p style='font-size: 1.2rem;'>{history['Sentiment'].mean():.2f}</p></div>\n</div>\n", unsafe_allow_html=True)
-
-# --- Sidebar Summary & Alerts ---
+# --- Sidebar: Summary & Alerts ---
 st.sidebar.header("📌 Sentiment Summary")
-overall_sentiments = data.groupby("Coin")["Sentiment"].mean()
-for coin, sentiment in overall_sentiments.items():
-    action = "📈 Buy" if sentiment > 0.2 else "📉 Sell" if sentiment < -0.2 else "🤝 Hold"
-    timestamp = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
-    st.sidebar.write(f"**{coin}**: {sentiment:.2f} → {action}")
-    st.sidebar.caption(f"_Updated: {timestamp}_")
 
-    toggle_key = f"alert_toggle_{coin}"
-    if st.sidebar.checkbox(f"🔔 Alert for {coin}", key=toggle_key):
-        last_action = previous_actions.get(coin)
-        if last_action != action:
-            msg = f"⚠️ **{coin} Action Changed**\nNew Avg Sentiment: {sentiment:.2f}\n**Suggested Action:** {action}"
+overall = data.groupby("Coin")["Sentiment"].mean()
+for coin, avg in overall.items():
+    action = "📈 Buy" if avg > 0.2 else "📉 Sell" if avg < -0.2 else "🤝 Hold"
+    ts = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S UTC")
+    st.sidebar.write(f"**{coin}**: {avg:.2f} → {action}")
+    st.sidebar.caption(f"_Updated: {ts}_")
+
+    key = f"alert_toggle_{coin}"
+    if st.sidebar.checkbox(f"🔔 Alert for {coin}", key=key):
+        last = previous_actions.get(coin)
+        if last != action:
+            msg = f"⚠️ **{coin} Action Changed**\nNew Avg Sentiment: {avg:.2f}\n**Suggested Action:** {action}"
             send_telegram_message(msg)
             previous_actions[coin] = action
 
-save_previous_actions(previous_actions)
+with open(json_path, "w") as f:
+    json.dump(previous_actions, f)
 
 # --- Sentiment Bar Chart ---
 if os.path.exists(chart_path):
     st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
-# --- Trends Over Time ---
-st.markdown("""
-<h3 style='color: var(--text-color, #fff); margin-top: 2rem;'>📈 Trends Over Time</h3>
-""", unsafe_allow_html=True)
+# --- Trends Over Time (Always visible) ---
+st.markdown("<h3 style='color: var(--text-color); margin-top:2rem;'>📈 Trends Over Time</h3>", unsafe_allow_html=True)
 
 if not history.empty:
-    selected_coin = st.selectbox("Select coin for trend view:", sorted(history["Coin"].unique()))
-    coin_history = history[history["Coin"] == selected_coin]
+    # KPI Summary Card
+    last_update = pd.to_datetime(history["Timestamp"]).max()
+    days = history["Timestamp"].str[:10].nunique()
+    avg_sent = history["Sentiment"].mean()
 
-    if not coin_history.empty:
+    st.markdown(f"""
+    <div style='
+        padding: 1rem;
+        border: 1px solid var(--divider-color);
+        border-radius: 10px;
+        margin-bottom: 2rem;
+        background-color: var(--primary-background-color);
+        color: var(--text-color);
+    '>
+        <div style='margin-bottom:0.5rem;'><b>📅 Last Updated:</b> {last_update}</div>
+        <div style='margin-bottom:0.5rem;'><b>📊 Days of History:</b> {days}</div>
+        <div><b>📈 Avg Sentiment:</b> {avg_sent:.2f}</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # Coin selector & plot
+    selected = st.selectbox("Select coin for trend view:", sorted(history["Coin"].unique()))
+    subset = history[history["Coin"] == selected]
+    if not subset.empty:
         fig, ax1 = plt.subplots(figsize=(10, 5))
-        ax1.plot(coin_history["Timestamp"], coin_history["Sentiment"], marker="o", color="#1f77b4", label="Sentiment")
+        ax1.plot(subset["Timestamp"], subset["Sentiment"], marker="o", color="#1f77b4", label="Sentiment")
         ax1.set_ylabel("Sentiment", color="#1f77b4")
         ax1.tick_params(axis='y', labelcolor="#1f77b4")
-
-        if "PriceUSD" in coin_history.columns:
+        if "PriceUSD" in subset.columns:
             ax2 = ax1.twinx()
-            ax2.plot(coin_history["Timestamp"], coin_history["PriceUSD"], linestyle="--", color="#2ca02c", label="Price")
+            ax2.plot(subset["Timestamp"], subset["PriceUSD"], linestyle="--", color="#2ca02c", label="Price")
             ax2.set_ylabel("Price (USD)", color="#2ca02c")
             ax2.tick_params(axis='y', labelcolor="#2ca02c")
-
         ax1.set_xlabel("Time")
+        plt.title(f"{selected} - Sentiment and Price Over Time")
         fig.autofmt_xdate()
-        plt.title(f"{selected_coin} - Sentiment and Price Over Time")
         st.pyplot(fig)
     else:
         st.info("No historical data yet for this coin.")
@@ -122,12 +115,11 @@ else:
 
 # --- Sentiment Details Table ---
 st.subheader("📋 Sentiment Details")
-coin_filter = st.selectbox("Filter by coin:", ["All"] + sorted(data["Coin"].unique()))
-filtered = data if coin_filter == "All" else data[data["Coin"] == coin_filter]
+filter_coin = st.selectbox("Filter by coin:", ["All"] + sorted(data["Coin"].unique()))
+filtered = data if filter_coin == "All" else data[data["Coin"] == filter_coin]
 cols = ["Source", "Sentiment", "SuggestedAction", "Text", "Link"]
-display_cols = [col for col in cols if col in filtered.columns]
-
-if not filtered.empty and display_cols:
-    st.dataframe(filtered[display_cols].sort_values(by="Sentiment", ascending=False))
+display = [c for c in cols if c in filtered.columns]
+if not filtered.empty and display:
+    st.dataframe(filtered[display].sort_values(by="Sentiment", ascending=False), use_container_width=True)
 else:
     st.info("No sentiment data to display.")
