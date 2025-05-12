@@ -1,4 +1,4 @@
-# dashboard.py
+# dashboard.py (UPDATED with summary card)
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,11 +11,10 @@ from rss_fetch import fetch_rss_articles
 from analyze_sentiment import analyze_sentiment
 from fetch_prices import fetch_prices
 
-# Branding
-st.set_page_config(page_title="AlphaPulse", layout="wide")
-st.image("alpha_logo.jpg", width=200)
-st.title("👁️ AlphaPulse")
-st.markdown("Next-gen crypto intelligence: Real-time sentiment, price trends, and behavioral alerts.")
+st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
+
+st.title("📊 Crypto Sentiment Dashboard")
+st.markdown("Live crypto sentiment analysis from Reddit and crypto news + historical trends.")
 
 csv_path = "sentiment_output.csv"
 chart_path = "sentiment_chart.png"
@@ -42,13 +41,13 @@ def save_previous_actions(data):
     with open(json_path, "w") as f:
         json.dump(data, f)
 
-# Load files
+# Load data
 data = load_data(csv_path)
 history = load_data(history_file)
 previous_actions = load_previous_actions()
 prices = fetch_prices()
 
-# Sidebar: Summary & Alerts
+# --- Sidebar Summary & Alerts ---
 st.sidebar.header("📌 Sentiment Summary")
 
 overall_sentiments = data.groupby("Coin")["Sentiment"].mean()
@@ -62,7 +61,6 @@ for coin, sentiment in overall_sentiments.items():
 
     summary_table.append({"Coin": coin, "Sentiment": sentiment, "Action": action, "Time": timestamp})
 
-    # Telegram alert toggle
     toggle_key = f"alert_toggle_{coin}"
     if st.sidebar.checkbox(f"🔔 Alert for {coin}", key=toggle_key):
         last_action = previous_actions.get(coin)
@@ -73,19 +71,32 @@ for coin, sentiment in overall_sentiments.items():
 
 save_previous_actions(previous_actions)
 
-# Chart
+# --- Chart (Bar Graph) ---
 if os.path.exists(chart_path):
     st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
-# Trends Tab
+# --- Trends Section ---
 st.subheader("📈 Trends Over Time")
+
 if not history.empty:
+    # 🔹 Summary Card
+    last_update = pd.to_datetime(history["Timestamp"]).max()
+    total_days = history["Timestamp"].str[:10].nunique()
+    avg_sentiment_all = history["Sentiment"].mean()
+
+    st.markdown(f"""
+    <div style='padding: 1rem; border: 1px solid #ccc; border-radius: 10px; margin-bottom: 1rem; background-color: #f9f9f9;'>
+        <b>📅 Last Updated:</b> {last_update}<br>
+        <b>📊 Days of Data:</b> {total_days}<br>
+        <b>📈 Avg Sentiment (All):</b> {avg_sentiment_all:.2f}
+    </div>
+    """, unsafe_allow_html=True)
+
     selected_coin = st.selectbox("Select coin for trend view:", sorted(history["Coin"].unique()))
     coin_history = history[history["Coin"] == selected_coin]
 
     if not coin_history.empty:
         fig, ax1 = plt.subplots(figsize=(10, 5))
-
         ax1.plot(coin_history["Timestamp"], coin_history["Sentiment"], marker="o", label="Sentiment", color="blue")
         ax1.set_ylabel("Sentiment", color="blue")
         ax1.tick_params(axis='y', labelcolor="blue")
@@ -104,7 +115,7 @@ if not history.empty:
 else:
     st.warning("📉 No historical trend data available.")
 
-# Sentiment Table
+# --- Sentiment Details Table ---
 st.subheader("📋 Sentiment Details")
 coin_filter = st.selectbox("Filter by coin:", ["All"] + sorted(data["Coin"].unique()))
 filtered = data if coin_filter == "All" else data[data["Coin"] == coin_filter]
