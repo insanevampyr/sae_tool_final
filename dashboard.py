@@ -1,9 +1,10 @@
-# dashboard.py
+# dashboard.py (AlphaPulse with KPI Cards + Refresh Button)
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import json
 import os
+import subprocess
 from datetime import datetime, timezone
 from send_telegram import send_telegram_message
 from reddit_fetch import fetch_reddit_posts
@@ -22,6 +23,7 @@ chart_path = "sentiment_chart.png"
 history_file = "sentiment_history.csv"
 json_path = "previous_actions.json"
 
+# --- Loaders ---
 def load_data(path):
     if os.path.exists(path):
         try:
@@ -42,15 +44,31 @@ def save_previous_actions(data):
     with open(json_path, "w") as f:
         json.dump(data, f)
 
-# Load data
+# --- Refresh Button ---
+if st.button("🔄 Run Sentiment Refresh"):
+    with st.spinner("Re-analyzing sentiment and updating files..."):
+        result = subprocess.run(["python", "analyze.py"], capture_output=True, text=True)
+        st.success("Data refreshed!")
+        st.code(result.stdout)
+
+# --- Load Data ---
 data = load_data(csv_path)
 history = load_data(history_file)
 previous_actions = load_previous_actions()
 prices = fetch_prices()
 
+# --- Animated KPI Cards ---
+if not history.empty:
+    st.markdown("""
+    <div style='display: flex; gap: 2rem;'>
+        <div style='padding: 1rem; border-radius: 10px; background-color: #f0f8ff; box-shadow: 0 0 10px rgba(0,0,0,0.1);'>
+            <h4 style='margin: 0;'>📅 Last Updated</h4>
+            <p style='font-size: 1.2rem;'>""" + pd.to_datetime(history['Timestamp']).max().strftime("%Y-%m-%d %H:%M:%S UTC") + "</p></div>" +
+        f"<div style='padding: 1rem; border-radius: 10px; background-color: #e8f5e9; box-shadow: 0 0 10px rgba(0,0,0,0.1);'>\n<h4 style='margin: 0;'>📊 Days of History</h4><p style='font-size: 1.2rem;'>{history['Timestamp'].str[:10].nunique()}</p></div>" +
+        f"<div style='padding: 1rem; border-radius: 10px; background-color: #fff3e0; box-shadow: 0 0 10px rgba(0,0,0,0.1);'>\n<h4 style='margin: 0;'>📈 Avg Sentiment</h4><p style='font-size: 1.2rem;'>{history['Sentiment'].mean():.2f}</p></div>\n</div>\n", unsafe_allow_html=True)
+
 # --- Sidebar Summary & Alerts ---
 st.sidebar.header("📌 Sentiment Summary")
-
 overall_sentiments = data.groupby("Coin")["Sentiment"].mean()
 for coin, sentiment in overall_sentiments.items():
     action = "📈 Buy" if sentiment > 0.2 else "📉 Sell" if sentiment < -0.2 else "🤝 Hold"
@@ -72,23 +90,12 @@ save_previous_actions(previous_actions)
 if os.path.exists(chart_path):
     st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
-# --- Trends Over Time (Always visible)
-st.markdown("<h3 style='color: var(--text-color);'>📈 Trends Over Time</h3>", unsafe_allow_html=True)
+# --- Trends Over Time ---
+st.markdown("""
+<h3 style='color: var(--text-color, #fff); margin-top: 2rem;'>📈 Trends Over Time</h3>
+""", unsafe_allow_html=True)
 
 if not history.empty:
-    # Quick Summary Card
-    last_update = pd.to_datetime(history["Timestamp"]).max()
-    total_days = history["Timestamp"].str[:10].nunique()
-    avg_sentiment_all = history["Sentiment"].mean()
-
-    st.markdown(f"""
-    <div style='padding: 1rem; border: 1px solid #444; border-radius: 10px; margin-bottom: 1rem; background-color: rgba(255,255,255,0.05);'>
-        <b>📅 Last Updated:</b> {last_update}<br>
-        <b>📊 Days of Data:</b> {total_days}<br>
-        <b>📈 Avg Sentiment (All):</b> {avg_sentiment_all:.2f}
-    </div>
-    """, unsafe_allow_html=True)
-
     selected_coin = st.selectbox("Select coin for trend view:", sorted(history["Coin"].unique()))
     coin_history = history[history["Coin"] == selected_coin]
 
