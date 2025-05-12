@@ -22,14 +22,20 @@ chart_path      = "sentiment_chart.png"
 history_file    = "sentiment_history.csv"
 json_path       = "previous_actions.json"
 
-def load_data(path):
-    if os.path.exists(path):
-        try:
-            return pd.read_csv(path)
-        except Exception as e:
-            st.error(f"Failed to load {path}: {e}")
-            return pd.DataFrame()
-    return pd.DataFrame()
+--- a/dashboard.py
++++ b/dashboard.py
+@@
+ def load_data(path):
+     if os.path.exists(path):
+         try:
+-            return pd.read_csv(path)
++            return pd.read_csv(path, on_bad_lines='skip', engine='python')
+         except Exception as e:
+             st.error(f"Failed to load {path}: {e}")
+             return pd.DataFrame()
+     else:
+         return pd.DataFrame()
+
 
 def load_previous_actions():
     if os.path.exists(json_path):
