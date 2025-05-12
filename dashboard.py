@@ -1,4 +1,4 @@
-# dashboard.py (Updated with Trends Header Color + Logo Branding)
+# dashboard.py (UPDATED with theme-safe Trends header + branding)
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,13 +13,14 @@ from fetch_prices import fetch_prices
 
 st.set_page_config(page_title="AlphaPulse - Crypto Sentiment Dashboard", layout="wide")
 
-# Branding + Logo
-col1, col2 = st.columns([0.15, 0.85])
+# Logo + Title
+col1, col2 = st.columns([1, 6])
 with col1:
-    st.image("alpha_logo.jpg", width=80)
+    if os.path.exists("alpha_logo.jpg"):
+        st.image("alpha_logo.jpg", width=100)
 with col2:
     st.title("AlphaPulse - Crypto Sentiment Dashboard")
-st.markdown("Live crypto sentiment analysis from Reddit and crypto news + historical trends.")
+    st.caption("Live crypto sentiment analysis from Reddit and crypto news + historical trends.")
 
 csv_path = "sentiment_output.csv"
 chart_path = "sentiment_chart.png"
@@ -81,16 +82,17 @@ if os.path.exists(chart_path):
     st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
 # --- Trends Section ---
-st.markdown("<h3 style='color: #00B0F0;'>📈 Trends Over Time</h3>", unsafe_allow_html=True)
+st.markdown("""
+    <h3 style='color: var(--text-color);'>📈 Trends Over Time</h3>
+""", unsafe_allow_html=True)
 
 if not history.empty:
-    # 🔹 Summary Card
     last_update = pd.to_datetime(history["Timestamp"]).max()
     total_days = history["Timestamp"].str[:10].nunique()
     avg_sentiment_all = history["Sentiment"].mean()
 
     st.markdown(f"""
-    <div style='padding: 1rem; border: 1px solid #ccc; border-radius: 10px; margin-bottom: 1rem; background-color: #f9f9f9;'>
+    <div style='padding: 1rem; border: 1px solid #ccc; border-radius: 10px; margin-bottom: 1rem; background-color: rgba(255, 255, 255, 0.05);'>
         <b>📅 Last Updated:</b> {last_update}<br>
         <b>📊 Days of Data:</b> {total_days}<br>
         <b>📈 Avg Sentiment (All):</b> {avg_sentiment_all:.2f}
