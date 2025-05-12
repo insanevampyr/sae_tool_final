@@ -19,7 +19,7 @@ if os.path.exists("alpha_logo.jpg"):
 st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 st.markdown("Live crypto sentiment analysis from Reddit and news + historical trends.")
 
-# Paths
+# File paths
 csv_path     = "sentiment_output.csv"
 chart_path   = "sentiment_chart.png"
 history_path = "sentiment_history.csv"
@@ -43,28 +43,31 @@ def save_json(path, data):
     with open(path, "w") as f:
         json.dump(data, f)
 
-# Load everything
-data         = load_df(csv_path)
-history      = load_df(history_path)
+# Load DataFrames
+data    = load_df(csv_path)
+history = load_df(history_path)
 prev_actions = load_json(actions_path)
-prices       = fetch_prices()
+prices  = fetch_prices()
 
-# — normalize history columns —
+# — rename “Action” → “SuggestedAction” so it matches our downstream code —
+if "Action" in data.columns:
+    data = data.rename(columns={"Action": "SuggestedAction"})
+
+# — normalize output-CSV columns —
+data.columns = data.columns.str.strip()
+
+# — normalize history-CSV columns —
 history.columns = history.columns.str.strip()
 col_map = {}
 for c in history.columns:
     lc = c.lower()
-    if lc == "timestamp":
-        col_map[c] = "Timestamp"
-    elif lc == "coin":
-        col_map[c] = "Coin"
-    elif lc in ("priceusd","price_usd"):
-        col_map[c] = "PriceUSD"
-    elif lc == "sentiment":
-        col_map[c] = "Sentiment"
-    elif lc in ("suggestedaction","action"):
-        col_map[c] = "SuggestedAction"
-history = history.rename(columns=col_map)
+    if lc == "timestamp":       col_map[c] = "Timestamp"
+    elif lc == "coin":          col_map[c] = "Coin"
+    elif lc in ("price_usd","priceusd"): col_map[c] = "PriceUSD"
+    elif lc == "sentiment":     col_map[c] = "Sentiment"
+    elif lc in ("action","suggestedaction"): col_map[c] = "SuggestedAction"
+if col_map:
+    history = history.rename(columns=col_map)
 
 # --- Sidebar: Summary & Alerts ---
 st.sidebar.header("📌 Sentiment Summary")
@@ -77,11 +80,13 @@ if not data.empty:
         st.sidebar.caption(f"_Updated: {updated}_")
         if st.sidebar.checkbox(f"🔔 Alert for {coin}", key=f"alert_{coin}"):
             if prev_actions.get(coin) != action:
-                send_telegram_message(f"⚠️ **{coin} Action Changed**\nAvg Sentiment: {sent:.2f}\nSuggested: {action}")
+                send_telegram_message(
+                    f"⚠️ **{coin} Action Changed**\nAvg Sentiment: {sent:.2f}\nSuggested: {action}"
+                )
                 prev_actions[coin] = action
     save_json(actions_path, prev_actions)
 else:
-    st.sidebar.info("No sentiment data yet.")
+    st.sidebar.info("No sentiment data yet (run analyze.py).")
 
 # --- Sentiment Bar Chart ---
 if os.path.exists(chart_path):
@@ -89,38 +94,33 @@ if os.path.exists(chart_path):
 
 # --- Trends Over Time (Always visible) ---
 st.markdown(
-    "<h3 style='color:#ffffff; background-color:#000000; padding:5px;'>📈 Trends Over Time</h3>",
+    "<h3 style='color:#fff; background:#000; padding:5px;'>📈 Trends Over Time</h3>",
     unsafe_allow_html=True
 )
 
 if "Timestamp" in history.columns and not history.empty:
-    # Quick Summary Card
     last_upd = pd.to_datetime(history["Timestamp"], errors="coerce").max()
     days     = history["Timestamp"].str[:10].nunique()
     avg_all  = history["Sentiment"].mean()
-
     st.markdown(f"""
-    <div style="background:#f0f2f6; padding:10px; border-radius:8px; margin-bottom:1rem;">
+    <div style="background:#f0f2f6; padding:1rem; border-radius:8px; margin-bottom:1rem;">
       📅 <b>Last Updated:</b> {last_upd}<br>
-      📊 <b>Days of Data:</b> {days}<br>
-      📈 <b>Avg Sentiment:</b> {avg_all:.2f}
+      📊 <b>Days of History:</b> {days}<br>
+      📈 <b>Avg Sentiment (All):</b> {avg_all:.2f}
     </div>""", unsafe_allow_html=True)
 
-    # Per‐coin selector + chart
     coins = ["All"] + history["Coin"].unique().tolist()
-    coin_sel = st.selectbox("Select coin:", coins)
-    subset = history if coin_sel == "All" else history[history["Coin"] == coin_sel]
+    coin_sel = st.selectbox("Select coin for trend view:", coins)
+    subset = history if coin_sel=="All" else history[history["Coin"]==coin_sel]
 
     if not subset.empty:
-        fig, ax1 = plt.subplots(figsize=(10, 5))
-        ax1.plot(subset["Timestamp"], subset["Sentiment"],
-                 'o-', color="#1f77b4", label="Sentiment")
+        fig, ax1 = plt.subplots(figsize=(10,5))
+        ax1.plot(subset["Timestamp"], subset["Sentiment"], 'o-', color="#1f77b4", label="Sentiment")
         ax1.set_ylabel("Sentiment", color="#1f77b4")
         ax1.tick_params(axis='y', labelcolor="#1f77b4")
         if "PriceUSD" in subset.columns:
             ax2 = ax1.twinx()
-            ax2.plot(subset["Timestamp"], subset["PriceUSD"],
-                     '--', color="#2ca02c", label="Price")
+            ax2.plot(subset["Timestamp"], subset["PriceUSD"], '--', color="#2ca02c", label="Price")
             ax2.set_ylabel("Price USD", color="#2ca02c")
             ax2.tick_params(axis='y', labelcolor="#2ca02c")
         plt.title(f"{coin_sel} Trends Over Time")
@@ -129,7 +129,7 @@ if "Timestamp" in history.columns and not history.empty:
     else:
         st.info("No history for this selection.")
 else:
-    st.warning("History CSV missing 'Timestamp' or is empty. Please rerun your analysis.")
+    st.warning("History CSV missing ‘Timestamp’ or is empty. Run analyze.py to rebuild it.")
 
 # --- Sentiment Details Table ---
 st.subheader("📋 Sentiment Details")
@@ -137,8 +137,9 @@ if not data.empty:
     df = data.drop_duplicates(subset=["Source","Coin","Text"])
     coins = ["All"] + df["Coin"].unique().tolist()
     coin_filter = st.selectbox("Filter by coin:", coins)
-    view = df if coin_filter == "All" else df[df["Coin"] == coin_filter]
-    st.dataframe(view[["Source","Coin","Sentiment","SuggestedAction","Text","Link"]],
-                 use_container_width=True)
+    view = df if coin_filter=="All" else df[df["Coin"]==coin_filter]
+    cols = ["Source","Coin","Sentiment","SuggestedAction","Text","Link"]
+    available = [c for c in cols if c in view.columns]
+    st.dataframe(view[available], use_container_width=True)
 else:
     st.info("No sentiment data to display.")
