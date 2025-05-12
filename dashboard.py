@@ -24,7 +24,6 @@ HISTORY_PATH = "sentiment_history.csv"
 JSON_PATH    = "previous_actions.json"
 
 def load_csv(path):
-    """Load a CSV skipping bad lines, return empty DF on error."""
     if not os.path.exists(path):
         return pd.DataFrame()
     try:
@@ -32,16 +31,14 @@ def load_csv(path):
             path,
             engine="python",
             on_bad_lines="skip",
-            dtype=str  # read everything as string first
+            dtype=str
         )
     except Exception as e:
         st.error(f"Failed to load {path}: {e}")
         return pd.DataFrame()
 
 def load_previous_actions():
-    if os.path.exists(JSON_PATH):
-        return json.load(open(JSON_PATH))
-    return {}
+    return json.load(open(JSON_PATH)) if os.path.exists(JSON_PATH) else {}
 
 def save_previous_actions(d):
     json.dump(d, open(JSON_PATH, "w"))
@@ -50,12 +47,12 @@ def save_previous_actions(d):
 data = load_csv(CSV_PATH)
 
 if not data.empty:
-    # only keep rows with Coin & Sentiment
-    data = data.dropna(subset=["Coin","Sentiment"])
+    # drop rows missing key fields
+    data = data.dropna(subset=["Source","Coin","Sentiment","Text","Link","Timestamp"])
     # coerce Sentiment to float, drop invalid
     data["Sentiment"] = pd.to_numeric(data["Sentiment"], errors="coerce")
     data = data.dropna(subset=["Sentiment"])
-    # drop exact duplicates
+    # remove exact duplicates (so each item appears once)
     data = data.drop_duplicates(
         subset=["Source","Coin","Text","Link","Timestamp"],
         keep="first"
@@ -65,7 +62,7 @@ history = load_csv(HISTORY_PATH)
 previous_actions = load_previous_actions()
 prices = fetch_prices()
 
-# — Sidebar: summary & toggles —
+# — Sidebar: summary & alerts —
 st.sidebar.header("📌 Sentiment Summary")
 
 if data.empty:
@@ -91,7 +88,7 @@ else:
 
 save_previous_actions(previous_actions)
 
-# — Bar chart by coin & source —
+# — Sentiment Bar Chart —
 if os.path.exists(CHART_PATH):
     st.image(CHART_PATH, caption="Sentiment by Coin and Source", use_container_width=True)
 
@@ -101,7 +98,7 @@ st.markdown("<h3 style='color: var(--text-color);'>📈 Trends Over Time</h3>", 
 if history.empty:
     st.warning("📉 No historical trend data available.")
 else:
-    # sanitize history like above
+    # sanitize and sort
     history = history.dropna(subset=["Coin","Sentiment","Timestamp"])
     history["Sentiment"] = pd.to_numeric(history["Sentiment"], errors="coerce")
     history = history.dropna(subset=["Sentiment"])
@@ -148,13 +145,15 @@ else:
         fig.autofmt_xdate()
         st.pyplot(fig)
 
-# — Sentiment Details Table —
+# — Sentiment Details Table (deduped) —
 st.subheader("📋 Sentiment Details")
 if data.empty:
     st.info("No sentiment data to display.")
 else:
     coin_filter = st.selectbox("Filter by coin:", ["All"] + sorted(data["Coin"].unique()))
     filt = data if coin_filter=="All" else data[data["Coin"]==coin_filter]
-    cols = ["Source","Sentiment","Action","Text","Link"]
-    avail = [c for c in cols if c in filt.columns]
-    st.dataframe(filt[avail].sort_values("Sentiment", ascending=False))
+    # drop duplicates one more time just in case
+    filt = filt.drop_duplicates(subset=["Source","Coin","Text","Link","Timestamp"])
+    cols = ["Source","Coin","Sentiment","Text","Link"]
+    display_cols = [c for c in cols if c in filt.columns]
+    st.dataframe(filt[display_cols].sort_values("Sentiment", ascending=False), use_container_width=True)
