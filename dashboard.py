@@ -32,7 +32,7 @@ def load_data(path):
         return pd.read_csv(
             path,
             engine="python",
-            on_bad_lines="skip",       # skip rows with wrong field counts
+            on_bad_lines="skip",       # skip malformed rows
             quotechar='"',
             skip_blank_lines=True
         )
@@ -50,16 +50,24 @@ def save_previous_actions(data):
     with open(json_path, "w") as f:
         json.dump(data, f)
 
-# --- LOAD EVERYTHING ---
+# --- LOAD & CLEAN DATA ---
 data             = load_data(csv_path)
 history          = load_data(history_file)
 previous_actions = load_previous_actions()
 prices           = fetch_prices()
 
-# --- SIDEBAR: SENTIMENT SUMMARY & ALERTS ---
+# ensure numeric
+if "Sentiment" in data.columns:
+    data["Sentiment"] = pd.to_numeric(data["Sentiment"], errors="coerce")
+if "Sentiment" in history.columns:
+    history["Sentiment"] = pd.to_numeric(history["Sentiment"], errors="coerce")
+if "PriceUSD" in history.columns:
+    history["PriceUSD"] = pd.to_numeric(history["PriceUSD"], errors="coerce")
+
+# --- SIDEBAR: SUMMARY & ALERTS ---
 st.sidebar.header("📌 Sentiment Summary")
 
-if not data.empty and "Coin" in data.columns and "Sentiment" in data.columns:
+if not data.empty and {"Coin","Sentiment"}.issubset(data.columns):
     overall = data.groupby("Coin")["Sentiment"].mean()
     for coin, sentiment in overall.items():
         action    = "📈 Buy" if sentiment > 0.2 else "📉 Sell" if sentiment < -0.2 else "🤝 Hold"
@@ -83,14 +91,13 @@ save_previous_actions(previous_actions)
 if os.path.exists(chart_path):
     st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
-# --- TRENDS OVER TIME (always visible, with readable header) ---
+# --- TRENDS OVER TIME ---
 st.markdown("<h2 style='color:#FF8C00;'>📈 Trends Over Time</h2>", unsafe_allow_html=True)
 
-if not history.empty and all(col in history.columns for col in ("Timestamp","Coin","Sentiment")):
-    # summary card
-    last_update    = pd.to_datetime(history["Timestamp"], errors="coerce").max()
-    total_days     = history["Timestamp"].str[:10].nunique()
-    avg_sent_all   = history["Sentiment"].mean()
+if not history.empty and {"Timestamp","Coin","Sentiment"}.issubset(history.columns):
+    last_update  = pd.to_datetime(history["Timestamp"], errors="coerce").max()
+    total_days   = history["Timestamp"].str[:10].nunique()
+    avg_sent_all = history["Sentiment"].mean()
     st.markdown(f"""
     <div style='margin:1rem 0;padding:1rem;border:1px solid #444;border-radius:8px;
                 background-color:rgba(255,255,255,0.1);'>
@@ -100,8 +107,8 @@ if not history.empty and all(col in history.columns for col in ("Timestamp","Coi
     </div>
     """, unsafe_allow_html=True)
 
-    coin_sel   = st.selectbox("Select coin for trend view:", sorted(history["Coin"].unique()))
-    coin_hist  = history[history["Coin"] == coin_sel]
+    coin_sel  = st.selectbox("Select coin for trend view:", sorted(history["Coin"].unique()))
+    coin_hist = history[history["Coin"] == coin_sel]
 
     if not coin_hist.empty:
         fig, ax1 = plt.subplots(figsize=(10,4))
@@ -126,14 +133,15 @@ if not history.empty and all(col in history.columns for col in ("Timestamp","Coi
 else:
     st.warning("📉 No historical trend data available.")
 
-# --- DETAILED TABLE ---
+# --- DETAILS TABLE ---
 st.subheader("📋 Sentiment Details")
 coins = ["All"] + sorted(data["Coin"].unique()) if "Coin" in data.columns else ["All"]
-sel    = st.selectbox("Filter by coin:", coins)
+sel   = st.selectbox("Filter by coin:", coins)
 filtered = data if sel=="All" else data[data["Coin"]==sel]
 cols     = ["Source","Sentiment","SuggestedAction","Text","Link"]
 show     = [c for c in cols if c in filtered.columns]
 if not filtered.empty and show:
-    st.dataframe(filtered[show].sort_values("Sentiment",ascending=False), use_container_width=True)
+    st.dataframe(filtered[show].sort_values("Sentiment",ascending=False),
+                 use_container_width=True)
 else:
     st.info("No sentiment data to display.")
