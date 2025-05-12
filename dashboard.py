@@ -13,7 +13,7 @@ from fetch_prices import fetch_prices
 
 st.set_page_config(page_title="AlphaPulse | Sentiment Dashboard", layout="wide")
 
-st.image("alpha_logo.jpg", use_column_width=True)
+st.image("alpha_logo.jpg", use_container_width=True)
 st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 st.markdown("Live crypto sentiment analysis from Reddit and news + historical trends.")
 
