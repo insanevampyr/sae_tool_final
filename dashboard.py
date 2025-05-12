@@ -13,7 +13,7 @@ from fetch_prices import fetch_prices
 
 st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
 
-st.title("📊 Crypto Sentiment Dashboard")
+st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 st.image("alpha_logo.jpg", width=150)
 st.markdown("Live crypto sentiment analysis from Reddit and crypto news + historical trends.")
 
@@ -122,7 +122,7 @@ else:
     st.warning("📉 No historical trend data available.")
 
 # Sentiment Table
-st.subheader("📋 Sentiment Details")
+st.markdown("<h3 style='color: var(--text-color);'>📈 Trends Over Time</h3>", unsafe_allow_html=True)
 coin_filter = st.selectbox("Filter by coin:", ["All"] + sorted(data["Coin"].unique()))
 filtered = data if coin_filter == "All" else data[data["Coin"] == coin_filter]
 cols = ["Source", "Sentiment", "SuggestedAction", "Text", "Link"]
