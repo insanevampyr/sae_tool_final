@@ -48,19 +48,46 @@ history = load_data(history_file)
 actions = load_previous_actions()
 prices  = fetch_prices()
 
+# Parse timestamps in the raw data
+if "Timestamp" in data.columns:
+    data["Timestamp"] = pd.to_datetime(
+        data["Timestamp"],
+        utc=True,
+        errors="coerce"
+    )
+else:
+    st.sidebar.error("⚠️ 'Timestamp' column missing in sentiment_output.csv")
+
 # — Sidebar: current sentiment & alert toggles —
 st.sidebar.header("📌 Sentiment Summary")
-if not data.empty:
-    # default 24-hour summary
-    now      = datetime.now(timezone.utc)
-    cutoff24 = now - timedelta(days=1)
-    recent24 = data[pd.to_datetime(data["Timestamp"]) >= cutoff24]
-    overall  = recent24.groupby("Coin")["Sentiment"].mean()
 
+# Time-range selector for summary
+range_opt = st.sidebar.selectbox(
+    "Time range:",
+    ["Last 24 Hours", "Last 7 Days", "Last 30 Days", "Last 6 Months", "Last Year"],
+    index=0
+)
+now = datetime.now(timezone.utc)
+cutoffs = {
+    "Last 24 Hours": now - timedelta(days=1),
+    "Last 7 Days":   now - timedelta(days=7),
+    "Last 30 Days":  now - timedelta(days=30),
+    "Last 6 Months": now - timedelta(days=182),
+    "Last Year":     now - timedelta(days=365),
+}
+cutoff = cutoffs[range_opt]
+
+# Filtered slice
+recent = data[data["Timestamp"] >= cutoff]
+
+if recent.empty:
+    st.sidebar.warning("No data in that time window.")
+else:
+    overall = recent.groupby("Coin")["Sentiment"].mean()
     for coin, avg in overall.items():
         action = "📈 Buy" if avg > 0.2 else "📉 Sell" if avg < -0.2 else "🤝 Hold"
         ts     = now.strftime("%Y-%m-%d %H:%M:%S UTC")
-        st.sidebar.write(f"**{coin} (24 h)**: {avg:.2f} → {action}")
+        st.sidebar.write(f"**{coin}**: {avg:.2f} → {action}")
         st.sidebar.caption(f"_Updated: {ts}_")
 
         key = f"alert_toggle_{coin}"
@@ -68,14 +95,13 @@ if not data.empty:
             if actions.get(coin) != action:
                 msg = (
                     f"⚠️ **{coin} Action Changed**\n"
-                    f"New 24 h Avg Sentiment: {avg:.2f}\n**Suggested:** {action}"
+                    f"New Avg Sentiment: {avg:.2f}\n"
+                    f"**Suggested:** {action}"
                 )
                 send_telegram_message(msg)
                 actions[coin] = action
 
     save_previous_actions(actions)
-else:
-    st.sidebar.info("No sentiment data found. Run `analyze.py` first.")
 
 # — Latest-run bar chart —
 if os.path.exists(chart_path):
@@ -85,47 +111,36 @@ if os.path.exists(chart_path):
 st.markdown("<h3 style='color: var(--primary-text-color);'>📈 Trends Over Time</h3>", unsafe_allow_html=True)
 
 if not history.empty:
-    # Clean & parse
     history.rename(columns=lambda c: c.strip(), inplace=True)
-    history["Timestamp"] = pd.to_datetime(history["Timestamp"], errors="coerce")
-
-    # Time-range selector
-    range_opt = st.selectbox(
-        "Time range:",
-        ["Last 24 Hours", "Last 7 Days", "Last 30 Days", "Last 6 Months", "Last Year"],
-        index=0
+    history["Timestamp"] = pd.to_datetime(
+        history["Timestamp"],
+        utc=True,
+        errors="coerce"
     )
-    now     = datetime.now(timezone.utc)
-    cutoffs = {
-        "Last 24 Hours": now - timedelta(days=1),
-        "Last 7 Days":   now - timedelta(days=7),
-        "Last 30 Days":  now - timedelta(days=30),
-        "Last 6 Months": now - timedelta(days=182),
-        "Last Year":     now - timedelta(days=365),
-    }
-    cutoff = cutoffs[range_opt]
 
-    # Summary card for selected window
-    window      = history[history["Timestamp"] >= cutoff]
-    last_upd    = window["Timestamp"].max()
-    days_of_data= window["Timestamp"].dt.date.nunique()
-    avg_all     = window["Sentiment"].mean()
+    last_upd     = history["Timestamp"].max()
+    days_of_data = history["Timestamp"].dt.date.nunique()
+    avg_all      = history["Sentiment"].mean()
 
     st.markdown(f"""
-      <div style='padding:1rem;
-                  border:1px solid #444;
-                  border-radius:8px;
-                  margin-bottom:1rem;
-                  background-color:rgba(255,255,255,0.1);'>
-        <b>📅 Last Updated:</b> {last_upd}<br>
-        <b>📊 Days of History:</b> {days_of_data}<br>
-        <b>📈 Avg Sentiment:</b> {avg_all:.2f}
-      </div>
+    <div style='
+        padding:1rem;
+        border:1px solid #444;
+        border-radius:8px;
+        margin-bottom:1rem;
+        background-color:rgba(255,255,255,0.1);
+    '>
+      <b>📅 Last Updated:</b> {last_upd}<br>
+      <b>📊 Days of History:</b> {days_of_data}<br>
+      <b>📈 Avg Sentiment:</b> {avg_all:.2f}
+    </div>
     """, unsafe_allow_html=True)
 
-    # Coin selector & filter
     coin = st.selectbox("Select coin for trend view:", sorted(history["Coin"].dropna().unique()))
-    df_c = window[window["Coin"] == coin]
+    df_c = history[
+        (history["Coin"] >= coin) &
+        (history["Timestamp"] >= cutoff)
+    ]
 
     if not df_c.empty:
         fig, ax1 = plt.subplots(figsize=(10,5))
@@ -134,26 +149,20 @@ if not history.empty:
         ax1.xaxis.set_major_locator(locator)
         ax1.xaxis.set_major_formatter(fmt)
 
-        ax1.plot(
-            df_c["Timestamp"],
-            df_c["Sentiment"],
-            marker="o", color="#1f77b4", label="Sentiment",
-        )
+        ax1.plot(df_c["Timestamp"], df_c["Sentiment"],
+                 marker="o", color="#1f77b4", label="Sentiment")
         ax1.set_ylabel("Sentiment", color="#1f77b4")
         ax1.tick_params(axis='y', labelcolor="#1f77b4")
         ax1.set_xlabel("Time")
 
         if "PriceUSD" in df_c.columns:
             ax2 = ax1.twinx()
-            ax2.plot(
-                df_c["Timestamp"],
-                df_c["PriceUSD"],
-                linestyle="--", color="#2ca02c", label="Price (USD)",
-            )
+            ax2.plot(df_c["Timestamp"], df_c["PriceUSD"],
+                     linestyle="--", color="#2ca02c", label="Price (USD)")
             ax2.set_ylabel("Price (USD)", color="#2ca02c")
             ax2.tick_params(axis='y', labelcolor="#2ca02c")
 
-        plt.title(f"{coin} — Sentiment & Price Over {range_opt}")
+        plt.title(f"{coin} — Sentiment & Price Over Time")
         fig.autofmt_xdate()
         st.pyplot(fig)
     else:
@@ -164,7 +173,7 @@ else:
 # — Sentiment Details Table —
 st.subheader("📋 Sentiment Details")
 if not data.empty:
-    flt  = st.selectbox("Filter by coin:", ["All"] + sorted(data["Coin"].unique()))
+    flt = st.selectbox("Filter by coin:", ["All"] + sorted(data["Coin"].unique()))
     view = data if flt == "All" else data[data["Coin"] == flt]
     cols = ["Source","Coin","Sentiment","Action","Text","Link"]
     available = [c for c in cols if c in view.columns]
