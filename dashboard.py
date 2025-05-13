@@ -42,31 +42,24 @@ def save_previous_actions(data):
     with open(json_path, "w") as f:
         json.dump(data, f)
 
-# — Load datasets & credentials —
+# — Load data & credentials —
 data    = load_data(csv_path)
 history = load_data(history_file)
 actions = load_previous_actions()
 prices  = fetch_prices()
 
-# Parse timestamps in the raw data
+# — Parse raw timestamps —
 if "Timestamp" in data.columns:
-    data["Timestamp"] = pd.to_datetime(
-        data["Timestamp"],
-        utc=True,
-        errors="coerce"
-    )
+    data["Timestamp"] = pd.to_datetime(data["Timestamp"], utc=True, errors="coerce")
 else:
     st.sidebar.error("⚠️ 'Timestamp' column missing in sentiment_output.csv")
 
-# — Sidebar: current sentiment & alert toggles —
+# — Sidebar: Sentiment Summary & Alerts —
 st.sidebar.header("📌 Sentiment Summary")
 
-# Time-range selector for summary
-range_opt = st.sidebar.selectbox(
-    "Time range:",
-    ["Last 24 Hours", "Last 7 Days", "Last 30 Days", "Last 6 Months", "Last Year"],
-    index=0
-)
+# time‐range for summary
+range_opts = ["Last 24 Hours","Last 7 Days","Last 30 Days","Last 6 Months","Last Year"]
+summary_range = st.sidebar.selectbox("Summary window:", range_opts, index=0)
 now = datetime.now(timezone.utc)
 cutoffs = {
     "Last 24 Hours": now - timedelta(days=1),
@@ -75,11 +68,9 @@ cutoffs = {
     "Last 6 Months": now - timedelta(days=182),
     "Last Year":     now - timedelta(days=365),
 }
-cutoff = cutoffs[range_opt]
+cutoff_summary = cutoffs[summary_range]
 
-# Filtered slice
-recent = data[data["Timestamp"] >= cutoff]
-
+recent = data[data["Timestamp"] >= cutoff_summary]
 if recent.empty:
     st.sidebar.warning("No data in that time window.")
 else:
@@ -100,7 +91,6 @@ else:
                 )
                 send_telegram_message(msg)
                 actions[coin] = action
-
     save_previous_actions(actions)
 
 # — Latest-run bar chart —
@@ -111,17 +101,13 @@ if os.path.exists(chart_path):
 st.markdown("<h3 style='color: var(--primary-text-color);'>📈 Trends Over Time</h3>", unsafe_allow_html=True)
 
 if not history.empty:
-    history.rename(columns=lambda c: c.strip(), inplace=True)
-    history["Timestamp"] = pd.to_datetime(
-        history["Timestamp"],
-        utc=True,
-        errors="coerce"
-    )
+    history.rename(columns=str.strip, inplace=True)
+    history["Timestamp"] = pd.to_datetime(history["Timestamp"], utc=True, errors="coerce")
 
+    # summary card
     last_upd     = history["Timestamp"].max()
     days_of_data = history["Timestamp"].dt.date.nunique()
     avg_all      = history["Sentiment"].mean()
-
     st.markdown(f"""
     <div style='
         padding:1rem;
@@ -136,10 +122,14 @@ if not history.empty:
     </div>
     """, unsafe_allow_html=True)
 
+    # time‐range for trends
+    trend_range = st.selectbox("Trend window:", range_opts, index=0)
+    cutoff_trend = cutoffs[trend_range]
+
     coin = st.selectbox("Select coin for trend view:", sorted(history["Coin"].dropna().unique()))
     df_c = history[
-        (history["Coin"] >= coin) &
-        (history["Timestamp"] >= cutoff)
+        (history["Coin"] == coin) &
+        (history["Timestamp"] >= cutoff_trend)
     ]
 
     if not df_c.empty:
@@ -155,18 +145,18 @@ if not history.empty:
         ax1.tick_params(axis='y', labelcolor="#1f77b4")
         ax1.set_xlabel("Time")
 
-        if "PriceUSD" in df_c.columns:
+        if "PriceUSD" in df_c:
             ax2 = ax1.twinx()
             ax2.plot(df_c["Timestamp"], df_c["PriceUSD"],
                      linestyle="--", color="#2ca02c", label="Price (USD)")
             ax2.set_ylabel("Price (USD)", color="#2ca02c")
             ax2.tick_params(axis='y', labelcolor="#2ca02c")
 
-        plt.title(f"{coin} — Sentiment & Price Over Time")
+        plt.title(f"{coin} — Sentiment & Price Over Time ({trend_range})")
         fig.autofmt_xdate()
         st.pyplot(fig)
     else:
-        st.info("No history in that time window for this coin.")
+        st.info(f"No history in the {trend_range.lower()} window for {coin}.")
 else:
     st.warning("📉 No historical trend data available. Run `analyze.py` to build it.")
 
