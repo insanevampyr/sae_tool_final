@@ -1,4 +1,4 @@
-# dashboard.py
+# dashboard.py (EXTENDED WITH ML PREDICTIONS)
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,6 +11,8 @@ from reddit_fetch import fetch_reddit_posts
 from rss_fetch import fetch_rss_articles
 from analyze_sentiment import analyze_sentiment
 from fetch_prices import fetch_prices
+from sklearn.linear_model import LinearRegression
+import numpy as np
 
 # — Page config & Branding —
 st.set_page_config(page_title="AlphaPulse | Sentiment Dashboard", layout="wide")
@@ -24,6 +26,7 @@ chart_path   = "sentiment_chart.png"
 history_file = "sentiment_history.csv"
 json_path    = "previous_actions.json"
 
+# — Utility Functions —
 def load_data(path):
     if os.path.exists(path):
         try:
@@ -48,7 +51,7 @@ history = load_data(history_file)
 actions = load_previous_actions()
 prices  = fetch_prices()
 
-# — Parse raw timestamps —
+# — Parse timestamps —
 if "Timestamp" in data.columns:
     data["Timestamp"] = pd.to_datetime(data["Timestamp"], utc=True, errors="coerce")
 else:
@@ -56,8 +59,6 @@ else:
 
 # — Sidebar: Sentiment Summary & Alerts —
 st.sidebar.header("📌 Sentiment Summary")
-
-# time‐range for summary
 range_opts     = ["Last 24 Hours","Last 7 Days","Last 30 Days","Last 6 Months","Last Year"]
 summary_range  = st.sidebar.selectbox("Summary window:", range_opts, index=0)
 now            = datetime.now(timezone.utc)
@@ -70,7 +71,6 @@ cutoffs        = {
 }
 cutoff_summary = cutoffs[summary_range]
 
-# apply filter + fallback
 recent = data[data["Timestamp"] >= cutoff_summary]
 if recent.empty and summary_range == "Last 24 Hours":
     st.sidebar.warning("No data in last 24 h; showing all data instead.")
@@ -97,44 +97,33 @@ else:
                 actions[coin] = action
     save_previous_actions(actions)
 
-# — Latest-run bar chart —
+# — Chart —
 if os.path.exists(chart_path):
     st.image(chart_path, caption="Sentiment by Coin and Source", use_container_width=True)
 
-# — Trends Over Time (always visible) —
+# — Trends + Prediction —
 st.markdown("<h3 style='color: var(--primary-text-color);'>📈 Trends Over Time</h3>", unsafe_allow_html=True)
 
 if not history.empty:
     history.rename(columns=str.strip, inplace=True)
     history["Timestamp"] = pd.to_datetime(history["Timestamp"], utc=True, errors="coerce")
 
-    # summary card
     last_upd     = history["Timestamp"].max()
     days_of_data = history["Timestamp"].dt.date.nunique()
     avg_all      = history["Sentiment"].mean()
-    st.markdown(f"""
-    <div style='
-        padding:1rem;
-        border:1px solid #444;
-        border-radius:8px;
-        margin-bottom:1rem;
-        background-color:rgba(255,255,255,0.1);
-    '>
-      <b>📅 Last Updated:</b> {last_upd}<br>
-      <b>📊 Days of History:</b> {days_of_data}<br>
-      <b>📈 Avg Sentiment:</b> {avg_all:.2f}
-    </div>
-    """, unsafe_allow_html=True)
 
-    # time‐range for trends
+    st.markdown(f"""
+    <div style='padding:1rem;border:1px solid #444;border-radius:8px;margin-bottom:1rem;background-color:rgba(255,255,255,0.1);'>
+    <b>📅 Last Updated:</b> {last_upd}<br>
+    <b>📊 Days of History:</b> {days_of_data}<br>
+    <b>📈 Avg Sentiment:</b> {avg_all:.2f}
+    </div>""", unsafe_allow_html=True)
+
     trend_range  = st.selectbox("Trend window:", range_opts, index=0)
     cutoff_trend = cutoffs[trend_range]
 
     coin = st.selectbox("Select coin for trend view:", sorted(history["Coin"].dropna().unique()))
-    df_c = history[
-        (history["Coin"] == coin) &
-        (history["Timestamp"] >= cutoff_trend)
-    ]
+    df_c = history[(history["Coin"] == coin) & (history["Timestamp"] >= cutoff_trend)]
 
     if not df_c.empty:
         fig, ax1 = plt.subplots(figsize=(10,5))
@@ -143,18 +132,26 @@ if not history.empty:
         ax1.xaxis.set_major_locator(locator)
         ax1.xaxis.set_major_formatter(fmt)
 
-        ax1.plot(df_c["Timestamp"], df_c["Sentiment"],
-                 marker="o", color="#1f77b4", label="Sentiment")
+        ax1.plot(df_c["Timestamp"], df_c["Sentiment"], marker="o", color="#1f77b4", label="Sentiment")
         ax1.set_ylabel("Sentiment", color="#1f77b4")
         ax1.tick_params(axis='y', labelcolor="#1f77b4")
         ax1.set_xlabel("Time")
 
         if "PriceUSD" in df_c:
             ax2 = ax1.twinx()
-            ax2.plot(df_c["Timestamp"], df_c["PriceUSD"],
-                     linestyle="--", color="#2ca02c", label="Price (USD)")
+            ax2.plot(df_c["Timestamp"], df_c["PriceUSD"], linestyle="--", color="#2ca02c", label="Price (USD)")
             ax2.set_ylabel("Price (USD)", color="#2ca02c")
             ax2.tick_params(axis='y', labelcolor="#2ca02c")
+
+            # — ML PREDICTION —
+            df_model = df_c.dropna(subset=["Sentiment", "PriceUSD"])
+            if len(df_model) >= 4:
+                model = LinearRegression()
+                X = df_model[["Sentiment"]].values
+                y = df_model["PriceUSD"].values
+                model.fit(X, y)
+                pred_price = model.predict([[df_model["Sentiment"].iloc[-1]]])[0]
+                st.success(f"🤖 ML Prediction: {coin} target price based on sentiment = ${pred_price:,.2f}")
 
         plt.title(f"{coin} — Sentiment & Price Over Time ({trend_range})")
         fig.autofmt_xdate()
@@ -164,7 +161,7 @@ if not history.empty:
 else:
     st.warning("📉 No historical trend data available. Run `analyze.py` to build it.")
 
-# — Sentiment Details Table —
+# — Sentiment Table —
 st.subheader("📋 Sentiment Details")
 if not data.empty:
     flt = st.selectbox("Filter by coin:", ["All"] + sorted(data["Coin"].unique()))
