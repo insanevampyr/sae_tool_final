@@ -98,3 +98,10 @@ for coin in coins:
     action = suggest_action(all_avg)
     msg = f"🚨 {coin} overall avg sentiment: {all_avg:.2f}\nSuggested: {action}"
     send_telegram_message(msg)
+
+# analyze.py (at the very bottom)
+import auto_push
+
+if __name__ == "__main__":
+    # ... all your existing analysis logic ...
+    auto_push.auto_push()
