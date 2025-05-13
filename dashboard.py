@@ -58,10 +58,10 @@ else:
 st.sidebar.header("📌 Sentiment Summary")
 
 # time‐range for summary
-range_opts = ["Last 24 Hours","Last 7 Days","Last 30 Days","Last 6 Months","Last Year"]
-summary_range = st.sidebar.selectbox("Summary window:", range_opts, index=0)
-now = datetime.now(timezone.utc)
-cutoffs = {
+range_opts     = ["Last 24 Hours","Last 7 Days","Last 30 Days","Last 6 Months","Last Year"]
+summary_range  = st.sidebar.selectbox("Summary window:", range_opts, index=0)
+now            = datetime.now(timezone.utc)
+cutoffs        = {
     "Last 24 Hours": now - timedelta(days=1),
     "Last 7 Days":   now - timedelta(days=7),
     "Last 30 Days":  now - timedelta(days=30),
@@ -70,7 +70,11 @@ cutoffs = {
 }
 cutoff_summary = cutoffs[summary_range]
 
+# apply filter + fallback
 recent = data[data["Timestamp"] >= cutoff_summary]
+if recent.empty and summary_range == "Last 24 Hours":
+    st.sidebar.warning("No data in last 24 h; showing all data instead.")
+    recent = data
 if recent.empty:
     st.sidebar.warning("No data in that time window.")
 else:
@@ -123,7 +127,7 @@ if not history.empty:
     """, unsafe_allow_html=True)
 
     # time‐range for trends
-    trend_range = st.selectbox("Trend window:", range_opts, index=0)
+    trend_range  = st.selectbox("Trend window:", range_opts, index=0)
     cutoff_trend = cutoffs[trend_range]
 
     coin = st.selectbox("Select coin for trend view:", sorted(history["Coin"].dropna().unique()))
