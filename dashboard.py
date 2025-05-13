@@ -151,7 +151,9 @@ if not history.empty:
                 y = df_model["PriceUSD"].values
                 model.fit(X, y)
                 pred_price = model.predict([[df_model["Sentiment"].iloc[-1]]])[0]
-                st.success(f"🤖 ML Prediction: {coin} target price prediction (in the next hour) based on sentiment = ${pred_price:,.2f}")
+                pred_time = (datetime.now(timezone.utc) + timedelta(hours=1)).strftime("%Y-%m-%d %H:%M UTC")
+st.success(f"🤖 ML Prediction: {coin} target price = ${pred_price:,.2f} ⏳ by approx {pred_time}")
+
 
         plt.title(f"{coin} — Sentiment & Price Over Time ({trend_range})")
         fig.autofmt_xdate()
