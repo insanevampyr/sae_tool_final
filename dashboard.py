@@ -123,7 +123,7 @@ if not history.empty:
         recent_correct = [x for x in log[coin][-24:] if x["accurate"] is True]
         acc_24h = len(recent_correct)
 
-        # — Output
+        # — Output block —
         verdict = "✅ Accurate" if was_correct else "❌ Off" if was_correct == False else "🕒 Pending"
         bg = "#ccffcc" if was_correct else "#ffcccc" if was_correct == False else "#eee"
 
@@ -134,6 +134,7 @@ if not history.empty:
         </div>
         """, unsafe_allow_html=True)
 
+        # Send Telegram alert if diff is outside ±4%
         if abs(diff_pct) >= tolerance:
             msg = f"🔮 ML Alert: {coin} → ${prediction:,.2f} ({diff_pct:+.2f}%) by {future_str}"
             send_telegram_message(msg)
