@@ -125,12 +125,20 @@ if not history.empty:
 
         # — Output block —
         verdict = "✅ Accurate" if was_correct else "❌ Off" if was_correct == False else "🕒 Pending"
-        bg = "#ccffcc" if was_correct else "#ffcccc" if was_correct == False else "#eee"
+        bg = "#ccffcc" if was_correct else "#ffcccc" if was_correct == False else "#f1f1f1"
+        font_color = "#333" if was_correct is None else "#000"
 
         st.markdown(f"""
-        <div style='background-color:{bg};padding:1rem;margin-bottom:0.5rem;border-radius:5px'>
+        <div style='
+            background-color:{bg};
+            color:{font_color};
+            padding:1rem;
+            margin-bottom:0.5rem;
+            border-radius:5px;
+            font-size:16px;
+        '>
             <b>{coin}</b>: ${prediction:,.2f} {direction} ({diff_pct:+.2f}%) by {future_str} <br>
-            <b>Accuracy:</b> {verdict} — <b>{acc_24h}</b> correct predictions in last 24h
+            <b>Accuracy:</b> {verdict} — <b>{acc_24h}</b> correct in last 24h
         </div>
         """, unsafe_allow_html=True)
 
