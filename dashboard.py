@@ -18,9 +18,10 @@ st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 st.markdown("Live crypto sentiment analysis, historical trends, and ML forecasts.")
 
 # — Paths —
-csv_path = "sentiment_output.csv"
-history_file = "sentiment_history.csv"
-json_path = "previous_actions.json"
+csv_path      = "sentiment_output.csv"
+history_file  = "sentiment_history.csv"
+json_path     = "previous_actions.json"
+ml_log_path   = "prediction_log.json"
 
 # — Loaders —
 def load_data(path):
@@ -31,24 +32,22 @@ def load_data(path):
             st.error(f"Failed to load {path}: {e}")
     return pd.DataFrame()
 
-def load_previous_actions():
-    if os.path.exists(json_path):
-        with open(json_path, "r") as f:
-            return json.load(f)
-    return {}
+def load_json(path):
+    return json.load(open(path)) if os.path.exists(path) else {}
 
-def save_previous_actions(data):
-    with open(json_path, "w") as f:
+def save_json(data, path):
+    with open(path, "w") as f:
         json.dump(data, f)
 
 # — Load —
 raw     = load_data(csv_path)
 history = load_data(history_file)
-actions = load_previous_actions()
+actions = load_json(json_path)
+log     = load_json(ml_log_path)
 prices  = fetch_prices()
 now     = datetime.now(timezone.utc)
 
-# — Sidebar Summary —
+# — Sidebar: Sentiment Summary —
 st.sidebar.header("📌 Sentiment Summary")
 range_opts = ["Last 24 Hours", "Last 7 Days", "Last 30 Days"]
 cutoffs = {
@@ -56,7 +55,7 @@ cutoffs = {
     "Last 7 Days":   now - timedelta(days=7),
     "Last 30 Days":  now - timedelta(days=30),
 }
-summary_range = st.sidebar.selectbox("Summary Window", range_opts, index=0)
+summary_range  = st.sidebar.selectbox("Summary Window", range_opts, index=0)
 cutoff_summary = cutoffs[summary_range]
 
 if "Timestamp" in raw.columns:
@@ -66,7 +65,7 @@ else:
 
 recent = raw[raw["Timestamp"] >= cutoff_summary]
 if recent.empty:
-    st.sidebar.warning(f"No data in the {summary_range} window — showing all instead.")
+    st.sidebar.warning(f"No data in {summary_range}; showing all.")
     recent = raw
 
 if not recent.empty:
@@ -79,14 +78,16 @@ if not recent.empty:
                 msg = f"⚠️ **{coin} Action Changed**\nSentiment: {avg:.2f}\nSuggested: {action}"
                 send_telegram_message(msg)
                 actions[coin] = action
-    save_previous_actions(actions)
+    save_json(actions, json_path)
 
-# — ML Price Predictions —
+# — ML Price Predictions + Accuracy Tracking —
 st.markdown("### 🤖 ML Price Predictions")
+
 if not history.empty:
     history.rename(columns=str.strip, inplace=True)
     history["Timestamp"] = pd.to_datetime(history["Timestamp"], utc=True, errors="coerce")
-    tolerance = 4  # percentage
+    tolerance = 4  # percent
+    st.markdown(f"_Accuracy tolerance: ±{tolerance}%_")
 
     for coin in sorted(history["Coin"].dropna().unique()):
         df = history[history["Coin"] == coin].sort_values("Timestamp")
@@ -95,23 +96,49 @@ if not history.empty:
         X = np.arange(len(df)).reshape(-1, 1)
         y = df["PriceUSD"].values.reshape(-1, 1)
         model = LinearRegression().fit(X, y)
-        pred = model.predict([[len(df)]])[0][0]
-        current = y[-1][0]
-        diff_pct = ((pred - current) / current) * 100
-        direction = "↑" if diff_pct > 0 else "↓"
-        color = "green" if abs(diff_pct) >= tolerance else "gray"
-        future_time = now + timedelta(hours=1)
-        future_str = future_time.strftime("%H:%M UTC")
+        prediction = model.predict([[len(df)]])[0][0]
+        current    = y[-1][0]
+        diff_pct   = ((prediction - current) / current) * 100
+        direction  = "↑" if diff_pct > 0 else "↓"
+        color      = "green" if abs(diff_pct) >= tolerance else "gray"
+        future_str = (now + timedelta(hours=1)).strftime("%H:%M UTC")
+
+        # --- Accuracy Check ---
+        last_known = df.iloc[-1]
+        next_df    = df[df["Timestamp"] > last_known["Timestamp"]]
+        actual     = next_df["PriceUSD"].values[0] if not next_df.empty else None
+
+        was_correct = None
+        if actual:
+            err = abs((prediction - actual) / actual) * 100
+            was_correct = err <= tolerance
+
+        log.setdefault(coin, []).append({
+            "timestamp": now.isoformat(),
+            "predicted": round(prediction, 2),
+            "actual": round(actual, 2) if actual else None,
+            "diff_pct": round(diff_pct, 2),
+            "accurate": was_correct
+        })
+        recent_correct = [x for x in log[coin][-24:] if x["accurate"] is True]
+        acc_24h = len(recent_correct)
+
+        # — Output
+        verdict = "✅ Accurate" if was_correct else "❌ Off" if was_correct == False else "🕒 Pending"
+        bg = "#ccffcc" if was_correct else "#ffcccc" if was_correct == False else "#eee"
 
         st.markdown(f"""
-        <div style='border-left: 4px solid {color}; padding-left: 1rem; margin-bottom: 0.5rem;'>
-            <b>{coin}</b>: Predicted = ${pred:,.2f} ({direction}{abs(diff_pct):.2f}%) by {future_str}
+        <div style='background-color:{bg};padding:1rem;margin-bottom:0.5rem;border-radius:5px'>
+            <b>{coin}</b>: ${prediction:,.2f} {direction} ({diff_pct:+.2f}%) by {future_str} <br>
+            <b>Accuracy:</b> {verdict} — <b>{acc_24h}</b> correct predictions in last 24h
         </div>
         """, unsafe_allow_html=True)
 
         if abs(diff_pct) >= tolerance:
-            msg = f"🔮 ML Alert: {coin} → ${pred:,.2f} ({diff_pct:+.2f}%) by {future_str}"
+            msg = f"🔮 ML Alert: {coin} → ${prediction:,.2f} ({diff_pct:+.2f}%) by {future_str}"
             send_telegram_message(msg)
+
+    save_json(log, ml_log_path)
 else:
     st.info("No historical data available for ML predictions.")
 
@@ -126,20 +153,19 @@ if not history.empty:
         locator = mdates.AutoDateLocator(minticks=3, maxticks=7)
         ax1.xaxis.set_major_locator(locator)
         ax1.xaxis.set_major_formatter(mdates.ConciseDateFormatter(locator))
-
-        ax1.plot(df_c["Timestamp"], df_c["Sentiment"], marker="o", color="#1f77b4", label="Sentiment")
+        ax1.plot(df_c["Timestamp"], df_c["Sentiment"], marker="o", color="#1f77b4")
         ax1.set_ylabel("Sentiment", color="#1f77b4")
 
         ax2 = ax1.twinx()
-        ax2.plot(df_c["Timestamp"], df_c["PriceUSD"], linestyle="--", color="#2ca02c", label="Price")
+        ax2.plot(df_c["Timestamp"], df_c["PriceUSD"], linestyle="--", color="#2ca02c")
         ax2.set_ylabel("Price (USD)", color="#2ca02c")
 
         plt.title(f"{coin} — Sentiment & Price Over Time")
         st.pyplot(fig)
     else:
-        st.info("No data in this range.")
+        st.info("No trend data available.")
 else:
-    st.warning("📉 No history found. Run `analyze.py` first.")
+    st.warning("📉 No historical data loaded.")
 
 # — Sentiment Table —
 st.subheader("📋 Sentiment Details")
@@ -148,4 +174,4 @@ if not raw.empty:
     view = raw if flt == "All" else raw[raw["Coin"] == flt]
     st.dataframe(view.sort_values("Timestamp", ascending=False), use_container_width=True)
 else:
-    st.info("No raw sentiment data.")
+    st.info("No sentiment data available.")
