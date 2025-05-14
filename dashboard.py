@@ -37,7 +37,7 @@ def load_json(path):
 
 def save_json(data, path):
     with open(path, "w") as f:
-        json.dump(data, f)
+        json.dump(data, f, indent=2)
 
 # — Load —
 raw     = load_data(csv_path)
@@ -63,6 +63,8 @@ if "Timestamp" in raw.columns:
 else:
     st.sidebar.warning("⚠️ No 'Timestamp' in sentiment_output.csv")
 
+raw.drop_duplicates(inplace=True)
+
 recent = raw[raw["Timestamp"] >= cutoff_summary]
 if recent.empty:
     st.sidebar.warning(f"No data in {summary_range}; showing all.")
@@ -86,6 +88,8 @@ st.markdown("### 🤖 ML Price Predictions")
 if not history.empty:
     history.rename(columns=str.strip, inplace=True)
     history["Timestamp"] = pd.to_datetime(history["Timestamp"], utc=True, errors="coerce")
+    history.drop_duplicates(inplace=True)
+
     tolerance = 4  # percent
     st.markdown(f"_Accuracy tolerance: ±{tolerance}%_")
 
@@ -113,20 +117,23 @@ if not history.empty:
             err = abs((prediction - actual) / actual) * 100
             was_correct = err <= tolerance
 
-        log.setdefault(coin, []).append({
-            "timestamp": now.isoformat(),
-            "predicted": round(prediction, 2),
-            "actual": round(actual, 2) if actual else None,
-            "diff_pct": round(diff_pct, 2),
-            "accurate": was_correct
-        })
+        # Prevent duplicate log entries
+        last_log = log.get(coin, [])[-1] if coin in log and log[coin] else None
+        if not last_log or last_log.get("timestamp") != now.isoformat():
+            log.setdefault(coin, []).append({
+                "timestamp": now.isoformat(),
+                "predicted": round(prediction, 2),
+                "actual": round(actual, 2) if actual else None,
+                "diff_pct": round(diff_pct, 2),
+                "accurate": was_correct
+            })
+
         recent_correct = [x for x in log[coin][-24:] if x["accurate"] is True]
         acc_24h = len(recent_correct)
 
-        # — Output block —
         verdict = "✅ Accurate" if was_correct else "❌ Off" if was_correct == False else "🕒 Pending"
         bg = "#ccffcc" if was_correct else "#ffcccc" if was_correct == False else "#f1f1f1"
-        font_color = "#333" if was_correct is None else "#000"
+        font_color = "#222" if was_correct is None else "#000"
 
         st.markdown(f"""
         <div style='
@@ -137,12 +144,11 @@ if not history.empty:
             border-radius:5px;
             font-size:16px;
         '>
-            <b>{coin}</b>: ${prediction:,.2f} {direction} ({diff_pct:+.2f}%) by {future_str} <br>
+            <b>{coin}</b>: ${prediction:,.2f} {direction} ({diff_pct:+.2f}%) by {future_str}<br>
             <b>Accuracy:</b> {verdict} — <b>{acc_24h}</b> correct in last 24h
         </div>
         """, unsafe_allow_html=True)
 
-        # Send Telegram alert if diff is outside ±4%
         if abs(diff_pct) >= tolerance:
             msg = f"🔮 ML Alert: {coin} → ${prediction:,.2f} ({diff_pct:+.2f}%) by {future_str}"
             send_telegram_message(msg)
@@ -181,6 +187,8 @@ st.subheader("📋 Sentiment Details")
 if not raw.empty:
     flt = st.selectbox("Filter by coin:", ["All"] + sorted(raw["Coin"].unique()))
     view = raw if flt == "All" else raw[raw["Coin"] == flt]
+    key_cols = ["Timestamp", "Coin", "Source", "Sentiment", "Text", "Link"]
+    view = view.drop_duplicates(subset=key_cols, keep="last")
     st.dataframe(view.sort_values("Timestamp", ascending=False), use_container_width=True)
 else:
     st.info("No sentiment data available.")
