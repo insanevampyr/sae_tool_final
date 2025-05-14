@@ -10,8 +10,6 @@ from reddit_fetch import fetch_reddit_posts
 from rss_fetch import fetch_rss_articles
 from fetch_prices import fetch_prices
 from send_telegram import send_telegram_message
-
-# auto_push.py must live alongside this file
 import auto_push
 
 # --- CONFIG ---
@@ -27,59 +25,53 @@ def suggest_action(score: float) -> str:
     return "🤝 Hold / Watch"
 
 def main():
-    # 1) Fetch raw posts
+    # 1) Fetch sentiment data
     sentiment_rows = []
-    print("🧠 Fetching Reddit sentiment…")
+    now_ts = datetime.now(timezone.utc).isoformat()
+
     for coin in coins:
         for post in fetch_reddit_posts("CryptoCurrency", coin, 5):
-            score = analyze_sentiment(post["text"])
             sentiment_rows.append({
                 "Source":    "Reddit",
                 "Coin":       coin,
                 "Text":       post["text"],
-                "Sentiment":  score,
-                "Action":     suggest_action(score),
-                "Timestamp":  datetime.now(timezone.utc).isoformat(),
+                "Sentiment":  analyze_sentiment(post["text"]),
+                "Action":     suggest_action(analyze_sentiment(post["text"])),
+                "Timestamp":  now_ts,
                 "Link":       post["url"],
             })
 
-    print("📰 Fetching Crypto News sentiment…")
-    for coin in coins:
         for post in fetch_rss_articles(coin, 5):
-            score = analyze_sentiment(post["text"])
             sentiment_rows.append({
                 "Source":    "News",
                 "Coin":       coin,
                 "Text":       post["text"],
-                "Sentiment":  score,
-                "Action":     suggest_action(score),
-                "Timestamp":  datetime.now(timezone.utc).isoformat(),
+                "Sentiment":  analyze_sentiment(post["text"]),
+                "Action":     suggest_action(analyze_sentiment(post["text"])),
+                "Timestamp":  now_ts,
                 "Link":       post.get("link", ""),
             })
 
-    # 2) Write or append raw output CSV
-    write_header = not os.path.exists(output_file)
-    with open(output_file, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=sentiment_rows[0].keys())
-        if write_header:
-            writer.writeheader()
-        writer.writerows(sentiment_rows)
-    print(f"✅ Sentiment results {'created' if write_header else 'appended to'} {output_file}")
+    # 2) Remove duplicates vs existing output
+    if os.path.exists(output_file):
+        old_df = pd.read_csv(output_file)
+        combined_df = pd.concat([old_df, pd.DataFrame(sentiment_rows)], ignore_index=True)
+        combined_df.drop_duplicates(subset=["Coin", "Source", "Text"], inplace=True)
+    else:
+        combined_df = pd.DataFrame(sentiment_rows)
 
-    # 3) Build summary rows for history
+    combined_df.to_csv(output_file, index=False)
+    print(f"✅ Written: {len(sentiment_rows)} entries to {output_file}")
+
+    # 3) Append historical data
     prices = fetch_prices()
     summary_rows = []
-    now_iso = datetime.now(timezone.utc).isoformat()
-
-    df_all = pd.DataFrame(sentiment_rows)
     for source in ("Reddit", "News"):
-        df = df_all[df_all["Source"] == source]
-        if df.empty:
-            continue
+        df = combined_df[combined_df["Source"] == source]
         grouped = df.groupby("Coin")["Sentiment"].mean().round(4)
         for coin, avg in grouped.items():
             summary_rows.append({
-                "Timestamp":       now_iso,
+                "Timestamp":       now_ts,
                 "Coin":            coin,
                 "Source":          source,
                 "Sentiment":       avg,
@@ -87,25 +79,19 @@ def main():
                 "SuggestedAction": suggest_action(avg),
             })
 
-    # 4) Write or append history CSV
-    history_fields = ["Timestamp","Coin","Source","Sentiment","PriceUSD","SuggestedAction"]
-    write_hist_header = not os.path.exists(history_file)
-    with open(history_file, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=history_fields)
-        if write_hist_header:
-            writer.writeheader()
-        writer.writerows(summary_rows)
-    print(f"✅ History {'created' if write_hist_header else 'appended to'} {history_file}")
+    hist_df = pd.DataFrame(summary_rows)
+    if os.path.exists(history_file):
+        hist_old = pd.read_csv(history_file)
+        hist_df = pd.concat([hist_old, hist_df], ignore_index=True)
+        hist_df.drop_duplicates(subset=["Timestamp", "Coin", "Source"], inplace=True)
 
-    # 5) Telegram alerts for overall avg per coin (across both sources)
+    hist_df.to_csv(history_file, index=False)
+    print(f"✅ Updated: {history_file}")
+
+    # 4) Telegram alerts
     for coin in coins:
-        overall_avg = (
-            pd.DataFrame(summary_rows)
-              .query("Coin == @coin")["Sentiment"]
-              .mean()
-        )
-        action = suggest_action(overall_avg)
-        msg = f"🚨 {coin} overall avg sentiment: {overall_avg:.2f}\nSuggested: {action}"
+        avg = hist_df.query("Coin == @coin")["Sentiment"].mean()
+        msg = f"🚨 {coin} overall avg sentiment: {avg:.2f}\nSuggested: {suggest_action(avg)}"
         send_telegram_message(msg)
 
 if __name__ == "__main__":
