@@ -66,8 +66,10 @@ else:
 
 recent = raw[raw["Timestamp"] >= cutoff_summary]
 if recent.empty:
-    st.sidebar.warning("No recent data.")
-else:
+    st.sidebar.warning(f"No data in the {summary_range} window — showing all instead.")
+    recent = raw
+
+if not recent.empty:
     overall = recent.groupby("Coin")["Sentiment"].mean()
     for coin, avg in overall.items():
         action = "📈 Buy" if avg > 0.2 else "📉 Sell" if avg < -0.2 else "🤝 Hold"
@@ -84,8 +86,7 @@ st.markdown("### 🤖 ML Price Predictions")
 if not history.empty:
     history.rename(columns=str.strip, inplace=True)
     history["Timestamp"] = pd.to_datetime(history["Timestamp"], utc=True, errors="coerce")
-    triggered = []
-    tolerance = 4  # percent
+    tolerance = 4  # percentage
 
     for coin in sorted(history["Coin"].dropna().unique()):
         df = history[history["Coin"] == coin].sort_values("Timestamp")
@@ -93,7 +94,6 @@ if not history.empty:
 
         X = np.arange(len(df)).reshape(-1, 1)
         y = df["PriceUSD"].values.reshape(-1, 1)
-
         model = LinearRegression().fit(X, y)
         pred = model.predict([[len(df)]])[0][0]
         current = y[-1][0]
@@ -112,7 +112,6 @@ if not history.empty:
         if abs(diff_pct) >= tolerance:
             msg = f"🔮 ML Alert: {coin} → ${pred:,.2f} ({diff_pct:+.2f}%) by {future_str}"
             send_telegram_message(msg)
-            triggered.append(coin)
 else:
     st.info("No historical data available for ML predictions.")
 
