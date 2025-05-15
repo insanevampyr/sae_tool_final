@@ -3,27 +3,32 @@ import pandas as pd
 from supabase import create_client, Client
 from datetime import datetime
 import uuid
+from PIL import Image
+from io import BytesIO
 
-# 🔐 Supabase credentials
+# Supabase connection
 url = "https://xxyfipfbnusrowhbtwkb.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eWZpcGZibnVzcm93aGJ0d2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI4MTMsImV4cCI6MjA2MjgzODgxM30.7a1UswYWolt82zAiRNzp3RAJ3OqW0GHYgWXvjoCES5I"
 supabase: Client = create_client(url, key)
 
 st.set_page_config(page_title="MEGA Client Manager", layout="centered")
+MAX_MB = 5
+MAX_BYTES = MAX_MB * 1024 * 1024
 
-st.markdown(
-    """
-    <style>
-    .stButton > button {
-        background-color: #444; color: white; border-radius: 6px; padding: 0.4em 1em;
-    }
-    .stTextInput > div > div > input, .stSelectbox > div > div > div {
-        background-color: #2b2b2b; color: #f0f0f0;
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+def crop_center_square(image_file):
+    img = Image.open(image_file)
+    width, height = img.size
+    min_dim = min(width, height)
+    left = (width - min_dim) / 2
+    top = (height - min_dim) / 2
+    right = (width + min_dim) / 2
+    bottom = (height + min_dim) / 2
+    return img.crop((left, top, right, bottom))
+
+def upload_image(bucket, file_obj, content_type):
+    path = f"{bucket}/{uuid.uuid4().hex}.jpg"
+    supabase.storage.from_(bucket).upload(path, file_obj, {"content-type": content_type})
+    return f"https://xxyfipfbnusrowhbtwkb.supabase.co/storage/v1/object/public/{path}", path
 
 st.title("🌟 MEGA Client Manager")
 
@@ -36,18 +41,16 @@ df = fetch_clients()
 if "id" in df.columns:
     df = df.drop(columns=["id"])
 
-# 🔍 Search
 selected_row = {}
 with st.expander("🔍 Find Client"):
     col1, col2 = st.columns(2)
     search_name = col1.text_input("Search by Name").strip().lower()
     search_legal = col2.text_input("Search by Legal Name").strip().lower()
 
-    combined_options = df.copy()
-    combined_options["display"] = combined_options.apply(
+    df["display"] = df.apply(
         lambda x: f'{x["name"]} — {x["legal_name"]}' if pd.notna(x["legal_name"]) else x["name"], axis=1
     )
-    selected_combo = st.selectbox("🔽 Or Select from Full List", combined_options["display"].sort_values())
+    selected_combo = st.selectbox("🔽 Or Select from Full List", df["display"].sort_values())
 
     if selected_combo:
         base_name = selected_combo.split(" — ")[0]
@@ -62,7 +65,6 @@ with st.expander("🔍 Find Client"):
     if not selected_df.empty:
         selected_row = selected_df.iloc[0].to_dict()
 
-# 🧾 Form
 with st.expander("➕ Add or Edit Client"):
     mode = st.radio("Mode", ["Add New", "Edit Selected"], horizontal=True)
 
@@ -92,26 +94,37 @@ with st.expander("➕ Add or Edit Client"):
             arrival_date = cols1.text_input("Arrival Date", selected_row.get("arrival_date", ""))
             arrival_time = cols2.text_input("Arrival Time", selected_row.get("arrival_time", ""))
 
-            # 🎯 Drag-n-Drop for Company Logo
-            logo_file = st.file_uploader("📎 Upload Company Logo", type=["png", "jpg", "jpeg"])
-            logo_url = selected_row.get("logo_url", "")
+            old_logo_url = selected_row.get("logo_url", "")
+            old_photo_url = selected_row.get("photo_url", "")
+
+            logo_file = st.file_uploader("📎 Upload Company Logo", type=["jpg", "jpeg", "png"])
+            logo_url = old_logo_url
             if logo_file:
-                file_path = f"logos/{uuid.uuid4().hex}_{logo_file.name}"
-                supabase.storage.from_("logos").upload(file_path, logo_file, {"content-type": logo_file.type})
-                logo_url = f"https://xxyfipfbnusrowhbtwkb.supabase.co/storage/v1/object/public/{file_path}"
-                st.success("✅ Logo uploaded!")
+                if logo_file.size > MAX_BYTES:
+                    st.error("Logo file too large (5MB max)")
+                else:
+                    cropped = crop_center_square(logo_file)
+                    buffer = BytesIO()
+                    cropped.save(buffer, format="JPEG")
+                    buffer.seek(0)
+                    logo_url, _ = upload_image("logos", buffer, "image/jpeg")
+                    st.success("✅ Logo uploaded!")
 
             if logo_url:
-                st.image(logo_url, caption="Company Logo", width=150)
+                st.image(logo_url, caption="Logo", width=150)
 
-            # 🎯 Drag-n-Drop for Headshot
-            photo_file = st.file_uploader("📷 Upload Headshot", type=["png", "jpg", "jpeg"])
-            photo_url = selected_row.get("photo_url", "")
+            photo_file = st.file_uploader("📷 Upload Headshot", type=["jpg", "jpeg", "png"])
+            photo_url = old_photo_url
             if photo_file:
-                file_path = f"headshots/{uuid.uuid4().hex}_{photo_file.name}"
-                supabase.storage.from_("headshots").upload(file_path, photo_file, {"content-type": photo_file.type})
-                photo_url = f"https://xxyfipfbnusrowhbtwkb.supabase.co/storage/v1/object/public/{file_path}"
-                st.success("✅ Headshot uploaded!")
+                if photo_file.size > MAX_BYTES:
+                    st.error("Photo file too large (5MB max)")
+                else:
+                    cropped = crop_center_square(photo_file)
+                    buffer = BytesIO()
+                    cropped.save(buffer, format="JPEG")
+                    buffer.seek(0)
+                    photo_url, _ = upload_image("headshots", buffer, "image/jpeg")
+                    st.success("✅ Headshot uploaded!")
 
             if photo_url:
                 st.image(photo_url, caption="Headshot", width=150)
@@ -132,6 +145,10 @@ with st.expander("➕ Add or Edit Client"):
                     st.success("✅ New client added.")
                 else:
                     supabase.table("clients").update(data).eq("name", selected_row["name"]).execute()
+                    if logo_file and old_logo_url:
+                        supabase.storage.from_("logos").remove(old_logo_url.split("/")[-1])
+                    if photo_file and old_photo_url:
+                        supabase.storage.from_("headshots").remove(old_photo_url.split("/")[-1])
                     st.success("✅ Client updated.")
 
                 st.cache_data.clear()
@@ -139,20 +156,24 @@ with st.expander("➕ Add or Edit Client"):
     else:
         st.warning("⚠️ Select a client before editing.")
 
-# 🗑 Delete
+# 🗑 DELETE
 with st.expander("🗑 Delete Client"):
     delete_name = st.selectbox("Choose Client to Delete", df["name"].dropna().unique())
     if st.button("❌ Confirm Delete"):
+        row = df[df["name"] == delete_name].iloc[0]
+        if row.get("photo_url"):
+            supabase.storage.from_("headshots").remove(row["photo_url"].split("/")[-1])
+        if row.get("logo_url"):
+            supabase.storage.from_("logos").remove(row["logo_url"].split("/")[-1])
         supabase.table("clients").delete().eq("name", delete_name).execute()
         st.success(f"✅ Deleted {delete_name}")
         st.cache_data.clear()
         st.rerun()
 
-# 📥 Export
+# 📥 EXPORT
 st.subheader("⬇️ Export Clients")
 if not df.empty:
-    export_df = df.drop(columns=["id"], errors="ignore")
-    csv = export_df.to_csv(index=False).encode("utf-8")
+    csv = df.drop(columns=["id"], errors="ignore").to_csv(index=False).encode("utf-8")
     st.download_button("Download CSV", data=csv, file_name="clients.csv", mime="text/csv")
 else:
     st.warning("Nothing to export.")
