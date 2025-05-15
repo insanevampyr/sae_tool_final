@@ -106,7 +106,7 @@ if not history.empty:
         color      = "green" if abs(diff_pct) >= tolerance else "gray"
         future_str = (now + timedelta(hours=1)).strftime("%H:%M UTC")
 
-        # --- Accuracy Check ---
+        # Accuracy check
         last_known = df.iloc[-1]
         next_df    = df[df["Timestamp"] > last_known["Timestamp"]]
         actual     = next_df["PriceUSD"].values[0] if not next_df.empty else None
@@ -116,7 +116,7 @@ if not history.empty:
             err = abs((prediction - actual) / actual) * 100
             was_correct = err <= tolerance
 
-        # Prevent duplicate log entries
+        # Avoid duplicates
         last_log = log.get(coin, [])[-1] if coin in log and log[coin] else None
         if not last_log or last_log.get("timestamp") != now.isoformat():
             log.setdefault(coin, []).append({
@@ -156,7 +156,7 @@ if not history.empty:
 else:
     st.info("No historical data available for ML predictions.")
 
-# — Trends — 
+# — Trends —
 st.markdown("### 📈 Trends Over Time")
 if not history.empty:
     coin = st.selectbox("Select coin:", sorted(history["Coin"].dropna().unique()))
@@ -188,6 +188,11 @@ if not raw.empty:
     view = raw if flt == "All" else raw[raw["Coin"] == flt]
     key_cols = ["Timestamp", "Coin", "Source", "Sentiment", "Text", "Link"]
     view = view.drop_duplicates(subset=key_cols, keep="last")
-    st.dataframe(view.sort_values("Timestamp", ascending=False), use_container_width=True)
+
+    # Desired column order
+    ordered = ["Coin", "Sentiment", "Action", "Text", "Source", "Link", "Timestamp"]
+    display_cols = [c for c in ordered if c in view.columns]
+
+    st.dataframe(view[display_cols].sort_values("Timestamp", ascending=False), use_container_width=True)
 else:
     st.info("No sentiment data available.")
