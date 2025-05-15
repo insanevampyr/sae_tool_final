@@ -5,7 +5,7 @@ from datetime import datetime
 
 # Supabase credentials
 url = "https://xxyfipfbnusrowhbtwkb.supabase.co"
-key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eWZpcGZibnVzcm93aGJ0d2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI4MTMsImV4cCI6MjA2MjgzODgxM30.7a1UswYWolt82zAiRNzp3RAJ3OqW0GHYgWXvjoCES5I"  # Replace with your actual anon key
+key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eWZpcGZibnVzcm93aGJ0d2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI4MTMsImV4cCI6MjA2MjgzODgxM30.7a1UswYWolt82zAiRNzp3RAJ3OqW0GHYgWXvjoCES5I"
 supabase: Client = create_client(url, key)
 
 st.set_page_config(page_title="MEGA Client Manager", layout="centered")
@@ -13,9 +13,8 @@ st.set_page_config(page_title="MEGA Client Manager", layout="centered")
 st.markdown(
     """
     <style>
-    body { background-color: #1e1e1e; color: #f0f0f0; }
     .stButton > button {
-        background-color: #444; color: white; border-radius: 6px; padding: 0.4em 1em; margin: 0.5em 0;
+        background-color: #444; color: white; border-radius: 6px; padding: 0.4em 1em;
     }
     .stTextInput > div > div > input, .stSelectbox > div > div > div {
         background-color: #2b2b2b; color: #f0f0f0;
@@ -34,31 +33,38 @@ def fetch_clients():
 
 df = fetch_clients()
 
-# Hide ID field from display
+# Hide ID column if exists
 if "id" in df.columns:
     df = df.drop(columns=["id"])
 
-# 🔎 Search or Select a Client
+# 🔍 Find Client
+selected_row = {}
 with st.expander("🔍 Find Client"):
     col1, col2 = st.columns(2)
     search_name = col1.text_input("Search by Name").strip().lower()
     search_legal = col2.text_input("Search by Legal Name").strip().lower()
 
-    if search_name:
+    combined_options = df.copy()
+    combined_options["display"] = combined_options.apply(
+        lambda x: f'{x["name"]} — {x["legal_name"]}' if pd.notna(x["legal_name"]) else x["name"], axis=1
+    )
+    selected_combo = st.selectbox("🔽 Or Select from Full List", combined_options["display"].sort_values())
+
+    # Determine selected row
+    if selected_combo:
+        base_name = selected_combo.split(" — ")[0]
+        selected_df = df[df["name"] == base_name]
+    elif search_name:
         selected_df = df[df["name"].str.lower().str.contains(search_name)]
-    elif search_legal and "legal_name" in df.columns:
+    elif search_legal:
         selected_df = df[df["legal_name"].str.lower().str.contains(search_legal)]
     else:
         selected_df = pd.DataFrame()
 
     if not selected_df.empty:
-        name_options = selected_df["name"].dropna().unique()
-        selected_name = st.selectbox("Select Matching Client", name_options)
-        selected_row = selected_df[selected_df["name"] == selected_name].iloc[0]
-    else:
-        selected_row = {}
+        selected_row = selected_df.iloc[0].to_dict()
 
-# ➕ Add / Edit Client
+# ➕ Add/Edit
 with st.expander("➕ Add or Edit Client"):
     mode = st.radio("Mode", ["Add New", "Edit Selected"], horizontal=True)
 
@@ -112,15 +118,14 @@ with st.expander("➕ Add or Edit Client"):
             st.cache_data.clear()
             st.rerun()
 
-# 🗑 Delete Client
+# 🗑 Delete
 with st.expander("🗑 Delete Client"):
-    if not df.empty:
-        delete_name = st.selectbox("Choose Client to Delete", df["name"].dropna().unique())
-        if st.button("❌ Confirm Delete"):
-            supabase.table("clients").delete().eq("name", delete_name).execute()
-            st.success(f"✅ Deleted {delete_name}")
-            st.cache_data.clear()
-            st.rerun()
+    delete_name = st.selectbox("Choose Client to Delete", df["name"].dropna().unique())
+    if st.button("❌ Confirm Delete"):
+        supabase.table("clients").delete().eq("name", delete_name).execute()
+        st.success(f"✅ Deleted {delete_name}")
+        st.cache_data.clear()
+        st.rerun()
 
 # 📤 Export
 st.subheader("⬇️ Export Clients")
