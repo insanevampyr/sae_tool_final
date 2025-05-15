@@ -1,3 +1,4 @@
+# dashboard.py
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,19 +11,16 @@ from sklearn.linear_model import LinearRegression
 from send_telegram import send_telegram_message
 from fetch_prices import fetch_prices
 
-# — Setup —
 st.set_page_config(page_title="AlphaPulse | Sentiment Dashboard", layout="wide")
 st.image("alpha_logo.jpg", use_container_width=True)
 st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 st.markdown("Live crypto sentiment analysis, historical trends, and ML forecasts.")
 
-# — Paths —
 csv_path      = "sentiment_output.csv"
 history_file  = "sentiment_history.csv"
 json_path     = "previous_actions.json"
 ml_log_path   = "prediction_log.json"
 
-# — Loaders —
 def load_data(path):
     if os.path.exists(path):
         try:
@@ -32,13 +30,19 @@ def load_data(path):
     return pd.DataFrame()
 
 def load_json(path):
-    return json.load(open(path)) if os.path.exists(path) else {}
+    if os.path.exists(path):
+        try:
+            with open(path) as f:
+                data = json.load(f)
+                return data if isinstance(data, dict) else {}
+        except:
+            return {}
+    return {}
 
 def save_json(data, path):
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
 
-# — Load —
 raw     = load_data(csv_path)
 history = load_data(history_file)
 actions = load_json(json_path)
@@ -46,7 +50,7 @@ log     = load_json(ml_log_path)
 prices  = fetch_prices()
 now     = datetime.now(timezone.utc)
 
-# — Sidebar: Sentiment Summary —
+# Sidebar Summary
 st.sidebar.header("📌 Sentiment Summary")
 range_opts = ["Last 24 Hours", "Last 7 Days", "Last 30 Days"]
 cutoffs = {
@@ -63,7 +67,6 @@ else:
     st.sidebar.warning("⚠️ No 'Timestamp' in sentiment_output.csv")
 
 raw.drop_duplicates(inplace=True)
-
 recent = raw[raw["Timestamp"] >= cutoff_summary]
 if recent.empty:
     st.sidebar.warning(f"No data in {summary_range}; showing all.")
@@ -81,7 +84,7 @@ if not recent.empty:
                 actions[coin] = action
     save_json(actions, json_path)
 
-# — ML Price Predictions + Accuracy Tracking —
+# ML Predictions
 st.markdown("### 🤖 ML Price Predictions")
 
 if not history.empty:
@@ -89,12 +92,13 @@ if not history.empty:
     history["Timestamp"] = pd.to_datetime(history["Timestamp"], utc=True, errors="coerce")
     history.drop_duplicates(inplace=True)
 
-    tolerance = 4  # percent
+    tolerance = 4
     st.markdown(f"_Accuracy tolerance: ±{tolerance}%_")
 
     for coin in sorted(history["Coin"].dropna().unique()):
         df = history[history["Coin"] == coin].sort_values("Timestamp")
-        if len(df) < 10: continue
+        if len(df) < 10:
+            continue
 
         X = np.arange(len(df)).reshape(-1, 1)
         y = df["PriceUSD"].values.reshape(-1, 1)
@@ -106,7 +110,7 @@ if not history.empty:
         color      = "green" if abs(diff_pct) >= tolerance else "gray"
         future_str = (now + timedelta(hours=1)).strftime("%H:%M UTC")
 
-        # Accuracy check
+        # Accuracy
         last_known = df.iloc[-1]
         next_df    = df[df["Timestamp"] > last_known["Timestamp"]]
         actual     = next_df["PriceUSD"].values[0] if not next_df.empty else None
@@ -116,10 +120,14 @@ if not history.empty:
             err = abs((prediction - actual) / actual) * 100
             was_correct = err <= tolerance
 
-        # Avoid duplicates
-        last_log = log.get(coin, [])[-1] if coin in log and log[coin] else None
-        if not last_log or last_log.get("timestamp") != now.isoformat():
-            log.setdefault(coin, []).append({
+        # Avoid malformed or duplicate log
+        log.setdefault(coin, [])
+        if not isinstance(log[coin], list):
+            log[coin] = []
+
+        last_log = log[coin][-1] if log[coin] else None
+        if not last_log or last_log["timestamp"][:13] != now.isoformat()[:13]:
+            log[coin].append({
                 "timestamp": now.isoformat(),
                 "predicted": round(prediction, 2),
                 "actual": round(actual, 2) if actual else None,
@@ -127,11 +135,15 @@ if not history.empty:
                 "accurate": was_correct
             })
 
-        recent_correct = [x for x in log[coin][-24:] if x["accurate"] is True]
-        acc_24h = len(recent_correct)
+            # Send Telegram alert if major movement
+            if abs(diff_pct) >= tolerance:
+                msg = f"🔮 ML Alert: {coin} → ${prediction:,.2f} ({diff_pct:+.2f}%) by {future_str}"
+                send_telegram_message(msg)
 
-        verdict = "✅ Accurate" if was_correct else "❌ Off" if was_correct == False else "🕒 Pending"
-        bg = "#ccffcc" if was_correct else "#ffcccc" if was_correct == False else "#f1f1f1"
+        recent_correct = [x for x in log[coin][-24:] if x.get("accurate") is True]
+        acc_24h = len(recent_correct)
+        verdict = "✅ Accurate" if was_correct else "❌ Off" if was_correct is False else "🕒 Pending"
+        bg = "#ccffcc" if was_correct else "#ffcccc" if was_correct is False else "#f1f1f1"
         font_color = "#222" if was_correct is None else "#000"
 
         st.markdown(f"""
@@ -148,15 +160,11 @@ if not history.empty:
         </div>
         """, unsafe_allow_html=True)
 
-        if abs(diff_pct) >= tolerance:
-            msg = f"🔮 ML Alert: {coin} → ${prediction:,.2f} ({diff_pct:+.2f}%) by {future_str}"
-            send_telegram_message(msg)
-
     save_json(log, ml_log_path)
 else:
     st.info("No historical data available for ML predictions.")
 
-# — Trends —
+# Trends
 st.markdown("### 📈 Trends Over Time")
 if not history.empty:
     coin = st.selectbox("Select coin:", sorted(history["Coin"].dropna().unique()))
@@ -181,7 +189,7 @@ if not history.empty:
 else:
     st.warning("📉 No historical data loaded.")
 
-# — Sentiment Table —
+# Table
 st.subheader("📋 Sentiment Details")
 if not raw.empty:
     flt = st.selectbox("Filter by coin:", ["All"] + sorted(raw["Coin"].unique()))
@@ -189,7 +197,6 @@ if not raw.empty:
     key_cols = ["Timestamp", "Coin", "Source", "Sentiment", "Text", "Link"]
     view = view.drop_duplicates(subset=key_cols, keep="last")
 
-    # Desired column order
     ordered = ["Coin", "Sentiment", "Action", "Text", "Source", "Link", "Timestamp"]
     display_cols = [c for c in ordered if c in view.columns]
 
