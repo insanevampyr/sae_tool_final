@@ -11,7 +11,13 @@ url = "https://xxyfipfbnusrowhbtwkb.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eWZpcGZibnVzcm93aGJ0d2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI4MTMsImV4cCI6MjA2MjgzODgxM30.7a1UswYWolt82zAiRNzp3RAJ3OqW0GHYgWXvjoCES5I"
 supabase: Client = create_client(url, key)
 
+# GUI Setup
 st.set_page_config(page_title="MEGA Client Manager", layout="centered")
+
+# Display Logo
+st.markdown("<div style='text-align:center'><img src='MEGA_logo.jpg' width='250'></div>", unsafe_allow_html=True)
+st.title("🌟 MEGA Client Manager")
+
 MAX_MB = 5
 MAX_BYTES = MAX_MB * 1024 * 1024
 
@@ -29,8 +35,6 @@ def upload_image(bucket, file_obj, content_type):
     path = f"{bucket}/{uuid.uuid4().hex}.jpg"
     supabase.storage.from_(bucket).upload(path, file_obj, {"content-type": content_type})
     return f"https://xxyfipfbnusrowhbtwkb.supabase.co/storage/v1/object/public/{path}", path
-
-st.title("🌟 MEGA Client Manager")
 
 @st.cache_data(ttl=60)
 def fetch_clients():
