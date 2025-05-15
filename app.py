@@ -15,7 +15,11 @@ supabase: Client = create_client(url, key)
 st.set_page_config(page_title="MEGA Client Manager", layout="centered")
 
 # Display Logo
-st.markdown("<div style='text-align:center'><img src='MEGA_logo.jpg' width='250'></div>", unsafe_allow_html=True)
+from PIL import Image
+
+logo = Image.open("MEGA_logo.jpg")
+st.image(logo, width=250)
+
 st.title("🌟 MEGA Client Manager")
 
 MAX_MB = 5
