@@ -2,8 +2,9 @@ import streamlit as st
 import pandas as pd
 from supabase import create_client, Client
 from datetime import datetime
+import uuid
 
-# Supabase credentials
+# 🔐 Supabase credentials
 url = "https://xxyfipfbnusrowhbtwkb.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eWZpcGZibnVzcm93aGJ0d2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI4MTMsImV4cCI6MjA2MjgzODgxM30.7a1UswYWolt82zAiRNzp3RAJ3OqW0GHYgWXvjoCES5I"
 supabase: Client = create_client(url, key)
@@ -32,11 +33,10 @@ def fetch_clients():
     return pd.DataFrame(res.data or [])
 
 df = fetch_clients()
-
 if "id" in df.columns:
     df = df.drop(columns=["id"])
 
-# 🔎 Search and Select
+# 🔍 Search
 selected_row = {}
 with st.expander("🔍 Find Client"):
     col1, col2 = st.columns(2)
@@ -62,12 +62,12 @@ with st.expander("🔍 Find Client"):
     if not selected_df.empty:
         selected_row = selected_df.iloc[0].to_dict()
 
-# ➕ Add/Edit
+# 🧾 Form
 with st.expander("➕ Add or Edit Client"):
     mode = st.radio("Mode", ["Add New", "Edit Selected"], horizontal=True)
 
     if mode == "Add New":
-        selected_row = {}  # 🔄 Clear all form fields
+        selected_row = {}
 
     if mode == "Add New" or (mode == "Edit Selected" and selected_row):
         with st.form("client_form", clear_on_submit=(mode == "Add New")):
@@ -91,11 +91,28 @@ with st.expander("➕ Add or Edit Client"):
             airport = cols2.text_input("Airport Code", selected_row.get("airport_code", ""))
             arrival_date = cols1.text_input("Arrival Date", selected_row.get("arrival_date", ""))
             arrival_time = cols2.text_input("Arrival Time", selected_row.get("arrival_time", ""))
-            logo_url = st.text_input("Company Logo URL", selected_row.get("logo_url", ""))
-            photo_url = st.text_input("Headshot Photo URL", selected_row.get("photo_url", ""))
+
+            # 🎯 Drag-n-Drop for Company Logo
+            logo_file = st.file_uploader("📎 Upload Company Logo", type=["png", "jpg", "jpeg"])
+            logo_url = selected_row.get("logo_url", "")
+            if logo_file:
+                file_path = f"logos/{uuid.uuid4().hex}_{logo_file.name}"
+                supabase.storage.from_("logos").upload(file_path, logo_file, {"content-type": logo_file.type})
+                logo_url = f"https://xxyfipfbnusrowhbtwkb.supabase.co/storage/v1/object/public/{file_path}"
+                st.success("✅ Logo uploaded!")
 
             if logo_url:
                 st.image(logo_url, caption="Company Logo", width=150)
+
+            # 🎯 Drag-n-Drop for Headshot
+            photo_file = st.file_uploader("📷 Upload Headshot", type=["png", "jpg", "jpeg"])
+            photo_url = selected_row.get("photo_url", "")
+            if photo_file:
+                file_path = f"headshots/{uuid.uuid4().hex}_{photo_file.name}"
+                supabase.storage.from_("headshots").upload(file_path, photo_file, {"content-type": photo_file.type})
+                photo_url = f"https://xxyfipfbnusrowhbtwkb.supabase.co/storage/v1/object/public/{file_path}"
+                st.success("✅ Headshot uploaded!")
+
             if photo_url:
                 st.image(photo_url, caption="Headshot", width=150)
 
@@ -113,14 +130,14 @@ with st.expander("➕ Add or Edit Client"):
                 if mode == "Add New":
                     supabase.table("clients").insert(data).execute()
                     st.success("✅ New client added.")
-                elif mode == "Edit Selected":
+                else:
                     supabase.table("clients").update(data).eq("name", selected_row["name"]).execute()
                     st.success("✅ Client updated.")
 
                 st.cache_data.clear()
                 st.rerun()
     else:
-        st.warning("⚠️ To edit, first select a client using the dropdown or search above.")
+        st.warning("⚠️ Select a client before editing.")
 
 # 🗑 Delete
 with st.expander("🗑 Delete Client"):
@@ -131,7 +148,7 @@ with st.expander("🗑 Delete Client"):
         st.cache_data.clear()
         st.rerun()
 
-# 📤 Export
+# 📥 Export
 st.subheader("⬇️ Export Clients")
 if not df.empty:
     export_df = df.drop(columns=["id"], errors="ignore")
