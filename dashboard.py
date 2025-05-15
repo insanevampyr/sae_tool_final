@@ -1,4 +1,3 @@
-# dashboard.py
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -157,7 +156,7 @@ if not history.empty:
 else:
     st.info("No historical data available for ML predictions.")
 
-# — Trends —
+# — Trends — 
 st.markdown("### 📈 Trends Over Time")
 if not history.empty:
     coin = st.selectbox("Select coin:", sorted(history["Coin"].dropna().unique()))
