@@ -97,7 +97,7 @@ with st.expander("➕ Add or Edit Client"):
             old_logo_url = selected_row.get("logo_url", "")
             old_photo_url = selected_row.get("photo_url", "")
 
-            logo_file = st.file_uploader("📎 Upload Company Logo", type=["jpg", "jpeg", "png"])
+            logo_file = st.file_uploader("📎 Upload Company Logo (Max 5MB, JPG/PNG)", type=["jpg", "jpeg", "png"])
             logo_url = old_logo_url
             if logo_file:
                 if logo_file.size > MAX_BYTES:
@@ -113,7 +113,7 @@ with st.expander("➕ Add or Edit Client"):
             if logo_url:
                 st.image(logo_url, caption="Logo", width=150)
 
-            photo_file = st.file_uploader("📷 Upload Headshot", type=["jpg", "jpeg", "png"])
+            photo_file = st.file_uploader("📷 Upload Headshot (Max 5MB, JPG/PNG)", type=["jpg", "jpeg", "png"])
             photo_url = old_photo_url
             if photo_file:
                 if photo_file.size > MAX_BYTES:
