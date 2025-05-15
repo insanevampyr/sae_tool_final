@@ -8,3 +8,4 @@ textblob
 python-dotenv
 schedule
 scikit-learn
+supabase
