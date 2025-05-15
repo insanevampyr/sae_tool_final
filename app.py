@@ -33,11 +33,10 @@ def fetch_clients():
 
 df = fetch_clients()
 
-# Hide ID column
 if "id" in df.columns:
     df = df.drop(columns=["id"])
 
-# Search or select
+# 🔎 Search and Select
 selected_row = {}
 with st.expander("🔍 Find Client"):
     col1, col2 = st.columns(2)
@@ -63,9 +62,12 @@ with st.expander("🔍 Find Client"):
     if not selected_df.empty:
         selected_row = selected_df.iloc[0].to_dict()
 
-# Add/Edit form
+# ➕ Add/Edit
 with st.expander("➕ Add or Edit Client"):
     mode = st.radio("Mode", ["Add New", "Edit Selected"], horizontal=True)
+
+    if mode == "Add New":
+        selected_row = {}  # 🔄 Clear all form fields
 
     if mode == "Add New" or (mode == "Edit Selected" and selected_row):
         with st.form("client_form", clear_on_submit=(mode == "Add New")):
@@ -120,7 +122,7 @@ with st.expander("➕ Add or Edit Client"):
     else:
         st.warning("⚠️ To edit, first select a client using the dropdown or search above.")
 
-# Delete
+# 🗑 Delete
 with st.expander("🗑 Delete Client"):
     delete_name = st.selectbox("Choose Client to Delete", df["name"].dropna().unique())
     if st.button("❌ Confirm Delete"):
@@ -129,7 +131,7 @@ with st.expander("🗑 Delete Client"):
         st.cache_data.clear()
         st.rerun()
 
-# Export
+# 📤 Export
 st.subheader("⬇️ Export Clients")
 if not df.empty:
     export_df = df.drop(columns=["id"], errors="ignore")
