@@ -1,8 +1,6 @@
 # analyze.py
-
-import os
-import csv
-from datetime import datetime, timezone
+import os, csv, json
+from datetime import datetime, timezone, timedelta
 import pandas as pd
 
 from analyze_sentiment import analyze_sentiment
@@ -16,62 +14,81 @@ import auto_push
 coins = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
 output_file  = "sentiment_output.csv"
 history_file = "sentiment_history.csv"
+ml_log_path  = "prediction_log.json"
 
 def suggest_action(score: float) -> str:
-    if score > 0.2:
-        return "📈 Consider Buying"
-    if score < -0.2:
-        return "📉 Consider Selling"
+    if score > 0.2: return "📈 Consider Buying"
+    if score < -0.2: return "📉 Consider Selling"
     return "🤝 Hold / Watch"
 
-def main():
-    # 1) Fetch sentiment data
-    sentiment_rows = []
-    now_ts = datetime.now(timezone.utc).isoformat()
+def load_json(path):
+    return json.load(open(path)) if os.path.exists(path) else {}
 
+def save_json(data, path):
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+
+def remove_duplicates(file_path, subset):
+    df = pd.read_csv(file_path)
+    df.drop_duplicates(subset=subset, keep="last", inplace=True)
+    df.to_csv(file_path, index=False)
+
+def main():
+    now = datetime.now(timezone.utc)
+    sentiment_rows = []
+
+    print("🧠 Fetching Reddit sentiment…")
     for coin in coins:
         for post in fetch_reddit_posts("CryptoCurrency", coin, 5):
+            score = analyze_sentiment(post["text"])
             sentiment_rows.append({
                 "Source":    "Reddit",
                 "Coin":       coin,
                 "Text":       post["text"],
-                "Sentiment":  analyze_sentiment(post["text"]),
-                "Action":     suggest_action(analyze_sentiment(post["text"])),
-                "Timestamp":  now_ts,
+                "Sentiment":  score,
+                "Action":     suggest_action(score),
+                "Timestamp":  now.isoformat(),
                 "Link":       post["url"],
             })
 
+    print("📰 Fetching Crypto News sentiment…")
+    for coin in coins:
         for post in fetch_rss_articles(coin, 5):
+            score = analyze_sentiment(post["text"])
             sentiment_rows.append({
                 "Source":    "News",
                 "Coin":       coin,
                 "Text":       post["text"],
-                "Sentiment":  analyze_sentiment(post["text"]),
-                "Action":     suggest_action(analyze_sentiment(post["text"])),
-                "Timestamp":  now_ts,
+                "Sentiment":  score,
+                "Action":     suggest_action(score),
+                "Timestamp":  now.isoformat(),
                 "Link":       post.get("link", ""),
             })
 
-    # 2) Remove duplicates vs existing output
-    if os.path.exists(output_file):
-        old_df = pd.read_csv(output_file)
-        combined_df = pd.concat([old_df, pd.DataFrame(sentiment_rows)], ignore_index=True)
-        combined_df.drop_duplicates(subset=["Coin", "Source", "Text"], inplace=True)
-    else:
-        combined_df = pd.DataFrame(sentiment_rows)
+    # 1) Write sentiment_output.csv
+    write_header = not os.path.exists(output_file)
+    with open(output_file, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=sentiment_rows[0].keys())
+        if write_header: writer.writeheader()
+        writer.writerows(sentiment_rows)
 
-    combined_df.to_csv(output_file, index=False)
-    print(f"✅ Written: {len(sentiment_rows)} entries to {output_file}")
+    remove_duplicates(output_file, ["Timestamp", "Coin", "Source", "Text"])
 
-    # 3) Append historical data
+    print(f"✅ Output written to {output_file}")
+
+    # 2) Build history rows
     prices = fetch_prices()
+    now_iso = now.isoformat()
     summary_rows = []
+
+    df_all = pd.DataFrame(sentiment_rows)
     for source in ("Reddit", "News"):
-        df = combined_df[combined_df["Source"] == source]
+        df = df_all[df_all["Source"] == source]
+        if df.empty: continue
         grouped = df.groupby("Coin")["Sentiment"].mean().round(4)
         for coin, avg in grouped.items():
             summary_rows.append({
-                "Timestamp":       now_ts,
+                "Timestamp":       now_iso,
                 "Coin":            coin,
                 "Source":          source,
                 "Sentiment":       avg,
@@ -79,21 +96,59 @@ def main():
                 "SuggestedAction": suggest_action(avg),
             })
 
-    hist_df = pd.DataFrame(summary_rows)
-    if os.path.exists(history_file):
-        hist_old = pd.read_csv(history_file)
-        hist_df = pd.concat([hist_old, hist_df], ignore_index=True)
-        hist_df.drop_duplicates(subset=["Timestamp", "Coin", "Source"], inplace=True)
+    # 3) Write sentiment_history.csv
+    write_header = not os.path.exists(history_file)
+    with open(history_file, "a", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=summary_rows[0].keys())
+        if write_header: writer.writeheader()
+        writer.writerows(summary_rows)
 
-    hist_df.to_csv(history_file, index=False)
-    print(f"✅ Updated: {history_file}")
+    remove_duplicates(history_file, ["Timestamp", "Coin", "Source"])
 
-    # 4) Telegram alerts
+    print(f"✅ History updated at {history_file}")
+
+    # 4) Telegram alerts for each coin's average
     for coin in coins:
-        avg = hist_df.query("Coin == @coin")["Sentiment"].mean()
-        msg = f"🚨 {coin} overall avg sentiment: {avg:.2f}\nSuggested: {suggest_action(avg)}"
-        send_telegram_message(msg)
+        avg = pd.DataFrame(summary_rows).query("Coin==@coin")["Sentiment"].mean()
+        action = suggest_action(avg)
+        send_telegram_message(f"🚨 {coin} avg sentiment: {avg:.2f}\nSuggested: {action}")
+
+    # 5) 🧠 Update prediction_log.json with actual prices
+    update_predictions()
+
+    # 6) Auto push to git
+    auto_push.auto_push()
+
+def update_predictions():
+    tolerance = 4
+    log = load_json(ml_log_path)
+    if not os.path.exists(history_file): return
+    hist_df = pd.read_csv(history_file)
+    hist_df["Timestamp"] = pd.to_datetime(hist_df["Timestamp"], utc=True, errors="coerce")
+
+    changed = False
+    for coin, entries in log.items():
+        for entry in entries:
+            if entry["actual"] is not None: continue
+            t = pd.to_datetime(entry["timestamp"], utc=True)
+            if datetime.now(timezone.utc) - t < timedelta(hours=1): continue
+
+            match = hist_df[
+                (hist_df["Coin"] == coin) &
+                (hist_df["Timestamp"] > t)
+            ].sort_values("Timestamp")
+
+            if not match.empty:
+                actual_price = match.iloc[0]["PriceUSD"]
+                entry["actual"] = round(actual_price, 2)
+                err = abs((entry["predicted"] - actual_price) / actual_price) * 100
+                entry["diff_pct"] = round(err, 2)
+                entry["accurate"] = err <= tolerance
+                changed = True
+
+    if changed:
+        save_json(log, ml_log_path)
+        print("✅ prediction_log.json updated with actual prices")
 
 if __name__ == "__main__":
     main()
-    auto_push.auto_push()

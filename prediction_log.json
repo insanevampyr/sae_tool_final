@@ -55,6 +55,13 @@
       "actual": null,
       "diff_pct": 0.61,
       "accurate": null
+    },
+    {
+      "timestamp": "2025-05-15T16:49:50.271646+00:00",
+      "predicted": 103332.57,
+      "actual": null,
+      "diff_pct": 0.02,
+      "accurate": null
     }
   ],
   "Dogecoin": [
@@ -112,6 +119,13 @@
       "predicted": 0.24,
       "actual": null,
       "diff_pct": 2.43,
+      "accurate": null
+    },
+    {
+      "timestamp": "2025-05-15T16:49:50.271646+00:00",
+      "predicted": 0.23,
+      "actual": null,
+      "diff_pct": 3.86,
       "accurate": null
     }
   ],
@@ -171,6 +185,13 @@
       "actual": null,
       "diff_pct": 3.1,
       "accurate": null
+    },
+    {
+      "timestamp": "2025-05-15T16:49:50.271646+00:00",
+      "predicted": 2635.01,
+      "actual": null,
+      "diff_pct": 2.79,
+      "accurate": null
     }
   ],
   "Solana": [
@@ -228,6 +249,13 @@
       "predicted": 182.09,
       "actual": null,
       "diff_pct": 2.76,
+      "accurate": null
+    },
+    {
+      "timestamp": "2025-05-15T16:49:50.271646+00:00",
+      "predicted": 176.95,
+      "actual": null,
+      "diff_pct": 2.95,
       "accurate": null
     }
   ]
