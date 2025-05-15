@@ -33,11 +33,11 @@ def fetch_clients():
 
 df = fetch_clients()
 
-# Hide ID column if exists
+# Hide ID column
 if "id" in df.columns:
     df = df.drop(columns=["id"])
 
-# 🔍 Find Client
+# Search or select
 selected_row = {}
 with st.expander("🔍 Find Client"):
     col1, col2 = st.columns(2)
@@ -50,7 +50,6 @@ with st.expander("🔍 Find Client"):
     )
     selected_combo = st.selectbox("🔽 Or Select from Full List", combined_options["display"].sort_values())
 
-    # Determine selected row
     if selected_combo:
         base_name = selected_combo.split(" — ")[0]
         selected_df = df[df["name"] == base_name]
@@ -64,61 +63,64 @@ with st.expander("🔍 Find Client"):
     if not selected_df.empty:
         selected_row = selected_df.iloc[0].to_dict()
 
-# ➕ Add/Edit
+# Add/Edit form
 with st.expander("➕ Add or Edit Client"):
     mode = st.radio("Mode", ["Add New", "Edit Selected"], horizontal=True)
 
-    with st.form("client_form", clear_on_submit=(mode == "Add New")):
-        cols1, cols2 = st.columns(2)
+    if mode == "Add New" or (mode == "Edit Selected" and selected_row):
+        with st.form("client_form", clear_on_submit=(mode == "Add New")):
+            cols1, cols2 = st.columns(2)
 
-        name = cols1.text_input("Name", selected_row.get("name", ""))
-        legal_name = cols2.text_input("Legal Name", selected_row.get("legal_name", ""))
-        badge_name = cols1.text_input("Badge Name", selected_row.get("badge_name", ""))
-        bio = cols2.text_input("Bio", selected_row.get("bio", ""))
-        dob = cols1.text_input("Date of Birth", selected_row.get("dob", ""))
-        gender = cols2.text_input("Gender", selected_row.get("gender", ""))
-        phone = cols1.text_input("Phone", selected_row.get("phone", ""))
-        email = cols2.text_input("Email", selected_row.get("email", ""))
-        company = cols1.text_input("Company", selected_row.get("company", ""))
-        address = cols2.text_input("Address", selected_row.get("address", ""))
-        city = cols1.text_input("City", selected_row.get("city", ""))
-        state = cols2.text_input("State", selected_row.get("state", ""))
-        zip_code = cols1.text_input("Zip", selected_row.get("zip", ""))
-        emergency = cols2.text_input("Emergency Contact", selected_row.get("emergency_contact", ""))
-        emergency_phone = cols1.text_input("Emergency Phone", selected_row.get("emergency_contact_phone", ""))
-        airport = cols2.text_input("Airport Code", selected_row.get("airport_code", ""))
-        arrival_date = cols1.text_input("Arrival Date", selected_row.get("arrival_date", ""))
-        arrival_time = cols2.text_input("Arrival Time", selected_row.get("arrival_time", ""))
-        logo_url = st.text_input("Company Logo URL", selected_row.get("logo_url", ""))
-        photo_url = st.text_input("Headshot Photo URL", selected_row.get("photo_url", ""))
+            name = cols1.text_input("Name", selected_row.get("name", ""))
+            legal_name = cols2.text_input("Legal Name", selected_row.get("legal_name", ""))
+            badge_name = cols1.text_input("Badge Name", selected_row.get("badge_name", ""))
+            bio = cols2.text_input("Bio", selected_row.get("bio", ""))
+            dob = cols1.text_input("Date of Birth", selected_row.get("dob", ""))
+            gender = cols2.text_input("Gender", selected_row.get("gender", ""))
+            phone = cols1.text_input("Phone", selected_row.get("phone", ""))
+            email = cols2.text_input("Email", selected_row.get("email", ""))
+            company = cols1.text_input("Company", selected_row.get("company", ""))
+            address = cols2.text_input("Address", selected_row.get("address", ""))
+            city = cols1.text_input("City", selected_row.get("city", ""))
+            state = cols2.text_input("State", selected_row.get("state", ""))
+            zip_code = cols1.text_input("Zip", selected_row.get("zip", ""))
+            emergency = cols2.text_input("Emergency Contact", selected_row.get("emergency_contact", ""))
+            emergency_phone = cols1.text_input("Emergency Phone", selected_row.get("emergency_contact_phone", ""))
+            airport = cols2.text_input("Airport Code", selected_row.get("airport_code", ""))
+            arrival_date = cols1.text_input("Arrival Date", selected_row.get("arrival_date", ""))
+            arrival_time = cols2.text_input("Arrival Time", selected_row.get("arrival_time", ""))
+            logo_url = st.text_input("Company Logo URL", selected_row.get("logo_url", ""))
+            photo_url = st.text_input("Headshot Photo URL", selected_row.get("photo_url", ""))
 
-        if logo_url:
-            st.image(logo_url, caption="Company Logo", width=150)
-        if photo_url:
-            st.image(photo_url, caption="Headshot", width=150)
+            if logo_url:
+                st.image(logo_url, caption="Company Logo", width=150)
+            if photo_url:
+                st.image(photo_url, caption="Headshot", width=150)
 
-        submitted = st.form_submit_button("💾 Save Client")
-        if submitted:
-            data = {
-                "name": name, "legal_name": legal_name, "badge_name": badge_name, "bio": bio, "dob": dob,
-                "gender": gender, "phone": phone, "email": email, "company": company, "logo_url": logo_url,
-                "address": address, "city": city, "state": state, "zip": zip_code,
-                "emergency_contact": emergency, "emergency_contact_phone": emergency_phone,
-                "airport_code": airport, "arrival_date": arrival_date, "arrival_time": arrival_time,
-                "photo_url": photo_url, "last_update": datetime.utcnow().isoformat()
-            }
+            submitted = st.form_submit_button("💾 Save Client")
+            if submitted:
+                data = {
+                    "name": name, "legal_name": legal_name, "badge_name": badge_name, "bio": bio, "dob": dob,
+                    "gender": gender, "phone": phone, "email": email, "company": company, "logo_url": logo_url,
+                    "address": address, "city": city, "state": state, "zip": zip_code,
+                    "emergency_contact": emergency, "emergency_contact_phone": emergency_phone,
+                    "airport_code": airport, "arrival_date": arrival_date, "arrival_time": arrival_time,
+                    "photo_url": photo_url, "last_update": datetime.utcnow().isoformat()
+                }
 
-            if mode == "Add New":
-                supabase.table("clients").insert(data).execute()
-                st.success("✅ New client added.")
-            elif mode == "Edit Selected" and selected_row:
-                supabase.table("clients").update(data).eq("name", selected_row["name"]).execute()
-                st.success("✅ Client updated.")
+                if mode == "Add New":
+                    supabase.table("clients").insert(data).execute()
+                    st.success("✅ New client added.")
+                elif mode == "Edit Selected":
+                    supabase.table("clients").update(data).eq("name", selected_row["name"]).execute()
+                    st.success("✅ Client updated.")
 
-            st.cache_data.clear()
-            st.rerun()
+                st.cache_data.clear()
+                st.rerun()
+    else:
+        st.warning("⚠️ To edit, first select a client using the dropdown or search above.")
 
-# 🗑 Delete
+# Delete
 with st.expander("🗑 Delete Client"):
     delete_name = st.selectbox("Choose Client to Delete", df["name"].dropna().unique())
     if st.button("❌ Confirm Delete"):
@@ -127,7 +129,7 @@ with st.expander("🗑 Delete Client"):
         st.cache_data.clear()
         st.rerun()
 
-# 📤 Export
+# Export
 st.subheader("⬇️ Export Clients")
 if not df.empty:
     export_df = df.drop(columns=["id"], errors="ignore")
