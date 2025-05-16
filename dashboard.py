@@ -15,8 +15,10 @@ st.title('📊 AlphaPulse: Crypto Sentiment Dashboard')
 st.markdown('Live crypto sentiment analysis, historical trends, and ML forecasts.')
 
 # Load data
+
 def load_data(path):
     return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
+
 def load_json(path):
     if os.path.exists(path):
         try:
@@ -78,9 +80,12 @@ if isinstance(log, dict):
         acc = entry.get('accurate')
         ts = entry.get('timestamp', '').split('+')[0].replace('T', ' ')
         icon = '✅' if acc else ('❌' if acc is False else '🕒')
-        st.markdown(f"**{coin}**: Pred ${pred:.2f} ({pct:+.2f}%) at {ts} UTC  
+        # Fixed f-string with triple quotes
+        st.markdown(f"""
+**{coin}**: Pred ${pred:.2f} ({pct:+.2f}%) at {ts} UTC  
 Actual: {('$'+format(act,',.2f')) if act else '_awaiting_'}  
-Accuracy: {icon}")
+Accuracy: {icon}
+""", unsafe_allow_html=True)
     if not shown:
         st.info('Run analyze.py to append predictions.')
 else:

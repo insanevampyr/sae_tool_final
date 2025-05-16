@@ -84,7 +84,7 @@ def main():
     now = datetime.now(timezone.utc)
     ts_iso = now.isoformat()
 
-    # Fetch and analyze sentiment
+    # 1) Fetch and analyze sentiment
     rows = []
     for coin in coins:
         for p in fetch_reddit_posts('CryptoCurrency', coin, 5):
@@ -111,7 +111,7 @@ def main():
                 'Link': a.get('link', '')
             })
 
-    # Write output and history
+    # 2) Write output and history
     header_out = not os.path.exists(output_file)
     with open(output_file, 'a', newline='', encoding='utf-8') as f:
         w = csv.DictWriter(f, fieldnames=rows[0].keys())
@@ -144,12 +144,12 @@ def main():
         w2.writerows(hist_rows)
     remove_duplicates(history_file, ['Timestamp', 'Coin', 'Source'])
 
-    # Telegram alerts
+    # 3) Telegram alerts
     for c in coins:
         avg_val = pd.DataFrame(hist_rows).query('Coin==@c')['Sentiment'].mean()
         send_telegram_message(f"🚨 {c} avg sentiment: {avg_val:.2f}")
 
-    # Initialize or append ML predictions
+    # 4) Initialize or append ML predictions
     if not os.path.exists(ml_log_path):
         init_prediction_log()
     log = load_json(ml_log_path)
@@ -158,11 +158,11 @@ def main():
     save_json(log, ml_log_path)
     print(f"✅ Appended new ML predictions to {ml_log_path}")
 
-    # Update actuals and auto-push
+    # 5) Update actuals and auto-push
     update_predictions()
     auto_push.auto_push()
 
-    # Print committed files
+    # 6) Print committed files
     try:
         files = subprocess.check_output(
             ['git', 'diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'], text=True
