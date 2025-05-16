@@ -10,10 +10,10 @@ creds.json
 # Python cache
 __pycache__/
 
-# Logs and local state
-logs/
-*.log
-prediction_log.json
-prediction_log.json.bak
-# ignore our per‐run alert tracker
-alert_log.json
+
+# Virtual env
+venv/
+__pycache__/
+*.pyc
+
+
