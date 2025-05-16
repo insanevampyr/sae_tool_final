@@ -38,7 +38,7 @@ def remove_duplicates(path, subset):
 
 # --- Prediction log initializer & updater ---
 def update_predictions():
-    # If log file missing or corrupted, initialize with empty lists
+    # Initialize if missing or corrupted
     if not os.path.exists(ml_log_path):
         default_log = {coin: [] for coin in coins}
         save_json(default_log, ml_log_path)
@@ -46,8 +46,7 @@ def update_predictions():
         return
 
     log = load_json(ml_log_path)
-    if not log:
-        # handle empty or invalid JSON by reinitializing
+    if not isinstance(log, dict) or not log:
         default_log = {coin: [] for coin in coins}
         save_json(default_log, ml_log_path)
         print(f"✅ Reinitialized corrupted {ml_log_path}")
@@ -62,16 +61,15 @@ def update_predictions():
         for entry in entries:
             if entry.get("actual") is not None:
                 continue
-            ts_str = entry.get("timestamp", "").replace('+00:00','')
+            ts_str = entry.get("timestamp", "").split("+")[0]
             try:
                 t0 = datetime.fromisoformat(ts_str)
-            except ValueError:
+            except Exception:
                 continue
             if now - t0 < timedelta(hours=1):
                 continue
             match = hist_df[
-                (hist_df["Coin"] == coin) &
-                (hist_df["Timestamp"] > t0)
+                (hist_df["Coin"] == coin) & (hist_df["Timestamp"] > t0)
             ].sort_values("Timestamp")
             if not match.empty:
                 actual_price = float(match.iloc[0].get("PriceUSD", 0))
@@ -91,7 +89,7 @@ def main():
     now_iso = now.isoformat()
     sentiment_rows = []
 
-    # Fetch Reddit sentiment
+    # 1) Fetch Reddit sentiment
     for coin in coins:
         for post in fetch_reddit_posts("CryptoCurrency", coin, 5):
             score = analyze_sentiment(post.get("text", ""))
@@ -105,7 +103,7 @@ def main():
                 "Link": post.get("url", ""),
             })
 
-    # Fetch News sentiment
+    # 2) Fetch News sentiment
     for coin in coins:
         for post in fetch_rss_articles(coin, 5):
             score = analyze_sentiment(post.get("text", ""))
@@ -119,61 +117,55 @@ def main():
                 "Link": post.get("link", ""),
             })
 
-    # Write/append sentiment_output.csv and dedupe
+    # 3) Write/append output and dedupe
     write_header = not os.path.exists(output_file)
     with open(output_file, "a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=sentiment_rows[0].keys())
-        if write_header:
-            writer.writeheader()
+        if write_header: writer.writeheader()
         writer.writerows(sentiment_rows)
-    remove_duplicates(output_file, ["Timestamp", "Coin", "Source", "Text"])
+    remove_duplicates(output_file, ["Timestamp","Coin","Source","Text"])
 
-    # Build and append history rows
+    # 4) Build & append history summary
     prices = fetch_prices()
     summary_rows = []
     df_all = pd.DataFrame(sentiment_rows)
-    for source in ("Reddit", "News"):
-        df = df_all[df_all["Source"] == source]
-        if df.empty:
-            continue
-        grouped = df.groupby("Coin")["Sentiment"].mean().round(4)
-        for coin, avg in grouped.items():
+    for source in ("Reddit","News"):
+        df = df_all[df_all["Source"]==source]
+        if df.empty: continue
+        for coin, avg in df.groupby("Coin")["Sentiment"].mean().round(4).items():
             summary_rows.append({
                 "Timestamp": now_iso,
                 "Coin": coin,
                 "Source": source,
                 "Sentiment": avg,
-                "PriceUSD": prices.get(coin, ""),
-                "SuggestedAction": ("📈 Consider Buying" if avg > 0.2 else "📉 Consider Selling" if avg < -0.2 else "🤝 Hold / Watch"),
+                "PriceUSD": prices.get(coin,''),
+                "SuggestedAction": ("📈 Consider Buying" if avg>0.2 else "📉 Consider Selling" if avg< -0.2 else "🤝 Hold / Watch"),
             })
     write_hist_header = not os.path.exists(history_file)
     with open(history_file, "a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=summary_rows[0].keys())
-        if write_hist_header:
-            writer.writeheader()
+        if write_hist_header: writer.writeheader()
         writer.writerows(summary_rows)
-    remove_duplicates(history_file, ["Timestamp", "Coin", "Source"])
+    remove_duplicates(history_file, ["Timestamp","Coin","Source"])
 
-    # Telegram alerts
+    # 5) Telegram alerts
     for coin in coins:
         avg = pd.DataFrame(summary_rows).query("Coin==@coin")["Sentiment"].mean()
-        send_telegram_message(f"🚨 {coin} avg sentiment: {avg:.2f}\nSuggested: {('📈 Consider Buying' if avg>0.2 else '📉 Consider Selling' if avg< -0.2 else '🤝 Hold / Watch')}")
+        send_telegram_message(f"🚨 {coin} avg sentiment: {avg:.2f}\nSuggested: {('📈 Buy' if avg>0.2 else '📉 Sell' if avg< -0.2 else '🤝 Hold')}")
 
-    # Update prediction log and auto-push
+    # 6) Update predictions & push
     update_predictions()
     auto_push.auto_push()
 
-    # Print files committed in last push
+    # 7) Print committed files
     try:
         last_files = subprocess.check_output(
-            ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"],
-            text=True
+            ["git","diff-tree","--no-commit-id","--name-only","-r","HEAD"], text=True
         ).splitlines()
         print("✅ Files updated/pushed in last commit:")
-        for f in last_files:
-            print(f" - {f}")
+        for f in last_files: print(f" - {f}")
     except Exception as e:
         print(f"⚠️ Could not list committed files: {e}")
 
-if __name__ == "__main__":
+if __name__=="__main__":
     main()
