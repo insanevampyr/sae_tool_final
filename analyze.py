@@ -14,12 +14,11 @@ from send_telegram      import send_telegram_message
 import auto_push
 
 # ─── CONFIG ─────────────────────────────────────────────────────────────────
-COINS           = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
-OUT_CSV         = "sentiment_output.csv"
-HIST_CSV        = "sentiment_history.csv"
-PRED_LOG_JSON   = "prediction_log.json"
-ALERT_LOG_JSON  = "alert_log.json"
-TOLERANCE_PCT   = 4  # ±4% tolerated error
+COINS          = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
+OUT_CSV        = "sentiment_output.csv"
+HIST_CSV       = "sentiment_history.csv"
+PRED_LOG_JSON  = "prediction_log.json"
+TOLERANCE_PCT  = 4   # ±4% error tolerance
 
 # ─── HELPERS ─────────────────────────────────────────────────────────────────
 def load_json(path):
@@ -35,7 +34,7 @@ def save_json(obj, path):
         json.dump(obj, f, indent=2)
 
 def dedupe_csv(path, subset):
-    df = pd.read_csv(path)
+    df = pd.read_csv(path, parse_dates=['Timestamp'])
     df.drop_duplicates(subset=subset, keep='last', inplace=True)
     df.to_csv(path, index=False)
 
@@ -43,7 +42,7 @@ def ensure_pred_log():
     if not os.path.exists(PRED_LOG_JSON):
         save_json({c: [] for c in COINS}, PRED_LOG_JSON)
 
-# ─── UPDATE WITH ACTUALS ──────────────────────────────────────────────────────
+# ─── BACKFILL ACTUALS ────────────────────────────────────────────────────────
 def update_predictions_with_actuals():
     log = load_json(PRED_LOG_JSON)
     if not os.path.exists(HIST_CSV):
@@ -59,13 +58,14 @@ def update_predictions_with_actuals():
         for entry in entries:
             if 'actual' in entry:
                 continue
+            # only backfill if >1h old
             try:
                 t0 = datetime.fromisoformat(entry['timestamp'])
             except ValueError:
                 continue
-            # only backfill if >1h old
             if now - t0 < timedelta(hours=1):
                 continue
+
             sub = hist[(hist.Coin == coin) & (hist.Timestamp > t0)]
             if not sub.empty:
                 actual = float(sub.iloc[0].PriceUSD)
@@ -86,23 +86,25 @@ def main():
     # 1) Gather posts + articles & analyze
     rows = []
     for coin in COINS:
+        # Reddit
         for post in fetch_reddit_posts('CryptoCurrency', coin, 5):
             s = analyze_sentiment(post['text'])
             rows.append({
                 'Timestamp': ts_iso, 'Coin': coin,
                 'Source': 'Reddit',
                 'Text':   post['text'],
-                'Sentiment': s,
+                'Sentiment': round(s,4),
                 'Action':    '📈 Buy' if s>0.2 else '📉 Sell' if s<-0.2 else '🤝 Hold',
                 'Link':      post.get('url','')
             })
+        # RSS News
         for art in fetch_rss_articles(coin,5):
             s = analyze_sentiment(art['text'])
             rows.append({
                 'Timestamp': ts_iso, 'Coin': coin,
                 'Source': 'News',
                 'Text':   art['text'],
-                'Sentiment': s,
+                'Sentiment': round(s,4),
                 'Action':    '📈 Buy' if s>0.2 else '📉 Sell' if s<-0.2 else '🤝 Hold',
                 'Link':      art.get('link','')
             })
@@ -117,9 +119,9 @@ def main():
     dedupe_csv(OUT_CSV, ['Timestamp','Coin','Source','Text'])
 
     # 3) Build summary history
-    prices = fetch_prices()
+    prices    = fetch_prices()
     hist_rows = []
-    df = pd.DataFrame(rows)
+    df        = pd.DataFrame(rows)
     for src in ['Reddit','News']:
         sub = df[df.Source==src]
         for coin, avg in sub.groupby('Coin')['Sentiment'].mean().round(4).items():
@@ -138,39 +140,26 @@ def main():
         w2.writerows(hist_rows)
     dedupe_csv(HIST_CSV, ['Timestamp','Coin','Source'])
 
-    # 4) Hourly Telegram alert
-    alert_log  = load_json(ALERT_LOG_JSON)
-    last_alert = alert_log.get('last_alert')
-    do_alert   = False
+    # 4) **Hourly Summary Alert**  
+    #    (Assumes you run this script once an hour; will send exactly one message per run.)
+    full     = pd.read_csv(HIST_CSV, parse_dates=['Timestamp'])
+    if full['Timestamp'].dt.tz is None:
+        full['Timestamp'] = full['Timestamp'].dt.tz_localize('UTC')
+    cutoff   = now - timedelta(hours=1)
+    recent   = full[full.Timestamp > cutoff]
+    p_log    = load_json(PRED_LOG_JSON)
+    lines    = [f"⏱️ Hourly Update at {now.strftime('%Y-%m-%d %H:%M')} UTC"]
+    for c in COINS:
+        avg   = recent[recent.Coin==c]['Sentiment'].mean() if not recent.empty else 0
+        price = prices.get(c,0)
+        pred  = p_log.get(c, [])[-1]['predicted'] if p_log.get(c) else 0
+        # compute % diff relative to current price
+        pct   = round((pred - price)/price*100,2) if price else 0
+        arrow = "🟢" if pct>0 else "🔴" if pct<0 else "⚪️"
+        lines.append(f"{c}: Sent {avg:+.2f}, Price ${price:.2f}, Pred ${pred:.2f} ({pct:+.2f}%){arrow}")
+    send_telegram_message("\n".join(lines))
 
-    if not last_alert:
-        do_alert = True
-    else:
-        try:
-            dt0 = datetime.fromisoformat(last_alert)
-            do_alert = (now - dt0) >= timedelta(hours=1)
-        except:
-            do_alert = True
-
-    if do_alert:
-        full = pd.read_csv(HIST_CSV, parse_dates=['Timestamp'])
-        if full['Timestamp'].dt.tz is None:
-            full['Timestamp'] = full['Timestamp'].dt.tz_localize('UTC')
-        cutoff = now - timedelta(hours=1)
-        recent = full[full.Timestamp > cutoff]
-
-        pred_log = load_json(PRED_LOG_JSON)
-        lines = [f"⏱️ Hourly update at {ts_iso} UTC"]
-        for c in COINS:
-            avg  = recent[recent.Coin==c]['Sentiment'].mean() if not recent.empty else 0
-            pred = pred_log.get(c, [])[-1]['predicted'] if pred_log.get(c) else 0
-            lines.append(f"{c}: Sent {avg:+.2f}, Pred ${pred:.2f}")
-        send_telegram_message("\n".join(lines))
-
-        alert_log['last_alert'] = ts_iso
-        save_json(alert_log, ALERT_LOG_JSON)
-
-    # 5) Append next-hour “predicted” prices
+    # 5) Append next‐hour “predicted” prices
     ensure_pred_log()
     plog = load_json(PRED_LOG_JSON)
     for c in COINS:
