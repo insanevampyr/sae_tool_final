@@ -1,19 +1,20 @@
-venv/
-.env
-previous_actions.json
-price_predictor.pkl
-# Backup and local files
-*BACKUP*.py
-BACK.env
-creds.json
-
-# Python cache
-__pycache__/
-
-
 # Virtual env
 venv/
 __pycache__/
-*.pyc
 
+# Logs & data
+*.log
+sentiment_output.csv
+sentiment_history.csv
+prediction_log.json
+alert_log.json
 
+# Credentials
+.env
+creds.json
+
+# Backups
+*BACKUP*.py
+
+# IDEs
+.vscode/

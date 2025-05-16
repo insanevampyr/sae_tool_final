@@ -1,262 +1,654 @@
 {
   "Bitcoin": [
     {
-      "timestamp": "2025-05-14T17:04:58.013616+00:00",
-      "predicted": 104452.1,
-      "actual": null,
-      "diff_pct": 0.35,
-      "accurate": null
+      "timestamp": "2025-05-16T15:54:32.749461+00:00",
+      "predicted": 103991,
+      "actual": 103994.0,
+      "diff_pct": 0.0,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T20:46:31.443601+00:00",
-      "predicted": 104243.57,
-      "actual": null,
-      "diff_pct": 0.8,
-      "accurate": null
+      "timestamp": "2025-05-16T15:56:33.617521+00:00",
+      "predicted": 103994,
+      "actual": 104159.0,
+      "diff_pct": 0.16,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:08:02.662106+00:00",
-      "predicted": 104232.26,
-      "actual": null,
-      "diff_pct": 0.61,
-      "accurate": null
+      "timestamp": "2025-05-16T16:06:09.930439+00:00",
+      "predicted": 104159,
+      "actual": 104213.0,
+      "diff_pct": 0.05,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:26.159918+00:00",
-      "predicted": 104232.26,
-      "actual": null,
-      "diff_pct": 0.61,
-      "accurate": null
+      "timestamp": "2025-05-16T16:11:00.895012+00:00",
+      "predicted": 104213,
+      "actual": 104173.0,
+      "diff_pct": 0.04,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:46.330564+00:00",
-      "predicted": 104232.26,
-      "actual": null,
-      "diff_pct": 0.61,
-      "accurate": null
+      "timestamp": "2025-05-16T16:27:13.481516+00:00",
+      "predicted": 104173,
+      "actual": 104060.0,
+      "diff_pct": 0.11,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:47.836581+00:00",
-      "predicted": 104232.26,
-      "actual": null,
-      "diff_pct": 0.61,
-      "accurate": null
+      "timestamp": "2025-05-16T16:36:25.991830+00:00",
+      "predicted": 104060,
+      "actual": 104101.0,
+      "diff_pct": 0.04,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:52.986745+00:00",
-      "predicted": 104232.26,
-      "actual": null,
-      "diff_pct": 0.61,
-      "accurate": null
+      "timestamp": "2025-05-16T17:08:31.267901+00:00",
+      "predicted": 104101,
+      "actual": 104116.0,
+      "diff_pct": 0.01,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:13:00.501166+00:00",
-      "predicted": 104232.26,
-      "actual": null,
-      "diff_pct": 0.61,
-      "accurate": null
+      "timestamp": "2025-05-16T17:13:21.322199+00:00",
+      "predicted": 104116,
+      "actual": 104217.0,
+      "diff_pct": 0.1,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-15T16:49:50.271646+00:00",
-      "predicted": 103332.57,
-      "actual": null,
+      "timestamp": "2025-05-16T17:21:07.531538+00:00",
+      "predicted": 104217,
+      "actual": 104250.0,
+      "diff_pct": 0.03,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:24:18.627728+00:00",
+      "predicted": 104250,
+      "actual": 104255.0,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:33:40.292313+00:00",
+      "predicted": 104255,
+      "actual": 104255.0,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:34:20.253452+00:00",
+      "predicted": 104255,
+      "actual": 104058.0,
+      "diff_pct": 0.19,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:52:50.166958+00:00",
+      "predicted": 104058,
+      "actual": 104058.0,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:53:12.082281+00:00",
+      "predicted": 104058,
+      "actual": 104043.0,
+      "diff_pct": 0.01,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:53:51.736463+00:00",
+      "predicted": 104043,
+      "actual": 104043.0,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:54:29.397201+00:00",
+      "predicted": 104043,
+      "actual": 103918.0,
+      "diff_pct": 0.12,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:04:42.133038+00:00",
+      "predicted": 103918,
+      "actual": 103918.0,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:04:59.232424+00:00",
+      "predicted": 103918,
+      "actual": 103918.0,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:05:16.421639+00:00",
+      "predicted": 103918,
+      "actual": 103918.0,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:05:36.740622+00:00",
+      "predicted": 103918,
+      "actual": 103998.0,
+      "diff_pct": 0.08,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:15:20.151791+00:00",
+      "predicted": 103998,
+      "actual": 103988.0,
+      "diff_pct": 0.01,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:30:09.189216+00:00",
+      "predicted": 103988,
+      "actual": 104007.0,
       "diff_pct": 0.02,
-      "accurate": null
-    }
-  ],
-  "Dogecoin": [
-    {
-      "timestamp": "2025-05-14T17:04:58.013616+00:00",
-      "predicted": 0.24,
-      "actual": null,
-      "diff_pct": 1.51,
-      "accurate": null
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T20:46:31.443601+00:00",
-      "predicted": 0.24,
-      "actual": null,
-      "diff_pct": 2.6,
-      "accurate": null
-    },
-    {
-      "timestamp": "2025-05-14T22:08:02.662106+00:00",
-      "predicted": 0.24,
-      "actual": null,
-      "diff_pct": 2.43,
-      "accurate": null
-    },
-    {
-      "timestamp": "2025-05-14T22:12:26.159918+00:00",
-      "predicted": 0.24,
-      "actual": null,
-      "diff_pct": 2.43,
-      "accurate": null
-    },
-    {
-      "timestamp": "2025-05-14T22:12:46.330564+00:00",
-      "predicted": 0.24,
-      "actual": null,
-      "diff_pct": 2.43,
-      "accurate": null
-    },
-    {
-      "timestamp": "2025-05-14T22:12:47.836581+00:00",
-      "predicted": 0.24,
-      "actual": null,
-      "diff_pct": 2.43,
-      "accurate": null
-    },
-    {
-      "timestamp": "2025-05-14T22:12:52.986745+00:00",
-      "predicted": 0.24,
-      "actual": null,
-      "diff_pct": 2.43,
-      "accurate": null
-    },
-    {
-      "timestamp": "2025-05-14T22:13:00.501166+00:00",
-      "predicted": 0.24,
-      "actual": null,
-      "diff_pct": 2.43,
-      "accurate": null
-    },
-    {
-      "timestamp": "2025-05-15T16:49:50.271646+00:00",
-      "predicted": 0.23,
-      "actual": null,
-      "diff_pct": 3.86,
-      "accurate": null
+      "timestamp": "2025-05-16T18:40:22.134270+00:00",
+      "predicted": 104007,
+      "actual": 103906.0,
+      "diff_pct": 0.1,
+      "accurate": true
     }
   ],
   "Ethereum": [
     {
-      "timestamp": "2025-05-14T17:04:58.013616+00:00",
-      "predicted": 2698.92,
-      "actual": null,
-      "diff_pct": 2.89,
-      "accurate": null
+      "timestamp": "2025-05-16T15:54:32.749461+00:00",
+      "predicted": 2590.35,
+      "actual": 2590.21,
+      "diff_pct": 0.01,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T20:46:31.443601+00:00",
-      "predicted": 2683.92,
-      "actual": null,
-      "diff_pct": 3.15,
-      "accurate": null
+      "timestamp": "2025-05-16T15:56:33.617521+00:00",
+      "predicted": 2590.21,
+      "actual": 2593.13,
+      "diff_pct": 0.11,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:08:02.662106+00:00",
-      "predicted": 2682.41,
-      "actual": null,
-      "diff_pct": 3.1,
-      "accurate": null
+      "timestamp": "2025-05-16T16:06:09.930439+00:00",
+      "predicted": 2593.13,
+      "actual": 2594.89,
+      "diff_pct": 0.07,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:26.159918+00:00",
-      "predicted": 2682.41,
-      "actual": null,
-      "diff_pct": 3.1,
-      "accurate": null
+      "timestamp": "2025-05-16T16:11:00.895012+00:00",
+      "predicted": 2594.89,
+      "actual": 2590.23,
+      "diff_pct": 0.18,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:46.330564+00:00",
-      "predicted": 2682.41,
-      "actual": null,
-      "diff_pct": 3.1,
-      "accurate": null
+      "timestamp": "2025-05-16T16:27:13.481516+00:00",
+      "predicted": 2590.23,
+      "actual": 2585.84,
+      "diff_pct": 0.17,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:47.836581+00:00",
-      "predicted": 2682.41,
-      "actual": null,
-      "diff_pct": 3.1,
-      "accurate": null
+      "timestamp": "2025-05-16T16:36:25.991830+00:00",
+      "predicted": 2585.84,
+      "actual": 2584.49,
+      "diff_pct": 0.05,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:52.986745+00:00",
-      "predicted": 2682.41,
-      "actual": null,
-      "diff_pct": 3.1,
-      "accurate": null
+      "timestamp": "2025-05-16T17:08:31.267901+00:00",
+      "predicted": 2584.49,
+      "actual": 2584.39,
+      "diff_pct": 0.0,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:13:00.501166+00:00",
-      "predicted": 2682.41,
-      "actual": null,
-      "diff_pct": 3.1,
-      "accurate": null
+      "timestamp": "2025-05-16T17:13:21.322199+00:00",
+      "predicted": 2584.39,
+      "actual": 2586.06,
+      "diff_pct": 0.06,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-15T16:49:50.271646+00:00",
-      "predicted": 2635.01,
-      "actual": null,
-      "diff_pct": 2.79,
-      "accurate": null
+      "timestamp": "2025-05-16T17:21:07.531538+00:00",
+      "predicted": 2586.06,
+      "actual": 2586.43,
+      "diff_pct": 0.01,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:24:18.627728+00:00",
+      "predicted": 2586.43,
+      "actual": 2589.22,
+      "diff_pct": 0.11,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:33:40.292313+00:00",
+      "predicted": 2589.22,
+      "actual": 2589.22,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:34:20.253452+00:00",
+      "predicted": 2589.22,
+      "actual": 2586.23,
+      "diff_pct": 0.12,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:52:50.166958+00:00",
+      "predicted": 2586.23,
+      "actual": 2586.23,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:53:12.082281+00:00",
+      "predicted": 2586.23,
+      "actual": 2585.91,
+      "diff_pct": 0.01,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:53:51.736463+00:00",
+      "predicted": 2585.91,
+      "actual": 2585.91,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:54:29.397201+00:00",
+      "predicted": 2585.91,
+      "actual": 2582.13,
+      "diff_pct": 0.15,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:04:42.133038+00:00",
+      "predicted": 2582.13,
+      "actual": 2582.13,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:04:59.232424+00:00",
+      "predicted": 2582.13,
+      "actual": 2582.13,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:05:16.421639+00:00",
+      "predicted": 2582.13,
+      "actual": 2582.13,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:05:36.740622+00:00",
+      "predicted": 2582.13,
+      "actual": 2582.71,
+      "diff_pct": 0.02,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:15:20.151791+00:00",
+      "predicted": 2582.71,
+      "actual": 2581.13,
+      "diff_pct": 0.06,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:30:09.189216+00:00",
+      "predicted": 2581.13,
+      "actual": 2583.35,
+      "diff_pct": 0.09,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:40:22.134270+00:00",
+      "predicted": 2583.35,
+      "actual": 2584.01,
+      "diff_pct": 0.03,
+      "accurate": true
     }
   ],
   "Solana": [
     {
-      "timestamp": "2025-05-14T17:04:58.013616+00:00",
-      "predicted": 183.74,
-      "actual": null,
-      "diff_pct": 1.4,
-      "accurate": null
+      "timestamp": "2025-05-16T15:54:32.749461+00:00",
+      "predicted": 172.18,
+      "actual": 172.16,
+      "diff_pct": 0.01,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T20:46:31.443601+00:00",
-      "predicted": 182.24,
-      "actual": null,
-      "diff_pct": 3.37,
-      "accurate": null
+      "timestamp": "2025-05-16T15:56:33.617521+00:00",
+      "predicted": 172.16,
+      "actual": 172.27,
+      "diff_pct": 0.06,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:08:02.662106+00:00",
-      "predicted": 182.09,
-      "actual": null,
-      "diff_pct": 2.76,
-      "accurate": null
+      "timestamp": "2025-05-16T16:06:09.930439+00:00",
+      "predicted": 172.27,
+      "actual": 172.29,
+      "diff_pct": 0.01,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:26.159918+00:00",
-      "predicted": 182.09,
-      "actual": null,
-      "diff_pct": 2.76,
-      "accurate": null
+      "timestamp": "2025-05-16T16:11:00.895012+00:00",
+      "predicted": 172.29,
+      "actual": 171.63,
+      "diff_pct": 0.38,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:46.330564+00:00",
-      "predicted": 182.09,
-      "actual": null,
-      "diff_pct": 2.76,
-      "accurate": null
+      "timestamp": "2025-05-16T16:27:13.481516+00:00",
+      "predicted": 171.63,
+      "actual": 171.19,
+      "diff_pct": 0.26,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:47.836581+00:00",
-      "predicted": 182.09,
-      "actual": null,
-      "diff_pct": 2.76,
-      "accurate": null
+      "timestamp": "2025-05-16T16:36:25.991830+00:00",
+      "predicted": 171.19,
+      "actual": 171.1,
+      "diff_pct": 0.05,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:12:52.986745+00:00",
-      "predicted": 182.09,
-      "actual": null,
-      "diff_pct": 2.76,
-      "accurate": null
+      "timestamp": "2025-05-16T17:08:31.267901+00:00",
+      "predicted": 171.1,
+      "actual": 171.08,
+      "diff_pct": 0.01,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-14T22:13:00.501166+00:00",
-      "predicted": 182.09,
-      "actual": null,
-      "diff_pct": 2.76,
-      "accurate": null
+      "timestamp": "2025-05-16T17:13:21.322199+00:00",
+      "predicted": 171.08,
+      "actual": 171.29,
+      "diff_pct": 0.12,
+      "accurate": true
     },
     {
-      "timestamp": "2025-05-15T16:49:50.271646+00:00",
-      "predicted": 176.95,
-      "actual": null,
-      "diff_pct": 2.95,
-      "accurate": null
+      "timestamp": "2025-05-16T17:21:07.531538+00:00",
+      "predicted": 171.29,
+      "actual": 171.36,
+      "diff_pct": 0.04,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:24:18.627728+00:00",
+      "predicted": 171.36,
+      "actual": 171.67,
+      "diff_pct": 0.18,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:33:40.292313+00:00",
+      "predicted": 171.67,
+      "actual": 171.67,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:34:20.253452+00:00",
+      "predicted": 171.67,
+      "actual": 171.29,
+      "diff_pct": 0.22,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:52:50.166958+00:00",
+      "predicted": 171.29,
+      "actual": 171.29,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:53:12.082281+00:00",
+      "predicted": 171.29,
+      "actual": 171.25,
+      "diff_pct": 0.02,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:53:51.736463+00:00",
+      "predicted": 171.25,
+      "actual": 171.25,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:54:29.397201+00:00",
+      "predicted": 171.25,
+      "actual": 170.75,
+      "diff_pct": 0.29,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:04:42.133038+00:00",
+      "predicted": 170.75,
+      "actual": 170.75,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:04:59.232424+00:00",
+      "predicted": 170.75,
+      "actual": 170.75,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:05:16.421639+00:00",
+      "predicted": 170.75,
+      "actual": 170.75,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:05:36.740622+00:00",
+      "predicted": 170.75,
+      "actual": 170.81,
+      "diff_pct": 0.04,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:15:20.151791+00:00",
+      "predicted": 170.81,
+      "actual": 170.78,
+      "diff_pct": 0.02,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:30:09.189216+00:00",
+      "predicted": 170.78,
+      "actual": 170.75,
+      "diff_pct": 0.02,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:40:22.134270+00:00",
+      "predicted": 170.75,
+      "actual": 170.46,
+      "diff_pct": 0.17,
+      "accurate": true
+    }
+  ],
+  "Dogecoin": [
+    {
+      "timestamp": "2025-05-16T15:54:32.749461+00:00",
+      "predicted": 0.229096,
+      "actual": 0.23,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T15:56:33.617521+00:00",
+      "predicted": 0.229098,
+      "actual": 0.23,
+      "diff_pct": 0.15,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T16:06:09.930439+00:00",
+      "predicted": 0.229437,
+      "actual": 0.23,
+      "diff_pct": 0.06,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T16:11:00.895012+00:00",
+      "predicted": 0.22958,
+      "actual": 0.23,
+      "diff_pct": 0.32,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T16:27:13.481516+00:00",
+      "predicted": 0.228838,
+      "actual": 0.23,
+      "diff_pct": 0.44,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T16:36:25.991830+00:00",
+      "predicted": 0.227839,
+      "actual": 0.23,
+      "diff_pct": 0.08,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:08:31.267901+00:00",
+      "predicted": 0.228017,
+      "actual": 0.23,
+      "diff_pct": 0.02,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:13:21.322199+00:00",
+      "predicted": 0.22797,
+      "actual": 0.23,
+      "diff_pct": 0.03,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:21:07.531538+00:00",
+      "predicted": 0.228048,
+      "actual": 0.23,
+      "diff_pct": 0.01,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:24:18.627728+00:00",
+      "predicted": 0.228076,
+      "actual": 0.23,
+      "diff_pct": 0.01,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:33:40.292313+00:00",
+      "predicted": 0.228042,
+      "actual": 0.23,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:34:20.253452+00:00",
+      "predicted": 0.228042,
+      "actual": 0.23,
+      "diff_pct": 0.57,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:52:50.166958+00:00",
+      "predicted": 0.22675,
+      "actual": 0.23,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:53:12.082281+00:00",
+      "predicted": 0.22675,
+      "actual": 0.23,
+      "diff_pct": 0.02,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:53:51.736463+00:00",
+      "predicted": 0.22671,
+      "actual": 0.23,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T17:54:29.397201+00:00",
+      "predicted": 0.22671,
+      "actual": 0.23,
+      "diff_pct": 0.24,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:04:42.133038+00:00",
+      "predicted": 0.226156,
+      "actual": 0.23,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:04:59.232424+00:00",
+      "predicted": 0.226156,
+      "actual": 0.23,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:05:16.421639+00:00",
+      "predicted": 0.226156,
+      "actual": 0.23,
+      "diff_pct": 0.0,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:05:36.740622+00:00",
+      "predicted": 0.226156,
+      "actual": 0.23,
+      "diff_pct": 0.19,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:15:20.151791+00:00",
+      "predicted": 0.226595,
+      "actual": 0.23,
+      "diff_pct": 0.05,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:30:09.189216+00:00",
+      "predicted": 0.226483,
+      "actual": 0.23,
+      "diff_pct": 0.12,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-16T18:40:22.134270+00:00",
+      "predicted": 0.226208,
+      "actual": 0.23,
+      "diff_pct": 0.12,
+      "accurate": true
     }
   ]
 }

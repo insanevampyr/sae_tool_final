@@ -5,25 +5,13 @@ from datetime import datetime
 import uuid
 from PIL import Image
 from io import BytesIO
-import os
 
 # Supabase connection
 url = "https://xxyfipfbnusrowhbtwkb.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eWZpcGZibnVzcm93aGJ0d2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI4MTMsImV4cCI6MjA2MjgzODgxM30.7a1UswYWolt82zAiRNzp3RAJ3OqW0GHYgWXvjoCES5I"
 supabase: Client = create_client(url, key)
 
-# Page config
 st.set_page_config(page_title="MEGA Client Manager", layout="centered")
-
-# Display logo (centered)
-if os.path.exists("MEGA_logo.jpg"):
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.image("MEGA_logo.jpg", width=300)
-
-# Title
-st.markdown("<h1 style='text-align: center;'>⭐ MEGA Client Manager</h1>", unsafe_allow_html=True)
-
 MAX_MB = 5
 MAX_BYTES = MAX_MB * 1024 * 1024
 
@@ -41,6 +29,8 @@ def upload_image(bucket, file_obj, content_type):
     path = f"{bucket}/{uuid.uuid4().hex}.jpg"
     supabase.storage.from_(bucket).upload(path, file_obj, {"content-type": content_type})
     return f"https://xxyfipfbnusrowhbtwkb.supabase.co/storage/v1/object/public/{path}", path
+
+st.title("🌟 MEGA Client Manager")
 
 @st.cache_data(ttl=60)
 def fetch_clients():
@@ -107,9 +97,7 @@ with st.expander("➕ Add or Edit Client"):
             old_logo_url = selected_row.get("logo_url", "")
             old_photo_url = selected_row.get("photo_url", "")
 
-            st.markdown(f"<small>📎 Upload Company Logo (Max {MAX_MB}MB, JPG/PNG)</small>", unsafe_allow_html=True)
-            logo_file = st.file_uploader("Upload Logo", type=["jpg", "jpeg", "png"], label_visibility="collapsed")
-
+            logo_file = st.file_uploader("📎 Upload Company Logo (Max 5MB, JPG/PNG)", type=["jpg", "jpeg", "png"])
             logo_url = old_logo_url
             if logo_file:
                 if logo_file.size > MAX_BYTES:
@@ -121,12 +109,11 @@ with st.expander("➕ Add or Edit Client"):
                     buffer.seek(0)
                     logo_url, _ = upload_image("logos", buffer, "image/jpeg")
                     st.success("✅ Logo uploaded!")
+
             if logo_url:
                 st.image(logo_url, caption="Logo", width=150)
 
-            st.markdown(f"<small>📷 Upload Headshot (Max {MAX_MB}MB, JPG/PNG)</small>", unsafe_allow_html=True)
-            photo_file = st.file_uploader("Upload Headshot", type=["jpg", "jpeg", "png"], key="photo", label_visibility="collapsed")
-
+            photo_file = st.file_uploader("📷 Upload Headshot (Max 5MB, JPG/PNG)", type=["jpg", "jpeg", "png"])
             photo_url = old_photo_url
             if photo_file:
                 if photo_file.size > MAX_BYTES:
@@ -138,6 +125,7 @@ with st.expander("➕ Add or Edit Client"):
                     buffer.seek(0)
                     photo_url, _ = upload_image("headshots", buffer, "image/jpeg")
                     st.success("✅ Headshot uploaded!")
+
             if photo_url:
                 st.image(photo_url, caption="Headshot", width=150)
 
@@ -166,9 +154,9 @@ with st.expander("➕ Add or Edit Client"):
                 st.cache_data.clear()
                 st.rerun()
     else:
-        st.warning("⚠️ Select a client from 'Find Client' above before editing.")
+        st.warning("⚠️ Select a client before editing.")
 
-# 🗑 DELETE CLIENT
+# 🗑 DELETE
 with st.expander("🗑 Delete Client"):
     delete_name = st.selectbox("Choose Client to Delete", df["name"].dropna().unique())
     if st.button("❌ Confirm Delete"):
@@ -182,7 +170,7 @@ with st.expander("🗑 Delete Client"):
         st.cache_data.clear()
         st.rerun()
 
-# 📥 EXPORT CSV
+# 📥 EXPORT
 st.subheader("⬇️ Export Clients")
 if not df.empty:
     csv = df.drop(columns=["id"], errors="ignore").to_csv(index=False).encode("utf-8")
