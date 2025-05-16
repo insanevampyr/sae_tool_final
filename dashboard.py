@@ -21,10 +21,10 @@ LOGO_FILE     = "alpha_logo.jpg"
 @st.cache_data
 def load_history() -> pd.DataFrame:
     if not os.path.exists(HIST_CSV):
-        return pd.DataFrame(columns=[
-            "Timestamp","Coin","Source","Sentiment","PriceUSD","SuggestedAction"
-        ])
+        cols = ["Timestamp","Coin","Source","Sentiment","PriceUSD","SuggestedAction"]
+        return pd.DataFrame(columns=cols)
     df = pd.read_csv(HIST_CSV)
+    # coerce to timezone-aware datetime
     df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True, errors="coerce")
     return df.dropna(subset=["Timestamp"])
 
@@ -37,14 +37,13 @@ def load_predictions() -> dict:
 # ─── PAGE SETUP ────────────────────────────────────────────────────────────
 st.set_page_config(page_title="AlphaPulse", layout="wide")
 
-# ── LOGO (centered) ───────────────────────────────────────────────────────
+# ─── LOGO (centered) ───────────────────────────────────────────────────────
 if os.path.exists(LOGO_FILE):
-    # create three columns and put the image in the middle one
-    left, mid, right = st.columns([1,2,1])
-    with mid:
-        st.image(LOGO_FILE, use_column_width=True)
+    c1, c2, c3 = st.columns([1, 2, 1])
+    with c2:
+        st.image(LOGO_FILE, use_container_width=True)
 
-# ─── SIDEBAR: Sentiment Summary ─────────────────────────────────────────────
+# ─── SIDEBAR: Sentiment Summary ────────────────────────────────────────────
 st.sidebar.header("📌 Sentiment Summary")
 hist = load_history()
 now  = datetime.now(timezone.utc)
@@ -65,7 +64,7 @@ recent = hist[hist.Timestamp >= cutoff]
 if hist.empty:
     st.sidebar.info("No data yet.")
 else:
-    st.sidebar.info(f"Data newest at {hist.Timestamp.max()} UTC")
+    st.sidebar.info(f"Data newest at {hist.Timestamp.max():%Y-%m-%d %H:%M} UTC")
 
 for coin in COINS:
     dfc    = recent[recent.Coin == coin]
@@ -83,7 +82,7 @@ st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 # ─── Next-Hour Price Forecasts ──────────────────────────────────────────────
 st.subheader("🤖 Next-Hour Price Forecasts")
 plog       = load_predictions()
-cur_prices = fetch_prices()  # current USD prices
+cur_prices = fetch_prices()
 
 cols = st.columns(len(COINS), gap="small")
 for col, coin in zip(cols, COINS):
@@ -98,7 +97,7 @@ for col, coin in zip(cols, COINS):
     ts_short = pd.to_datetime(last["timestamp"], utc=True).strftime("%H:%M")
     now_p    = cur_prices.get(coin, 0.0)
 
-    # compute or reuse stored pct-change
+    # % change
     dpct  = last.get("diff_pct",
                      round((pred_p - now_p) / now_p * 100 if now_p else 0, 2))
     delta = f"{dpct:+.1f}%"
@@ -107,10 +106,10 @@ for col, coin in zip(cols, COINS):
         label=f"**{coin}** by {ts_short}",
         value=f"${pred_p:.2f}",
         delta=delta,
-        delta_color="normal",  # lets Streamlit color +green / -red automatically
+        delta_color="normal",  # + green, – red
     )
 
-    # ─ 24h accuracy under the metric ─
+    # 24h accuracy
     day_ago = now - pd.Timedelta(hours=24)
     accs = [
         e.get("accurate", False)
@@ -122,7 +121,7 @@ for col, coin in zip(cols, COINS):
 
 # ─── Trends Over Time (Sentiment vs. Price) ─────────────────────────────────
 st.subheader("📈 Trends Over Time")
-sel = st.selectbox("Select coin:", COINS)
+sel = st.selectbox("Select coin:", COINS, index=0)
 dfc = hist[hist.Coin == sel].sort_values("Timestamp")
 
 if dfc.empty:
@@ -140,4 +139,4 @@ else:
 
 # ─── FOOTER ────────────────────────────────────────────────────────────────
 if not hist.empty:
-    st.caption(f"Last updated: {hist.Timestamp.max()} UTC")
+    st.caption(f"Last updated: {hist.Timestamp.max():%Y-%m-%d %H:%M} UTC")
