@@ -100,17 +100,18 @@ for col,coin in zip(cols,COINS):
     ts_short = pd.to_datetime(last["timestamp"], utc=True).strftime("%H:%M")
     now_p    = cur_prices.get(coin, 0.0)
     # use stored diff_pct if available, else compute
-    dpct     = last.get("diff_pct", round((pred_p-now_p)/now_p*100 if now_p else 0,2))
-    delta    = f"{dpct:+.1f}%"
-    # color: green for up, red for down, normal if small change
-    dcol     = "normal" if abs(dpct)<0.1 else ("positive" if dpct>0 else "negative")
+    dpct  = last.get("diff_pct",
+                     round((pred_p - now_p) / now_p * 100 if now_p else 0, 2))
+    delta = f"{dpct:+.1f}%"
 
+    # Always use "normal" so +ve is green, -ve is red.
     col.metric(
         label=f"**{coin}** by {ts_short}",
         value=f"${pred_p:.2f}",
         delta=delta,
-        delta_color=dcol
+        delta_color="normal",
     )
+
 
     # 24h accuracy
     day_ago = now - pd.Timedelta(hours=24)
