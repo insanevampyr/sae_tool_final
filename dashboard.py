@@ -1,7 +1,8 @@
-import os, json
 from dotenv import load_dotenv
 load_dotenv()
 
+import os
+import json
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,40 +11,43 @@ from datetime import datetime, timezone, timedelta
 from send_telegram import send_telegram_message
 from fetch_prices import fetch_prices
 
-# --- Page config ---
+# --- Page Configuration ---
 st.set_page_config(page_title='AlphaPulse | Crypto Sentiment Dashboard', layout='wide')
 st.image('alpha_logo.jpg', use_container_width=True)
 st.title('📊 AlphaPulse: Crypto Sentiment Dashboard')
 st.markdown('Live crypto sentiment analysis, historical trends, and ML forecasts.')
 
-# --- Load data ---
+# --- Helper Functions ---
 def load_data(path):
     return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
 
 def load_json(path):
     if os.path.exists(path):
         try:
-            return json.load(open(path, 'r', encoding='utf-8'))
+            with open(path, 'r', encoding='utf-8') as f:
+                return json.load(f)
         except json.JSONDecodeError:
             return {}
     return {}
 
 def save_json(data, path):
-    json.dump(data, open(path, 'w', encoding='utf-8'), indent=2)
+    with open(path, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2)
 
+# --- Paths ---
 csv_path = 'sentiment_output.csv'
-history_path = 'sentiment_history.csv'
+history_file = 'sentiment_history.csv'
 ml_log_path = 'prediction_log.json'
 actions_path = 'previous_actions.json'
 
-# Read sentiment and history
+# --- Load Data ---
 raw = load_data(csv_path)
-history = load_data(history_path)
+history = load_data(history_file)
 log = load_json(ml_log_path)
 actions = load_json(actions_path)
 prices = fetch_prices()
 
-# Ensure sentiment is numeric
+# Coerce sentiment to numeric
 if 'Sentiment' in raw.columns:
     raw['Sentiment'] = pd.to_numeric(raw['Sentiment'], errors='coerce')
     raw.dropna(subset=['Sentiment'], inplace=True)
@@ -60,9 +64,9 @@ now = datetime.now(timezone.utc)
 st.sidebar.header('📌 Sentiment Summary')
 ranges = ['Last 24 Hours', 'Last 7 Days', 'Last 30 Days']
 cutoffs = {
-    ranges[0]: now - timedelta(hours=24),
-    ranges[1]: now - timedelta(days=7),
-    ranges[2]: now - timedelta(days=30),
+    'Last 24 Hours': now - timedelta(hours=24),
+    'Last 7 Days': now - timedelta(days=7),
+    'Last 30 Days': now - timedelta(days=30),
 }
 sel = st.sidebar.selectbox('Summary window:', ranges)
 cut = cutoffs[sel]
@@ -71,14 +75,13 @@ recent = raw[raw['Timestamp'] >= cut] if not raw.empty else raw
 if recent.empty and not raw.empty:
     last_ts = raw['Timestamp'].max()
     st.sidebar.warning(f"No data in {sel}. Data newest at {last_ts:%Y-%m-%d %H:%M UTC}")
-    # If you prefer to show all when empty, uncomment:
-    # recent = raw
 
-# Show last update info\last_update = raw['Timestamp'].max()
-if pd.notna(last_update):
+# Always show last update info
+if not raw.empty and 'Timestamp' in raw.columns:
+    last_update = raw['Timestamp'].max()
     st.sidebar.caption(f"Data last updated: {last_update:%Y-%m-%d %H:%M UTC}")
 
-# Display averages and alert toggles
+# Display average sentiment and alert toggles
 for coin, avg in recent.groupby('Coin')['Sentiment'].mean().items():
     action = '📈 Buy' if avg > 0.2 else '📉 Sell' if avg < -0.2 else '🤝 Hold'
     st.sidebar.write(f"**{coin}:** {avg:.3f} → {action}")
