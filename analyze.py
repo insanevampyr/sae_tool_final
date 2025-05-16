@@ -36,10 +36,21 @@ def remove_duplicates(path, subset):
     df.drop_duplicates(subset=subset, keep="last", inplace=True)
     df.to_csv(path, index=False)
 
-# --- Prediction log updater ---
+# --- Prediction log initializer & updater ---
 def update_predictions():
+    # If log file missing or corrupted, initialize with empty lists
+    if not os.path.exists(ml_log_path):
+        default_log = {coin: [] for coin in coins}
+        save_json(default_log, ml_log_path)
+        print(f"✅ Initialized new {ml_log_path}")
+        return
+
     log = load_json(ml_log_path)
-    if not os.path.exists(history_file):
+    if not log:
+        # handle empty or invalid JSON by reinitializing
+        default_log = {coin: [] for coin in coins}
+        save_json(default_log, ml_log_path)
+        print(f"✅ Reinitialized corrupted {ml_log_path}")
         return
 
     hist_df = pd.read_csv(history_file)
@@ -72,6 +83,7 @@ def update_predictions():
 
     if changed:
         save_json(log, ml_log_path)
+        print(f"✅ Updated {ml_log_path} with actual prices")
 
 # --- Main script ---
 def main():
