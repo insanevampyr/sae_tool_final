@@ -17,155 +17,145 @@ history_file = "sentiment_history.csv"
 ml_log_path = "prediction_log.json"
 tolerance_pct = 4  # accuracy threshold in percent
 
-# --- Utility functions ---
+# --- Helpers ---
 def load_json(path):
     if os.path.exists(path):
         try:
-            with open(path, "r") as f:
+            with open(path, 'r', encoding='utf-8') as f:
                 return json.load(f)
         except json.JSONDecodeError:
             return {}
     return {}
 
 def save_json(data, path):
-    with open(path, "w") as f:
+    with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2)
 
 def remove_duplicates(path, subset):
     df = pd.read_csv(path)
-    df.drop_duplicates(subset=subset, keep="last", inplace=True)
+    df.drop_duplicates(subset=subset, keep='last', inplace=True)
     df.to_csv(path, index=False)
 
-# --- Prediction log initializer & updater ---
+# --- Initialize ML log ---
+def init_prediction_log():
+    default = {coin: [] for coin in coins}
+    save_json(default, ml_log_path)
+    print(f"✅ Initialized {ml_log_path}")
+
+# --- Update actuals in ML log ---
 def update_predictions():
-    # Initialize if missing or corrupted
-    if not os.path.exists(ml_log_path):
-        default_log = {coin: [] for coin in coins}
-        save_json(default_log, ml_log_path)
-        print(f"✅ Initialized new {ml_log_path}")
-        return
-
     log = load_json(ml_log_path)
-    if not isinstance(log, dict) or not log:
-        default_log = {coin: [] for coin in coins}
-        save_json(default_log, ml_log_path)
-        print(f"✅ Reinitialized corrupted {ml_log_path}")
+    if not isinstance(log, dict):
+        init_prediction_log()
+        return
+    if not os.path.exists(history_file):
         return
 
-    hist_df = pd.read_csv(history_file)
-    hist_df["Timestamp"] = pd.to_datetime(hist_df["Timestamp"], utc=True, errors="coerce")
-    changed = False
+    hist = pd.read_csv(history_file)
+    hist['Timestamp'] = pd.to_datetime(hist['Timestamp'], utc=True, errors='coerce')
     now = datetime.now(timezone.utc)
+    changed = False
 
     for coin, entries in log.items():
         for entry in entries:
-            if entry.get("actual") is not None:
+            if entry.get('actual') is not None:
                 continue
-            ts_str = entry.get("timestamp", "").split("+")[0]
+            # parse full ISO timestamp (with offset)
+            ts = entry.get('timestamp', '')
             try:
-                t0 = datetime.fromisoformat(ts_str)
+                t0 = datetime.fromisoformat(ts)
             except Exception:
                 continue
             if now - t0 < timedelta(hours=1):
                 continue
-            match = hist_df[
-                (hist_df["Coin"] == coin) & (hist_df["Timestamp"] > t0)
-            ].sort_values("Timestamp")
-            if not match.empty:
-                actual_price = float(match.iloc[0].get("PriceUSD", 0))
-                err_pct = abs((entry.get("predicted",0) - actual_price) / actual_price) * 100
-                entry["actual"] = round(actual_price, 2)
-                entry["diff_pct"] = round(err_pct, 2)
-                entry["accurate"] = err_pct <= tolerance_pct
+            df_sub = hist[(hist['Coin']==coin) & (hist['Timestamp']>t0)]
+            if not df_sub.empty:
+                actual = float(df_sub.iloc[0].get('PriceUSD', 0))
+                pct = abs((entry.get('predicted',0) - actual) / actual) * 100 if actual else None
+                entry['actual'] = round(actual,2)
+                entry['diff_pct'] = round(pct,2) if pct is not None else None
+                entry['accurate'] = pct is not None and pct <= tolerance_pct
                 changed = True
-
     if changed:
         save_json(log, ml_log_path)
         print(f"✅ Updated {ml_log_path} with actual prices")
 
-# --- Main script ---
+# --- Main ---
 def main():
     now = datetime.now(timezone.utc)
-    now_iso = now.isoformat()
-    sentiment_rows = []
+    ts_iso = now.isoformat()
 
-    # 1) Fetch Reddit sentiment
+    # 1) Fetch sentiment
+    rows = []
     for coin in coins:
-        for post in fetch_reddit_posts("CryptoCurrency", coin, 5):
-            score = analyze_sentiment(post.get("text", ""))
-            sentiment_rows.append({
-                "Source": "Reddit",
-                "Coin": coin,
-                "Text": post.get("text", ""),
-                "Sentiment": score,
-                "Action": ("📈 Consider Buying" if score > 0.2 else "📉 Consider Selling" if score < -0.2 else "🤝 Hold / Watch"),
-                "Timestamp": now_iso,
-                "Link": post.get("url", ""),
+        for p in fetch_reddit_posts('CryptoCurrency', coin, 5):
+            s = analyze_sentiment(p.get('text',''))
+            rows.append({
+                'Timestamp': ts_iso,'Coin':coin,'Source':'Reddit',
+                'Text':p.get('text',''),'Sentiment':s,
+                'Action':'📈 Buy' if s>0.2 else '📉 Sell' if s<-0.2 else '🤝 Hold',
+                'Link':p.get('url','')
+            })
+    for coin in coins:
+        for a in fetch_rss_articles(coin,5):
+            s = analyze_sentiment(a.get('text',''))
+            rows.append({
+                'Timestamp': ts_iso,'Coin':coin,'Source':'News',
+                'Text':a.get('text',''),'Sentiment':s,
+                'Action':'📈 Buy' if s>0.2 else '📉 Sell' if s<-0.2 else '🤝 Hold',
+                'Link':a.get('link','')
             })
 
-    # 2) Fetch News sentiment
-    for coin in coins:
-        for post in fetch_rss_articles(coin, 5):
-            score = analyze_sentiment(post.get("text", ""))
-            sentiment_rows.append({
-                "Source": "News",
-                "Coin": coin,
-                "Text": post.get("text", ""),
-                "Sentiment": score,
-                "Action": ("📈 Consider Buying" if score > 0.2 else "📉 Consider Selling" if score < -0.2 else "🤝 Hold / Watch"),
-                "Timestamp": now_iso,
-                "Link": post.get("link", ""),
-            })
+    # 2) Write output & history
+    header = not os.path.exists(output_file)
+    with open(output_file,'a',newline='',encoding='utf-8') as f:
+        w=csv.DictWriter(f, fieldnames=rows[0].keys())
+        if header: w.writeheader()
+        w.writerows(rows)
+    remove_duplicates(output_file,['Timestamp','Coin','Source','Text'])
 
-    # 3) Write/append output and dedupe
-    write_header = not os.path.exists(output_file)
-    with open(output_file, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=sentiment_rows[0].keys())
-        if write_header: writer.writeheader()
-        writer.writerows(sentiment_rows)
-    remove_duplicates(output_file, ["Timestamp","Coin","Source","Text"])
-
-    # 4) Build & append history summary
     prices = fetch_prices()
-    summary_rows = []
-    df_all = pd.DataFrame(sentiment_rows)
-    for source in ("Reddit","News"):
-        df = df_all[df_all["Source"]==source]
+    hist_rows = []
+    df_all = pd.DataFrame(rows)
+    for src in ['Reddit','News']:
+        df = df_all[df_all['Source']==src]
         if df.empty: continue
-        for coin, avg in df.groupby("Coin")["Sentiment"].mean().round(4).items():
-            summary_rows.append({
-                "Timestamp": now_iso,
-                "Coin": coin,
-                "Source": source,
-                "Sentiment": avg,
-                "PriceUSD": prices.get(coin,''),
-                "SuggestedAction": ("📈 Consider Buying" if avg>0.2 else "📉 Consider Selling" if avg< -0.2 else "🤝 Hold / Watch"),
+        for coin,avg in df.groupby('Coin')['Sentiment'].mean().round(4).items():
+            hist_rows.append({
+                'Timestamp':ts_iso,'Coin':coin,'Source':src,
+                'Sentiment':avg,'PriceUSD':prices.get(coin,''),
+                'SuggestedAction':'📈 Buy' if avg>0.2 else '📉 Sell' if avg<-0.2 else '🤝 Hold'
             })
-    write_hist_header = not os.path.exists(history_file)
-    with open(history_file, "a", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=summary_rows[0].keys())
-        if write_hist_header: writer.writeheader()
-        writer.writerows(summary_rows)
-    remove_duplicates(history_file, ["Timestamp","Coin","Source"])
+    hdr = not os.path.exists(history_file)
+    with open(history_file,'a',newline='',encoding='utf-8') as f:
+        w2=csv.DictWriter(f, fieldnames=hist_rows[0].keys())
+        if hdr: w2.writeheader()
+        w2.writerows(hist_rows)
+    remove_duplicates(history_file,['Timestamp','Coin','Source'])
 
-    # 5) Telegram alerts
-    for coin in coins:
-        avg = pd.DataFrame(summary_rows).query("Coin==@coin")["Sentiment"].mean()
-        send_telegram_message(f"🚨 {coin} avg sentiment: {avg:.2f}\nSuggested: {('📈 Buy' if avg>0.2 else '📉 Sell' if avg< -0.2 else '🤝 Hold')}")
+    # 3) Telegram
+    for c in coins:
+        avg = pd.DataFrame(hist_rows).query('Coin==@c')['Sentiment'].mean()
+        send_telegram_message(f"🚨 {c} avg sentiment: {avg:.2f}")
 
-    # 6) Update predictions & push
+    # 4) ML log init/append
+    if not os.path.exists(ml_log_path): init_prediction_log()
+    log = load_json(ml_log_path)
+    for c in coins:
+        log.setdefault(c,[]).append({'timestamp':ts_iso,'predicted':prices.get(c,0)})
+    save_json(log, ml_log_path)
+    print(f"✅ Appended new ML predictions to {ml_log_path}")
+
+    # 5) Update actuals & push
     update_predictions()
     auto_push.auto_push()
 
-    # 7) Print committed files
+    # 6) Print committed files
     try:
-        last_files = subprocess.check_output(
-            ["git","diff-tree","--no-commit-id","--name-only","-r","HEAD"], text=True
-        ).splitlines()
-        print("✅ Files updated/pushed in last commit:")
-        for f in last_files: print(f" - {f}")
+        files = subprocess.check_output(['git','diff-tree','--no-commit-id','--name-only','-r','HEAD'], text=True).splitlines()
+        print('✅ Files updated/pushed:')
+        for fn in files: print(f' - {fn}')
     except Exception as e:
-        print(f"⚠️ Could not list committed files: {e}")
+        print(f"⚠️ Could not list files: {e}")
 
-if __name__=="__main__":
-    main()
+if __name__=='__main__': main()
