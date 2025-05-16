@@ -2,24 +2,30 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import os
+import csv
 import json
-import streamlit as st
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
+import subprocess
 from datetime import datetime, timezone, timedelta
-from send_telegram import send_telegram_message
+import pandas as pd
+
+from analyze_sentiment import analyze_sentiment
+from reddit_fetch import fetch_reddit_posts
+from rss_fetch import fetch_rss_articles
 from fetch_prices import fetch_prices
+from send_telegram import send_telegram_message
+import auto_push
 
-# --- Page Configuration ---
-st.set_page_config(page_title='AlphaPulse | Crypto Sentiment Dashboard', layout='wide')
-st.image('alpha_logo.jpg', use_container_width=True)
-st.title('📊 AlphaPulse: Crypto Sentiment Dashboard')
-st.markdown('Live crypto sentiment analysis, historical trends, and ML forecasts.')
+# --- CONFIG ---
+coins = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
+output_file = "sentiment_output.csv"
+history_file = "sentiment_history.csv"
+ml_log_path = "prediction_log.json"
+tolerance_pct = 4  # accuracy threshold in percent
 
-# --- Helper Functions ---
-def load_data(path):
-    return pd.read_csv(path) if os.path.exists(path) else pd.DataFrame()
+# explicit column order for output_file
+output_fields = ['Source', 'Coin', 'Text', 'Sentiment', 'Action', 'Timestamp', 'Link']
+
+# --- Helpers ---
 
 def load_json(path):
     if os.path.exists(path):
@@ -30,119 +36,157 @@ def load_json(path):
             return {}
     return {}
 
+
 def save_json(data, path):
     with open(path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2)
 
-# --- Paths ---
-csv_path = 'sentiment_output.csv'
-history_file = 'sentiment_history.csv'
-ml_log_path = 'prediction_log.json'
-actions_path = 'previous_actions.json'
 
-# --- Load Data ---
-raw = load_data(csv_path)
-history = load_data(history_file)
-log = load_json(ml_log_path)
-actions = load_json(actions_path)
-prices = fetch_prices()
+def remove_duplicates(path, subset):
+    df = pd.read_csv(path)
+    df.drop_duplicates(subset=subset, keep='last', inplace=True)
+    df.to_csv(path, index=False)
 
-# Coerce sentiment to numeric
-if 'Sentiment' in raw.columns:
-    raw['Sentiment'] = pd.to_numeric(raw['Sentiment'], errors='coerce')
-    raw.dropna(subset=['Sentiment'], inplace=True)
+# --- Initialize ML log ---
+def init_prediction_log():
+    default = {coin: [] for coin in coins}
+    save_json(default, ml_log_path)
+    print(f"✅ Initialized {ml_log_path}")
 
-# Parse timestamps
-if 'Timestamp' in raw.columns:
-    raw['Timestamp'] = pd.to_datetime(raw['Timestamp'], utc=True, errors='coerce')
-if 'Timestamp' in history.columns:
-    history['Timestamp'] = pd.to_datetime(history['Timestamp'], utc=True, errors='coerce')
+# --- Update actuals in ML log ---
+def update_predictions():
+    log = load_json(ml_log_path)
+    if not isinstance(log, dict):
+        init_prediction_log()
+        return
+    if not os.path.exists(history_file):
+        return
 
-now = datetime.now(timezone.utc)
+    hist = pd.read_csv(history_file)
+    hist['Timestamp'] = pd.to_datetime(hist['Timestamp'], utc=True, errors='coerce')
+    now = datetime.now(timezone.utc)
+    changed = False
 
-# --- Sidebar: Sentiment Summary ---
-st.sidebar.header('📌 Sentiment Summary')
-ranges = ['Last 24 Hours', 'Last 7 Days', 'Last 30 Days']
-cutoffs = {
-    'Last 24 Hours': now - timedelta(hours=24),
-    'Last 7 Days': now - timedelta(days=7),
-    'Last 30 Days': now - timedelta(days=30),
-}
-sel = st.sidebar.selectbox('Summary window:', ranges)
-cut = cutoffs[sel]
-
-recent = raw[raw['Timestamp'] >= cut] if not raw.empty else raw
-if recent.empty and not raw.empty:
-    last_ts = raw['Timestamp'].max()
-    st.sidebar.warning(f"No data in {sel}. Data newest at {last_ts:%Y-%m-%d %H:%M UTC}")
-
-# Always show last update info
-if not raw.empty and 'Timestamp' in raw.columns:
-    last_update = raw['Timestamp'].max()
-    st.sidebar.caption(f"Data last updated: {last_update:%Y-%m-%d %H:%M UTC}")
-
-# Display average sentiment and alert toggles
-for coin, avg in recent.groupby('Coin')['Sentiment'].mean().items():
-    action = '📈 Buy' if avg > 0.2 else '📉 Sell' if avg < -0.2 else '🤝 Hold'
-    st.sidebar.write(f"**{coin}:** {avg:.3f} → {action}")
-    key = f'alert_{coin}'
-    if st.sidebar.checkbox(f'🔔 Alert for {coin}', key=key):
-        if actions.get(coin) != action:
-            send_telegram_message(f"⚠️ {coin} now {action} ({avg:.2f})")
-            actions[coin] = action
-            save_json(actions, actions_path)
-
-# --- ML Price Predictions ---
-st.markdown('### 🤖 ML Price Predictions')
-tolerance = 4
-shown = False
-if isinstance(log, dict):
-    st.markdown(f'_Tolerance ±{tolerance}%_')
     for coin, entries in log.items():
-        if not entries:
+        for entry in entries:
+            if entry.get('actual') is not None:
+                continue
+            ts = entry.get('timestamp', '')
+            try:
+                t0 = datetime.fromisoformat(ts)
+            except Exception:
+                continue
+            if now - t0 < timedelta(hours=1):
+                continue
+            df_sub = hist[(hist['Coin'] == coin) & (hist['Timestamp'] > t0)]
+            if not df_sub.empty:
+                actual = float(df_sub.iloc[0].get('PriceUSD', 0))
+                pct = abs((entry.get('predicted', 0) - actual) / actual) * 100 if actual else None
+                entry['actual'] = round(actual, 2)
+                entry['diff_pct'] = round(pct, 2) if pct is not None else None
+                entry['accurate'] = pct is not None and pct <= tolerance_pct
+                changed = True
+    if changed:
+        save_json(log, ml_log_path)
+        print(f"✅ Updated {ml_log_path} with actual prices")
+
+# --- Main script ---
+def main():
+    now = datetime.now(timezone.utc)
+    ts_iso = now.isoformat()
+
+    # 1) Fetch and analyze sentiment
+    rows = []
+    for coin in coins:
+        for p in fetch_reddit_posts('CryptoCurrency', coin, 5):
+            s = analyze_sentiment(p.get('text', ''))
+            rows.append({
+                'Source': 'Reddit',
+                'Coin': coin,
+                'Text': p.get('text', ''),
+                'Sentiment': s,
+                'Action': '📈 Buy' if s > 0.2 else '📉 Sell' if s < -0.2 else '🤝 Hold',
+                'Timestamp': ts_iso,
+                'Link': p.get('url', '')
+            })
+    for coin in coins:
+        for a in fetch_rss_articles(coin, 5):
+            s = analyze_sentiment(a.get('text', ''))
+            rows.append({
+                'Source': 'News',
+                'Coin': coin,
+                'Text': a.get('text', ''),
+                'Sentiment': s,
+                'Action': '📈 Buy' if s > 0.2 else '📉 Sell' if s < -0.2 else '🤝 Hold',
+                'Timestamp': ts_iso,
+                'Link': a.get('link', '')
+            })
+
+    # 2) Write output_file with consistent columns
+    header_out = not os.path.exists(output_file)
+    with open(output_file, 'a', newline='', encoding='utf-8') as f:
+        w = csv.DictWriter(f, fieldnames=output_fields)
+        if header_out:
+            w.writeheader()
+        for r in rows:
+            # ensure proper ordering
+            out = {col: r.get(col) for col in output_fields}
+            w.writerow(out)
+    remove_duplicates(output_file, ['Timestamp', 'Coin', 'Source', 'Text'])
+
+    # 3) Write history_file
+    prices = fetch_prices()
+    hist_rows = []
+    df_all = pd.DataFrame(rows)
+    for src in ['Reddit', 'News']:
+        df_src = df_all[df_all['Source'] == src]
+        if df_src.empty:
             continue
-        shown = True
-        entry = entries[-1]
-        pred = entry.get('predicted')
-        act = entry.get('actual')
-        pct = entry.get('diff_pct', 0)
-        acc = entry.get('accurate')
-        ts = entry.get('timestamp', '').split('+')[0].replace('T', ' ')
-        icon = '✅' if acc else ('❌' if acc is False else '🕒')
-        st.markdown(f"""
-**{coin}**: Pred ${pred:.2f} ({pct:+.2f}%) at {ts} UTC  
-Actual: {('$'+format(act,',.2f')) if act else '_awaiting_'}  
-Accuracy: {icon}
-""", unsafe_allow_html=True)
-    if not shown:
-        st.info('Run analyze.py to append predictions.')
-else:
-    st.info('No ML log found.')
+        for coin, avg in df_src.groupby('Coin')['Sentiment'].mean().round(4).items():
+            hist_rows.append({
+                'Timestamp': ts_iso,
+                'Coin': coin,
+                'Source': src,
+                'Sentiment': avg,
+                'PriceUSD': prices.get(coin, ''),
+                'SuggestedAction': '📈 Buy' if avg > 0.2 else '📉 Sell' if avg < -0.2 else '🤝 Hold'
+            })
+    header_hist = not os.path.exists(history_file)
+    with open(history_file, 'a', newline='', encoding='utf-8') as f:
+        w2 = csv.DictWriter(f, fieldnames=hist_rows[0].keys())
+        if header_hist:
+            w2.writeheader()
+        w2.writerows(hist_rows)
+    remove_duplicates(history_file, ['Timestamp', 'Coin', 'Source'])
 
-# --- Trends Over Time ---
-st.markdown('### 📈 Trends Over Time')
-if not history.empty:
-    coin_sel = st.selectbox('Select coin:', sorted(history['Coin'].unique()))
-    dfc = history[history['Coin'] == coin_sel]
-    if not dfc.empty:
-        fig, ax1 = plt.subplots(figsize=(10, 5))
-        ax1.plot(dfc['Timestamp'], dfc['Sentiment'], marker='o', label='Sentiment')
-        ax1.set_ylabel('Sentiment')
-        ax2 = ax1.twinx()
-        if 'PriceUSD' in dfc.columns:
-            ax2.plot(dfc['Timestamp'], dfc['PriceUSD'], linestyle='--', label='Price (USD)')
-            ax2.set_ylabel('Price (USD)')
-        ax1.xaxis.set_major_formatter(mdates.ConciseDateFormatter(mdates.AutoDateLocator()))
-        st.pyplot(fig)
-    else:
-        st.info('No history for this coin.')
-else:
-    st.warning('No historical data available.')
+    # 4) Telegram alerts for sentiment
+    for c in coins:
+        avg_val = pd.DataFrame(hist_rows).query('Coin==@c')['Sentiment'].mean()
+        send_telegram_message(f"🚨 {c} avg sentiment: {avg_val:.2f}")
 
-# --- Sentiment Details Table ---
-st.subheader('📋 Sentiment Details')
-if not raw.empty:
-    df_clean = raw.drop_duplicates(subset=['Timestamp', 'Coin', 'Source', 'Text'], keep='last')
-    st.dataframe(df_clean.sort_values('Timestamp', ascending=False), use_container_width=True)
-else:
-    st.info('No sentiment data available.')
+    # 5) ML predictions
+    if not os.path.exists(ml_log_path):
+        init_prediction_log()
+    log = load_json(ml_log_path)
+    for c in coins:
+        log.setdefault(c, []).append({'timestamp': ts_iso, 'predicted': prices.get(c, 0)})
+    save_json(log, ml_log_path)
+    print(f"✅ Appended new ML predictions to {ml_log_path}")
+
+    # 6) Update actuals & auto-push
+    update_predictions()
+    auto_push.auto_push()
+
+    # 7) Print committed files
+    try:
+        files = subprocess.check_output(
+            ['git', 'diff-tree', '--no-commit-id', '--name-only', '-r', 'HEAD'], text=True
+        ).splitlines()
+        print('✅ Files updated/pushed:')
+        for fn in files:
+            print(f' - {fn}')
+    except Exception as e:
+        print(f"⚠️ Could not list files: {e}")
+
+if __name__ == '__main__':
+    main()
