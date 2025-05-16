@@ -36,6 +36,10 @@ ml_log_path = 'prediction_log.json'
 actions_path = 'previous_actions.json'
 
 raw = load_data(csv_path)
+# ensure Sentiment is numeric to avoid aggregation errors
+if 'Sentiment' in raw.columns:
+    raw['Sentiment'] = pd.to_numeric(raw['Sentiment'], errors='coerce')
+    raw.dropna(subset=['Sentiment'], inplace=True)
 hist = load_data(history_file)
 log = load_json(ml_log_path)
 actions = load_json(actions_path)
