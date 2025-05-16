@@ -2,3 +2,16 @@ venv/
 .env
 previous_actions.json
 price_predictor.pkl
+# Backup and local files
+*BACKUP*.py
+BACK.env
+creds.json
+
+# Python cache
+__pycache__/
+
+# Logs and local state
+logs/
+*.log
+prediction_log.json
+prediction_log.json.bak
