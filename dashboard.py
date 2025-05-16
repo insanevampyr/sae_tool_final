@@ -24,7 +24,6 @@ def load_history() -> pd.DataFrame:
         cols = ["Timestamp","Coin","Source","Sentiment","PriceUSD","SuggestedAction"]
         return pd.DataFrame(columns=cols)
     df = pd.read_csv(HIST_CSV)
-    # coerce to timezone-aware datetime
     df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True, errors="coerce")
     return df.dropna(subset=["Timestamp"])
 
@@ -81,8 +80,8 @@ st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 
 # ─── Next-Hour Price Forecasts ──────────────────────────────────────────────
 st.subheader("🤖 Next-Hour Price Forecasts")
-plog       = load_predictions()
-cur_prices = fetch_prices()
+plog        = load_predictions()
+cur_prices  = fetch_prices()        # returns { "Bitcoin": 103572.0, ... }
 
 cols = st.columns(len(COINS), gap="small")
 for col, coin in zip(cols, COINS):
@@ -97,29 +96,29 @@ for col, coin in zip(cols, COINS):
     ts_short = pd.to_datetime(last["timestamp"], utc=True).strftime("%H:%M")
     now_p    = cur_prices.get(coin, 0.0)
 
-    # % change
+    # % change on that next-hour forecast
     dpct  = last.get("diff_pct",
                      round((pred_p - now_p) / now_p * 100 if now_p else 0, 2))
     delta = f"{dpct:+.1f}%"
 
     col.metric(
         label=f"**{coin}** by {ts_short}",
-        value=f"${pred_p:.2f}",
+        value=f"${pred_p:,.2f}",
         delta=delta,
-        delta_color="normal",  # + green, – red
+        delta_color="normal",  # positive=green, negative=red
     )
 
-    # 24h accuracy
+    # 24h accuracy badge
     day_ago = now - pd.Timedelta(hours=24)
-    accs = [
+    accs    = [
         e.get("accurate", False)
         for e in entries
         if pd.to_datetime(e["timestamp"], utc=True) >= day_ago
     ]
-    acc24 = f"{sum(accs)/len(accs)*100:.0f}%" if accs else "–"
-    col.caption(f"Now: ${now_p:.2f} • {acc24} acc (24h)")
+    acc24   = f"{sum(accs)/len(accs)*100:.0f}%" if accs else "–"
+    col.caption(f"Now: ${now_p:,.2f} • {acc24} acc (24h)")
 
-# ─── Trends Over Time (Sentiment vs. Price) ─────────────────────────────────
+# ─── Trends Over Time: Price vs Sentiment ───────────────────────────────────
 st.subheader("📈 Trends Over Time")
 sel = st.selectbox("Select coin:", COINS, index=0)
 dfc = hist[hist.Coin == sel].sort_values("Timestamp")
