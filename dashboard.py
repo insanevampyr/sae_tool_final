@@ -1,11 +1,9 @@
 # dashboard.py
+import os, json
 import streamlit as st
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-import json
-import os
 from datetime import datetime, timezone, timedelta
 from send_telegram import send_telegram_message
 from fetch_prices import fetch_prices
@@ -16,24 +14,31 @@ st.image("alpha_logo.jpg", use_container_width=True)
 st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 st.markdown("Live crypto sentiment analysis, historical trends, and ML forecasts.")
 
+# --- Load helpers ---
+def load_data(path):
+    if os.path.exists(path):
+        return pd.read_csv(path)
+    return pd.DataFrame()
+
+def load_json(path):
+    if os.path.exists(path):
+        try:
+            with open(path, "r") as f:
+                return json.load(f)
+        except json.JSONDecodeError:
+            st.warning(f"⚠️ Could not parse '{path}'. Skipping.")
+            return {}
+    return {}
+
+def save_json(data, path):
+    with open(path, "w") as f:
+        json.dump(data, f, indent=2)
+
 # --- Paths ---
 csv_path = "sentiment_output.csv"
 history_file = "sentiment_history.csv"
 actions_path = "previous_actions.json"
 ml_log_path = "prediction_log.json"
-
-# --- Loaders ---
-def load_data(path):
-    if os.path.exists(path): return pd.read_csv(path)
-    return pd.DataFrame()
-
-def load_json(path):
-    if os.path.exists(path):
-        with open(path, "r") as f: return json.load(f)
-    return {}
-
-def save_json(data, path):
-    with open(path, "w") as f: json.dump(data, f, indent=2)
 
 # --- Load data ---
 raw = load_data(csv_path)
@@ -47,11 +52,11 @@ now = datetime.now(timezone.utc)
 st.sidebar.header("📌 Sentiment Summary")
 ranges = ["Last 24 Hours","Last 7 Days","Last 30 Days"]
 cutoffs = {
-    "Last 24 Hours": now - timedelta(days=1),
-    "Last 7 Days": now - timedelta(days=7),
-    "Last 30 Days": now - timedelta(days=30),
+    ranges[0]: now - timedelta(days=1),
+    ranges[1]: now - timedelta(days=7),
+    ranges[2]: now - timedelta(days=30),
 }
-sel = st.sidebar.selectbox("Summary window:", ranges, 0)
+sel = st.sidebar.selectbox("Summary window:", ranges)
 cut = cutoffs[sel]
 
 if "Timestamp" in raw.columns:
@@ -59,20 +64,19 @@ if "Timestamp" in raw.columns:
 else:
     st.sidebar.warning("⚠️ Missing 'Timestamp' in sentiment_output.csv")
 
-recent = raw[raw["Timestamp"] >= cut]
-if recent.empty:
+recent = raw[raw["Timestamp"] >= cut] if not raw.empty else pd.DataFrame()
+if recent.empty and not raw.empty:
     st.sidebar.warning(f"No data in {sel}; showing all.")
     recent = raw
 
-# display summary and alerts
 actions_updated = False
-for coin, avg in recent.groupby("Coin")["Sentiment"].mean().items():
-    action = "📈 Buy" if avg>0.2 else "📉 Sell" if avg < -0.2 else "🤝 Hold"
+for coin, avg in recent.groupby("Coin")["Sentiment"].mean().items() if not recent.empty else []:
+    action = "📈 Buy" if avg>0.2 else "📉 Sell" if avg< -0.2 else "🤝 Hold"
     st.sidebar.write(f"**{coin}:** {avg:.3f} → {action}")
     key = f"alert_{coin}"
     if st.sidebar.checkbox(f"🔔 Alert for {coin}", key=key):
         if actions.get(coin) != action:
-            send_telegram_message(f"⚠️ {coin} action now **{action}** ({avg:.2f})")
+            send_telegram_message(f"⚠️ {coin} now **{action}** ({avg:.2f})")
             actions[coin] = action
             actions_updated = True
 if actions_updated:
@@ -89,15 +93,15 @@ if log:
         actual = entry.get("actual")
         err_pct = entry.get("diff_pct", 0)
         acc = entry.get("accurate")
-        ts = datetime.fromisoformat(entry["timestamp"]).strftime("%H:%M UTC")
-        icon = "✅" if acc else ("❌" if acc == False else "🕒")
+        ts = entry.get("timestamp", "").split("+")[0].replace("T"," ")
+        icon = "✅" if acc else ("❌" if acc is False else "🕒")
         st.markdown(f"""
-        <div style='padding:1rem; margin-bottom:1rem; border-radius:8px; background:#f9f9f9;'>
-          <b>{coin}</b>: Pred ${pred:,.2f} ({err_pct:+.2f}%) by {ts}<br>
-          <b>Actual:</b> {'$'+format(actual,',.2f') if actual is not None else '_awaiting_'} — Error: {err_pct:+.2f}%<br>
-          <b>Accuracy:</b> {icon}
-        </div>
-        """, unsafe_allow_html=True)
+<div style='padding:1rem; margin-bottom:1rem; border-radius:8px; background:#f9f9f9;'>
+  <b>{coin}</b>: Pred ${pred:,.2f} ({err_pct:+.2f}%) at {ts} UTC<br>
+  <b>Actual:</b> {'$'+format(actual,',.2f') if actual else '_awaiting_'} — Error: {err_pct:+.2f}%<br>
+  <b>Accuracy:</b> {icon}
+</div>
+""", unsafe_allow_html=True)
 else:
     st.info("No ML prediction log found.")
 
@@ -112,7 +116,7 @@ if not history.empty:
         ax1.plot(dfc["Timestamp"], dfc["Sentiment"], marker="o", label="Sentiment")
         ax1.set_ylabel("Sentiment")
         ax2 = ax1.twinx()
-        if "PriceUSD" in dfc:
+        if "PriceUSD" in dfc.columns:
             ax2.plot(dfc["Timestamp"], dfc["PriceUSD"], linestyle="--", label="Price (USD)")
             ax2.set_ylabel("Price (USD)")
         ax1.xaxis.set_major_formatter(mdates.ConciseDateFormatter(mdates.AutoDateLocator()))

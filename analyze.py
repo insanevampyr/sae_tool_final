@@ -1,5 +1,5 @@
 # analyze.py
-import os, csv, json
+import os, csv, json, subprocess
 from datetime import datetime, timezone, timedelta
 import pandas as pd
 
@@ -51,9 +51,11 @@ def update_predictions():
         for entry in entries:
             if entry.get("actual") is not None:
                 continue
-            # fixed timestamp parsing: strip timezone then parse
-            ts_str = entry["timestamp"].replace('+00:00','')
-            t0 = datetime.fromisoformat(ts_str)
+            ts_str = entry.get("timestamp", "").replace('+00:00','')
+            try:
+                t0 = datetime.fromisoformat(ts_str)
+            except ValueError:
+                continue
             if now - t0 < timedelta(hours=1):
                 continue
             match = hist_df[
@@ -61,8 +63,8 @@ def update_predictions():
                 (hist_df["Timestamp"] > t0)
             ].sort_values("Timestamp")
             if not match.empty:
-                actual_price = float(match.iloc[0]["PriceUSD"])
-                err_pct = abs((entry["predicted"] - actual_price) / actual_price) * 100
+                actual_price = float(match.iloc[0].get("PriceUSD", 0))
+                err_pct = abs((entry.get("predicted",0) - actual_price) / actual_price) * 100
                 entry["actual"] = round(actual_price, 2)
                 entry["diff_pct"] = round(err_pct, 2)
                 entry["accurate"] = err_pct <= tolerance_pct
@@ -80,32 +82,32 @@ def main():
     # Fetch Reddit sentiment
     for coin in coins:
         for post in fetch_reddit_posts("CryptoCurrency", coin, 5):
-            score = analyze_sentiment(post["text"])
+            score = analyze_sentiment(post.get("text", ""))
             sentiment_rows.append({
                 "Source": "Reddit",
                 "Coin": coin,
-                "Text": post["text"],
+                "Text": post.get("text", ""),
                 "Sentiment": score,
                 "Action": ("📈 Consider Buying" if score > 0.2 else "📉 Consider Selling" if score < -0.2 else "🤝 Hold / Watch"),
                 "Timestamp": now_iso,
-                "Link": post["url"],
+                "Link": post.get("url", ""),
             })
 
     # Fetch News sentiment
     for coin in coins:
         for post in fetch_rss_articles(coin, 5):
-            score = analyze_sentiment(post["text"])
+            score = analyze_sentiment(post.get("text", ""))
             sentiment_rows.append({
                 "Source": "News",
                 "Coin": coin,
-                "Text": post["text"],
+                "Text": post.get("text", ""),
                 "Sentiment": score,
                 "Action": ("📈 Consider Buying" if score > 0.2 else "📉 Consider Selling" if score < -0.2 else "🤝 Hold / Watch"),
                 "Timestamp": now_iso,
                 "Link": post.get("link", ""),
             })
 
-    # 1) Write/append sentiment_output.csv and dedupe
+    # Write/append sentiment_output.csv and dedupe
     write_header = not os.path.exists(output_file)
     with open(output_file, "a", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=sentiment_rows[0].keys())
@@ -114,7 +116,7 @@ def main():
         writer.writerows(sentiment_rows)
     remove_duplicates(output_file, ["Timestamp", "Coin", "Source", "Text"])
 
-    # 2) Build and append history rows
+    # Build and append history rows
     prices = fetch_prices()
     summary_rows = []
     df_all = pd.DataFrame(sentiment_rows)
@@ -140,14 +142,26 @@ def main():
         writer.writerows(summary_rows)
     remove_duplicates(history_file, ["Timestamp", "Coin", "Source"])
 
-    # 3) Telegram alerts
+    # Telegram alerts
     for coin in coins:
         avg = pd.DataFrame(summary_rows).query("Coin==@coin")["Sentiment"].mean()
         send_telegram_message(f"🚨 {coin} avg sentiment: {avg:.2f}\nSuggested: {('📈 Consider Buying' if avg>0.2 else '📉 Consider Selling' if avg< -0.2 else '🤝 Hold / Watch')}")
 
-    # 4) Update prediction log and auto-push
+    # Update prediction log and auto-push
     update_predictions()
     auto_push.auto_push()
+
+    # Print files committed in last push
+    try:
+        last_files = subprocess.check_output(
+            ["git", "diff-tree", "--no-commit-id", "--name-only", "-r", "HEAD"],
+            text=True
+        ).splitlines()
+        print("✅ Files updated/pushed in last commit:")
+        for f in last_files:
+            print(f" - {f}")
+    except Exception as e:
+        print(f"⚠️ Could not list committed files: {e}")
 
 if __name__ == "__main__":
     main()

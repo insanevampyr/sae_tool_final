@@ -773,3 +773,10 @@ Timestamp,Coin,Source,Sentiment,PriceUSD,SuggestedAction
 2025-05-16T15:22:04.102003+00:00,Bitcoin,News,0.0421,103939.0,🤝 Hold / Watch
 2025-05-16T15:22:04.102003+00:00,Ethereum,News,0.0525,2593.98,🤝 Hold / Watch
 2025-05-16T15:22:04.102003+00:00,Solana,News,0.11,172.08,🤝 Hold / Watch
+2025-05-16T15:30:25.731855+00:00,Bitcoin,Reddit,-0.032,103958.0,🤝 Hold / Watch
+2025-05-16T15:30:25.731855+00:00,Dogecoin,Reddit,0.014,0.227933,🤝 Hold / Watch
+2025-05-16T15:30:25.731855+00:00,Ethereum,Reddit,-0.056,2592.22,🤝 Hold / Watch
+2025-05-16T15:30:25.731855+00:00,Solana,Reddit,-0.194,172.05,🤝 Hold / Watch
+2025-05-16T15:30:25.731855+00:00,Bitcoin,News,0.0421,103958.0,🤝 Hold / Watch
+2025-05-16T15:30:25.731855+00:00,Ethereum,News,0.0525,2592.22,🤝 Hold / Watch
+2025-05-16T15:30:25.731855+00:00,Solana,News,0.11,172.05,🤝 Hold / Watch
