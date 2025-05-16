@@ -1,6 +1,6 @@
 # analyze.py
 from dotenv import load_dotenv
-load_dotenv()   # now os.environ will see TELEGRAM_TOKEN & TELEGRAM_CHAT_ID
+load_dotenv()
 
 import os, csv, json, subprocess
 from datetime import datetime, timezone, timedelta
