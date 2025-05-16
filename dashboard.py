@@ -7,9 +7,11 @@ import pandas as pd
 import streamlit as st
 
 # ─── CONFIG ────────────────────────────────────────────────────────────────
-COINS         = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
+COINS         = ["Bitcoin","Ethereum","Solana","Dogecoin"]
 HIST_CSV      = "sentiment_history.csv"
 PRED_LOG_JSON = "prediction_log.json"
+LOGO_PATH     = "alpha_logo.jpg"
+OUT_CSV       = "sentiment_output.csv"
 
 # ─── HELPERS ───────────────────────────────────────────────────────────────
 @st.cache_data
@@ -24,24 +26,32 @@ def load_history():
 @st.cache_data
 def load_predictions():
     if not os.path.exists(PRED_LOG_JSON):
-        return {c: [] for c in COINS}
-    return json.load(open(PRED_LOG_JSON, 'r', encoding='utf-8'))
+        return {c:[] for c in COINS}
+    return json.load(open(PRED_LOG_JSON,'r',encoding='utf-8'))
 
-# ─── RENDER ────────────────────────────────────────────────────────────────
+@st.cache_data
+def load_output():
+    if not os.path.exists(OUT_CSV):
+        return pd.DataFrame()
+    return pd.read_csv(OUT_CSV, parse_dates=['Timestamp'])
+
+# ─── PAGE LAYOUT ─────────────────────────────────────────────────────────────
 st.set_page_config(page_title="AlphaPulse", layout="wide")
+
+# Logo
+if os.path.exists(LOGO_PATH):
+    st.image(LOGO_PATH, use_column_width=True)
+
 st.sidebar.header("📌 Sentiment Summary")
 
-# 1) Window selector
-window = st.sidebar.selectbox(
-    "Summary window",
-    ["Last 24 Hours", "Last 7 Days", "Last 30 Days"],
-    index=0
-)
+# Window selector
+window = st.sidebar.selectbox("Summary window",
+    ["Last 24 Hours","Last 7 Days","Last 30 Days"], index=0)
 
 hist = load_history()
 now = datetime.now(timezone.utc)
 
-# 2) Compute cutoff
+# Compute cutoff
 if window=="Last 24 Hours":
     cutoff = now - pd.Timedelta(hours=24)
 elif window=="Last 7 Days":
@@ -51,43 +61,59 @@ else:
 
 recent = hist[hist.Timestamp >= cutoff]
 
-# 3) Freshness banner
+# Freshness info
 if hist.empty:
     st.sidebar.info("No data yet.")
 else:
-    st.sidebar.info(f"Data newest at {hist.Timestamp.max()}")
+    last_ts = hist.Timestamp.max().strftime("%Y-%m-%d %H:%M")
+    st.sidebar.info(f"Data newest at {last_ts} UTC")
 
-# 4) Sidebar per‐coin averages
+# Per‐coin avg + action
 for coin in COINS:
-    dfc = recent[recent.Coin==coin]
-    avg = dfc.Sentiment.mean() if not dfc.empty else float('nan')
-    action = "🤝 Hold" if abs(avg)<0.2 else ("📈 Buy" if avg>0 else "📉 Sell")
+    dfc   = recent[recent.Coin==coin]
+    avg   = dfc.Sentiment.mean() if not dfc.empty else float('nan')
+    action= "🤝 Hold" if abs(avg)<0.2 else ("📈 Buy" if avg>0 else "📉 Sell")
     st.sidebar.write(f"**{coin}**: {avg:+.3f} → {action}")
 
-# ─── MAIN ──────────────────────────────────────────────────────────────────
+# ─── MAIN CONTENT ──────────────────────────────────────────────────────────
 st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 
-# 5) ML Predictions panel
+# ML Predictions
 st.subheader("🤖 ML Price Predictions")
 plog = load_predictions()
 for coin in COINS:
     ent = plog.get(coin, [])
     if ent:
-        last = ent[-1]
-        ts   = last.get('timestamp','–')
-        pred = last.get('predicted',0)
-        acc  = last.get('accurate',None)
-        st.markdown(f"**{coin}** → Pred ${pred:.2f} @ {ts} UTC  • " +
-                    ("✅" if acc else "⚠️"))
+        last   = ent[-1]
+        ts     = last['timestamp'][:16].replace("T"," ")
+        pred   = last['predicted']
+        diff   = last.get('diff_pct')
+        emoji  = "🟢" if last.get('accurate') else "🔴" if diff is not None else "⚪️"
+        pctstr = f"{diff:+.2f}%" if diff is not None else ""
+        st.markdown(f"**{coin}** • ${pred:.2f} {pctstr} {emoji} • {ts} UTC")
     else:
-        st.markdown(f"**{coin}** → No prediction yet.")
+        st.markdown(f"**{coin}** • No prediction yet.")
 
-# 6) Trends Over Time chart
+# Trends Over Time: sentiment + price
 st.subheader("📈 Trends Over Time")
 coin = st.selectbox("Select coin:", COINS)
-series = hist[hist.Coin==coin].set_index('Timestamp')['Sentiment']
-st.line_chart(series)
+dfc  = hist[hist.Coin==coin].set_index('Timestamp')
+if not dfc.empty:
+    chart_df = dfc[['Sentiment','PriceUSD']].rename(columns={'PriceUSD':'Price'})
+    st.line_chart(chart_df)
+else:
+    st.write("No data to plot.")
 
-# 7) Footer
+# News & Links at bottom
+st.subheader("📰 Recent Headlines & Sentiment")
+out = load_output().sort_values('Timestamp', ascending=False).head(20)
+if not out.empty:
+    out_display = out[['Timestamp','Coin','Source','Action','Link']].copy()
+    out_display['Timestamp'] = out_display['Timestamp'].dt.strftime("%m-%d %H:%M")
+    st.dataframe(out_display)
+else:
+    st.write("No headlines yet.")
+
+# Footer
 if not hist.empty:
-    st.caption(f"Last updated: {hist.Timestamp.max()}")
+    st.caption(f"Last updated: {hist.Timestamp.max().strftime('%Y-%m-%d %H:%M')} UTC")
