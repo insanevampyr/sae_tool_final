@@ -1,3 +1,4 @@
+# dashboard.py
 import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -10,9 +11,7 @@ from sklearn.linear_model import LinearRegression
 
 from send_telegram import send_telegram_message
 from fetch_prices    import fetch_prices
-
-# bring in your update_predictions() from analyze.py
-from analyze import update_predictions
+from analyze         import update_predictions
 
 # — Setup Streamlit —
 st.set_page_config(page_title="AlphaPulse | Sentiment Dashboard", layout="wide")
@@ -48,26 +47,20 @@ def save_json(data, path):
     with open(path, "w") as f:
         json.dump(data, f, indent=2)
 
-#
-# 1) Load & pre-update your prediction_log.json
-#
-update_predictions()       # ← fill in any “actual” prices older than 1h
+# 1) Update any “actual” price points older than 1h
+update_predictions()
 log     = load_json(ml_log_path)
 
-#
-# 2) Load your other data sources
-#
+# 2) Load sentiment & history
 raw     = load_data(csv_path)
 history = load_data(history_file)
 actions = load_json(actions_path)
 prices  = fetch_prices()
 now     = datetime.now(timezone.utc)
 
-#
 # 3) Sidebar: Sentiment summary & alerts
-#
 st.sidebar.header("📌 Sentiment Summary")
-range_opts = ["Last 24 Hours","Last 7 Days","Last 30 Days"]
+range_opts = ["Last 24 Hours", "Last 7 Days", "Last 30 Days"]
 cutoffs = {
     "Last 24 Hours": now - timedelta(days=1),
     "Last 7 Days":   now - timedelta(days=7),
@@ -94,13 +87,13 @@ for coin, avg in overall.items():
     key = f"alert_{coin}"
     if st.sidebar.checkbox(f"🔔 Alert for {coin}", key=key):
         if actions.get(coin) != action:
-            send_telegram_message(f"⚠️ **{coin} Action Changed**\nSentiment: {avg:.3f}\n→ {action}")
+            send_telegram_message(
+                f"⚠️ **{coin} Action Changed**\nSentiment: {avg:.3f}\n→ {action}"
+            )
             actions[coin] = action
 save_json(actions, actions_path)
 
-#
-# 4) Main: ML Price Predictions with actuals
-#
+# 4) Main: ML Price Predictions
 st.markdown("### 🤖 ML Price Predictions")
 if history.empty:
     st.info("No historical data for ML predictions.")
@@ -114,56 +107,61 @@ else:
         if len(df) < 6:
             continue
 
-        # simple linear‐regression forecast
-        X = np.arange(len(df)).reshape(-1,1)
-        y = df["PriceUSD"].values.reshape(-1,1)
+        # forecast
+        X     = np.arange(len(df)).reshape(-1,1)
+        y     = df["PriceUSD"].values.reshape(-1,1)
         model = LinearRegression().fit(X, y)
         pred  = float(model.predict([[len(df)]])[0][0])
         curr  = float(y[-1][0])
-        diff_pct = (pred - curr) / curr * 100
-        dir_arrow = "↑" if diff_pct>0 else "↓"
-        future_t  = (now + timedelta(hours=1)).strftime("%H:%M UTC")
+        diff  = (pred - curr)/curr * 100
+        arrow = "↑" if diff>0 else "↓"
+        eta   = (now + timedelta(hours=1)).strftime("%H:%M UTC")
 
-        # pull matching entry from log
-        entries = log.get(coin, [])
-        last    = entries[-1] if entries else {}
-        actual  = last.get("actual")
-        accurate= last.get("accurate")
-        err_pct = last.get("diff_pct")
+        # lookup actual & accuracy
+        entry   = (log.get(coin) or [])[-1] if log.get(coin) else {}
+        actual  = entry.get("actual")
+        accurate= entry.get("accurate")
+        err_pct = entry.get("diff_pct")
 
-        # display panel
-        bg = "#ccffcc" if accurate else "#ffcccc" if accurate is False else "#f1f1f1"
-        verdict = ("✅ Accurate" if accurate
-                   else "❌ Off"     if accurate is False
-                   else "🕒 Pending")
+        # background & text color
+        bg_color   = "#ccffcc" if accurate else "#ffcccc" if accurate is False else "#f1f1f1"
+        font_color = "#000"  # force dark text for all themes
 
         st.markdown(f"""
-        <div style='background:{bg};padding:1rem;margin-bottom:0.5rem;border-radius:5px;'>
-          <b>{coin}</b>: Pred ${pred:,.2f} ({dir_arrow}{abs(diff_pct):.2f}%) by {future_t}<br>
-          Actual: {f"${actual:,.2f}" if actual else "_awaiting_"} — Error: {f"{err_pct:.2f}%" if err_pct is not None else "_n/a_"}<br>
-          <b>Accuracy:</b> {verdict}
+        <div style='
+            background:{bg_color};
+            color:{font_color};
+            padding:1rem;
+            margin-bottom:0.5rem;
+            border-radius:5px;
+            font-size:16px;
+        '>
+          <b>{coin}</b>: Pred ${pred:,.2f} ({arrow}{abs(diff):.2f}%) by {eta}<br>
+          Actual: {f"${actual:,.2f}" if actual else "_awaiting_"} — 
+          Error: {f"{err_pct:.2f}%" if err_pct is not None else "_n/a_"}<br>
+          <b>Accuracy:</b> {("✅ Accurate" if accurate else 
+                              "❌ Off"      if accurate is False else 
+                              "🕒 Pending")}
         </div>
         """, unsafe_allow_html=True)
 
-#
 # 5) Trends Over Time
-#
 st.markdown("### 📈 Trends Over Time")
 if not history.empty:
     coin = st.selectbox("Select coin:", sorted(history["Coin"].dropna().unique()))
-    df_c = history[history["Coin"] == coin]
-    if not df_c.empty:
+    sub  = history[history["Coin"] == coin]
+    if not sub.empty:
         fig, ax1 = plt.subplots(figsize=(10,5))
-        loc = mdates.AutoDateLocator(minticks=3, maxticks=7)
-        fmt = mdates.ConciseDateFormatter(loc)
+        loc  = mdates.AutoDateLocator(minticks=3, maxticks=7)
+        fmt  = mdates.ConciseDateFormatter(loc)
         ax1.xaxis.set_major_locator(loc)
         ax1.xaxis.set_major_formatter(fmt)
 
-        ax1.plot(df_c["Timestamp"], df_c["Sentiment"], "o-", label="Sentiment", color="#1f77b4")
+        ax1.plot(sub["Timestamp"], sub["Sentiment"], "o-", label="Sentiment", color="#1f77b4")
         ax1.set_ylabel("Sentiment")
 
         ax2 = ax1.twinx()
-        ax2.plot(df_c["Timestamp"], df_c["PriceUSD"], "--", label="Price (USD)", color="#2ca02c")
+        ax2.plot(sub["Timestamp"], sub["PriceUSD"], "--", label="Price (USD)", color="#2ca02c")
         ax2.set_ylabel("Price (USD)")
 
         plt.title(f"{coin} — Sentiment & Price")
@@ -171,9 +169,7 @@ if not history.empty:
     else:
         st.info("No data for that coin in this window.")
 
-#
 # 6) Raw sentiment table
-#
 st.subheader("📋 Sentiment Details")
 if not raw.empty:
     flt = st.selectbox("Filter by coin:", ["All"] + sorted(raw["Coin"].unique()))
