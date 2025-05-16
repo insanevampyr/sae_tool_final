@@ -38,9 +38,11 @@ st.set_page_config(page_title="AlphaPulse", layout="wide")
 
 # ─── LOGO (centered) ───────────────────────────────────────────────────────
 if os.path.exists(LOGO_FILE):
-    c1, c2, c3 = st.columns([1, 2, 1])
-    with c2:
-        st.image(LOGO_FILE, use_container_width=True)
+    st.markdown(
+        f"<div style='text-align:center;'><img src='{LOGO_FILE}' " 
+        "style='max-width:300px; height:auto;'/></div>",
+        unsafe_allow_html=True
+    )
 
 # ─── SIDEBAR: Sentiment Summary ────────────────────────────────────────────
 st.sidebar.header("📌 Sentiment Summary")
@@ -52,12 +54,11 @@ window = st.sidebar.selectbox(
     ["Last 24 Hours", "Last 7 Days", "Last 30 Days"],
     index=0
 )
-if window == "Last 24 Hours":
-    cutoff = now - pd.Timedelta(hours=24)
-elif window == "Last 7 Days":
-    cutoff = now - pd.Timedelta(days=7)
-else:
-    cutoff = now - pd.Timedelta(days=30)
+cutoff = {
+    "Last 24 Hours": now - pd.Timedelta(hours=24),
+    "Last 7 Days":   now - pd.Timedelta(days=7),
+    "Last 30 Days":  now - pd.Timedelta(days=30),
+}[window]
 
 recent = hist[hist.Timestamp >= cutoff]
 if hist.empty:
@@ -80,8 +81,8 @@ st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
 
 # ─── Next-Hour Price Forecasts ──────────────────────────────────────────────
 st.subheader("🤖 Next-Hour Price Forecasts")
-plog        = load_predictions()
-cur_prices  = fetch_prices()        # returns { "Bitcoin": 103572.0, ... }
+plog       = load_predictions()
+cur_prices = fetch_prices()  # :contentReference[oaicite:0]{index=0}:contentReference[oaicite:1]{index=1}
 
 cols = st.columns(len(COINS), gap="small")
 for col, coin in zip(cols, COINS):
@@ -105,22 +106,22 @@ for col, coin in zip(cols, COINS):
         label=f"**{coin}** by {ts_short}",
         value=f"${pred_p:,.2f}",
         delta=delta,
-        delta_color="normal",  # positive=green, negative=red
+        delta_color="normal",
     )
 
     # 24h accuracy badge
     day_ago = now - pd.Timedelta(hours=24)
     accs    = [
-        e.get("accurate", False)
+        bool(e.get("accurate"))
         for e in entries
         if pd.to_datetime(e["timestamp"], utc=True) >= day_ago
     ]
     acc24   = f"{sum(accs)/len(accs)*100:.0f}%" if accs else "–"
-    col.caption(f"Now: ${now_p:,.2f} • {acc24} acc (24h)")
+    col.caption(f"Now: ${now_p:,.2f} • {acc24} acc (24 h)")
 
 # ─── Trends Over Time: Price vs Sentiment ───────────────────────────────────
 st.subheader("📈 Trends Over Time")
-sel = st.selectbox("Select coin:", COINS, index=0)
+sel = st.selectbox("Select coin:", COINS)
 dfc = hist[hist.Coin == sel].sort_values("Timestamp")
 
 if dfc.empty:
