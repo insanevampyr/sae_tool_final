@@ -3,17 +3,7 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timezone, timedelta
 from dateutil import parser
-
-# Attempt to import Plotly
-try:
-    import plotly.graph_objs as go
-except ModuleNotFoundError:
-    st.error(
-        "Plotly is not installed in this environment.\n"
-        "Please ensure `plotly>=5.0.0` is listed in `requirements.txt` and redeploy the app."
-    )
-    st.stop()
-
+import plotly.graph_objs as go
 from fetch_prices import fetch_prices
 from train_price_predictor import predict_prices
 
@@ -31,7 +21,7 @@ st.image("alpha_logo.jpg", width=200)
 st.markdown("</div>", unsafe_allow_html=True)
 st.markdown("## AlphaPulse: Crypto Sentiment Dashboard")
 
-# Sidebar: 24h Sentiment Summary
+# Load and cache sentiment history
 def load_sentiment():
     df = pd.read_csv(SENT_HIST_CSV)
     df["Timestamp"] = df["Timestamp"].apply(parser.isoparse)
@@ -42,6 +32,8 @@ def sentiment_data():
     return load_sentiment()
 
 data = sentiment_data()
+
+# Sidebar: 24h Sentiment Summary
 st.sidebar.markdown("### Sentiment Summary (24h)")
 cutoff24 = datetime.now(timezone.utc) - timedelta(hours=24)
 for coin in COINS:
@@ -75,17 +67,24 @@ st.plotly_chart(fig, use_container_width=True)
 st.markdown("### Next-Hour Predictions")
 
 def load_current_prices():
-    df = fetch_prices(COINS)
-    return dict(zip(df.Coin, df.PriceUSD))
+    try:
+        df = fetch_prices(COINS)
+        return dict(zip(df.Coin, df.PriceUSD))
+    except Exception:
+        # fallback to sentiment history's last non-null PriceUSD
+        hist = data[data.PriceUSD.notnull()]
+        last = hist.sort_values('Timestamp').groupby('Coin').tail(1)
+        return dict(zip(last.Coin, last.PriceUSD))
 
 current_prices = load_current_prices()
 
 records = []
 cutoff_pred = datetime.now(timezone.utc) - timedelta(hours=WINDOW_HOURS)
 for coin in COINS:
-    window = data[(data.Coin == coin) & (data.Timestamp >= cutoff_pred)]["Sentiment"]
-    if not window.empty:
-        avg_sent = window.mean()
+    # sentiment window
+    window_vals = data[(data.Coin == coin) & (data.Timestamp >= cutoff_pred)]["Sentiment"]
+    if not window_vals.empty:
+        avg_sent = window_vals.mean()
     else:
         all_vals = data[data.Coin == coin]
         avg_sent = all_vals.sort_values("Timestamp").iloc[-1].Sentiment if not all_vals.empty else None
