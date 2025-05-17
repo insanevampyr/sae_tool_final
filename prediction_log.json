@@ -562,6 +562,14 @@
   ],
   "Dogecoin": [
     {
+      "coin": "Dogecoin",
+      "timestamp": "2025-05-17T01:13:18.765421+00:00",
+      "current_price": NaN,
+      "predicted_price": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
