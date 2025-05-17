@@ -1,68 +1,57 @@
 # train_price_predictor.py
+
 import pandas as pd
-import joblib
-from sklearn.linear_model import LogisticRegression
+import numpy as np
 from sklearn.multioutput import MultiOutputClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report
+import joblib
 
-MODEL_PATH = "price_predictor.pkl"
-HIST_CSV    = "sentiment_history.csv"
+# ─── CONFIG ────────────────────────────────────────────────────────────────
+HIST_CSV = "sentiment_history.csv"
+WINDOW_HRS = 1            # how far back to look for features
+TARGET_HRS = 1            # how far ahead to predict price movement
+MODEL_FILE = "price_predictor.pkl"
+COINS = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
 
+def load_features_and_targets():
+    df = pd.read_csv(HIST_CSV, parse_dates=["Timestamp"])
+    df = df.sort_values("Timestamp").set_index("Timestamp")
+    X, ys = [], {coin: [] for coin in COINS}
+    for t in range(WINDOW_HRS, len(df)-TARGET_HRS):
+        window = df.iloc[t-WINDOW_HRS:t]
+        future = df.iloc[t+TARGET_HRS]["PriceUSD"]
+        now = df.iloc[t]["PriceUSD"]
+        features = window["Sentiment"].values  # shape=(WINDOW_HRS,)
+        X.append(features)
+        for i, coin in enumerate(COINS):
+            # if price up over next hour → 1 else 0
+            ys[coin].append(int(future > now))
+    X = np.stack(X)
+    y = np.stack([ys[c] for c in COINS], axis=1)  # shape=(n_samples,4)
+    return X, y
 
 def train_and_save():
-    # load your sentiment+price history
-    df = pd.read_csv(HIST_CSV, parse_dates=["Timestamp"] )
+    X, y = load_features_and_targets()
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+    clf = MultiOutputClassifier(LogisticRegression(max_iter=500))
+    clf.fit(X_train, y_train)
 
-    # pivot to get one row per timestamp, one column per Coin's sentiment
-    pivot = df.pivot_table(
-        index="Timestamp",
-        columns="Coin",
-        values="Sentiment",
-    ).dropna()
+    y_pred = clf.predict(X_test)
 
-    # next‐hour “up or down” label per coin
-    shifted = pivot.shift(-1).dropna()
-    X = pivot.loc[shifted.index].values
-    y = (shifted.values > pivot.loc[shifted.index].values).astype(int)
+    # print per‐coin reports
+    for idx, coin in enumerate(COINS):
+        print(f"\n=== {coin} ===")
+        print(classification_report(
+            y_test[:, idx],
+            y_pred[:, idx],
+            labels=[0,1],
+            target_names=["down/flat","up"]
+        ))
 
-    # wrap logistic regression for multi-output
-    base = LogisticRegression(max_iter=1000)
-    clf = MultiOutputClassifier(base)
-    clf.fit(X, y)
-
-    # save model
-    joblib.dump(clf, MODEL_PATH)
-
-    # report performance
-    y_pred = clf.predict(X)
-    print(classification_report(y, y_pred, target_names=["down/flat","up"]))
-
-
-def predict_prices(current_prices: dict) -> dict:
-    """
-    Given a dict of {coin: current_price}, returns {coin: predicted_price}.
-    We take each coin’s **latest** sentiment from HISTORY,
-    use the saved model to predict up/down, then
-    assume a ±1% move for demonstration.
-    """
-    clf = joblib.load(MODEL_PATH)
-
-    # fetch last sentiment per coin
-    hist = pd.read_csv(HIST_CSV, parse_dates=["Timestamp"])
-    last_sent = hist.groupby("Coin")["Sentiment"].last().to_dict()
-
-    preds = {}
-    for coin, price in current_prices.items():
-        s = last_sent.get(coin, 0.0)
-        # predict: clf expects a row of length equal to number of coins
-        # so we need to build a vector matching training ordering
-        # here we assume same order as COINS list
-        vec = [ last_sent.get(c, 0.0) for c in pivot.columns ]  # pivot.columns stored order
-        direction = clf.predict([vec])[0][list(pivot.columns).index(coin)]
-        factor = 1.01 if direction == 1 else 0.99
-        preds[coin] = price * factor
-    return preds
-
+    joblib.dump(clf, MODEL_FILE)
+    print(f"\n💾 Model saved to {MODEL_FILE}")
 
 if __name__ == "__main__":
     train_and_save()
