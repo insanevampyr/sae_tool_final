@@ -569,6 +569,13 @@
       "accurate": null
     },
     {
+      "timestamp": "2025-05-17T01:13:18.765421+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "coin": "Dogecoin",
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
