@@ -55,3 +55,17 @@ def train_and_save():
 
 if __name__ == "__main__":
     train_and_save()
+
+import joblib
+import pandas as pd
+
+MODEL_PATH = "price_predictor.pkl"
+
+def predict_prices(sentiment_window: pd.DataFrame) -> list[float]:
+    """
+    Given a DataFrame `sentiment_window` with columns ['Timestamp','AvgSentiment'],
+    returns a list of predictions (0 or 1) for each row.
+    """
+    model = joblib.load(MODEL_PATH)
+    X = sentiment_window[["AvgSentiment"]]
+    return model.predict(X).tolist()
