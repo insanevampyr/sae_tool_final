@@ -32,36 +32,24 @@ def append_sentiment():
     print(f"✅ Appended {len(records)} sentiment rows")
 
 
---- analyze.py   (your current)
-+++ analyze.py   (fixed)
-@@ def log_predictions():
--    # 1) grab last N hours of sentiment
--    preds = predict_prices(sentiment_window=3)  # adjust window as needed
-+    # 1) grab last 3 hours of sentiment history
-+    hist = pd.read_csv(HIST_SENT_CSV, parse_dates=["Timestamp"])
-+    cutoff = datetime.now(timezone.utc) - timedelta(hours=3)
-+    window_df = hist[ hist.Timestamp >= cutoff ]
-+
-+    # 2) run your model on that 3-hour window
-+    preds = predict_prices(window_df)
+def log_predictions():
+    # auto-push via git
+    try:
+        subprocess.check_call(["git", "add", HIST_PRED_JSON])
+        subprocess.check_call(["git", "commit", "-m", f"auto-update @ {now_iso}"])
+        subprocess.check_call(["git", "push"])
 
-     # 3) append into prediction_log.json
-     log = json.load(open(LOG_JSON,"r", encoding="utf-8"))
-     for coin,data in preds.items():
--        # data must have keys: "predicted","timestamp","accurate"
-+        # data must have keys: "predicted","timestamp","accurate"
-         entry = {
-             "coin":      coin,
--            "timestamp": data["timestamp"],
-+            "timestamp": data["timestamp"],    # lower-case to match your JSON
-             "predicted": data["predicted"],
-             "accurate":  data["accurate"]
-         }
-         log.setdefault(coin,[]).insert(0, entry)
+        # **RESTORED PRINT OF UPDATED FILES**
+        files = subprocess.check_output(
+            ["git","diff-tree","--no-commit-id","--name-only","-r","HEAD"],
+            text=True
+        ).splitlines()
+        print("✅ Files updated/pushed:")
+        for f in files:
+            print("  -", f)
 
-     with open(LOG_JSON,"w", encoding="utf-8") as f:
-         json.dump(log, f, indent=2)
-
+    except subprocess.CalledProcessError as e:
+        print("⚠️ Git push failed:", e)
 
     # write back
     with open(HIST_PRED_JSON, "w", encoding="utf-8") as f:
