@@ -1,31 +1,32 @@
-# reddit_fetch.py
-
 import os
+from dotenv import load_dotenv
 import praw
-from datetime import datetime
 
-# no analyze_sentiment import here—just fetch raw posts!
+# Load .env before reading credentials
+load_dotenv()
 
-REDDIT_CLIENT = os.getenv("REDDIT_CLIENT_ID")
-REDDIT_SECRET = os.getenv("REDDIT_CLIENT_SECRET")
-USER_AGENT    = "AlphaPulse/1.0"
+# Instantiate PRAW client with env vars
+reddit = praw.Reddit(
+    client_id=os.getenv("REDDIT_CLIENT_ID"),
+    client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
+    user_agent=os.getenv("REDDIT_USER_AGENT"),
+)
 
-def fetch_reddit_posts(coins):
-    reddit = praw.Reddit(
-        client_id=REDDIT_CLIENT,
-        client_secret=REDDIT_SECRET,
-        user_agent=USER_AGENT
-    )
-
-    items = []
+def fetch_reddit_posts(coins, limit=100):
+    """
+    Fetch latest submissions from r/CryptoCurrency for each coin keyword.
+    Returns a list of dicts: { "timestamp": iso, "coin": coin, "text": title+body }.
+    """
+    posts = []
     for coin in coins:
-        subreddit = reddit.subreddit(coin.lower())
-        for post in subreddit.new(limit=10):
-            items.append({
-                "Timestamp":  datetime.fromtimestamp(post.created_utc, tz=datetime.timezone.utc).isoformat(),
-                "Coin":       coin,
-                "Source":     "reddit",
-                "Content":    post.title + "\n\n" + post.selftext,
-                # PriceUSD not known here
+        for submission in reddit.subreddit("CryptoCurrency").search(
+            query=coin, sort="new", limit=limit
+        ):
+            posts.append({
+                "timestamp": datetime.fromtimestamp(
+                    submission.created_utc, tz=timezone.utc
+                ).isoformat(),
+                "coin": coin,
+                "text": submission.title + "\n" + submission.selftext
             })
-    return items
+    return posts
