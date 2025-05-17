@@ -3,7 +3,17 @@ import streamlit as st
 import pandas as pd
 from datetime import datetime, timezone, timedelta
 from dateutil import parser
-import plotly.graph_objs as go
+
+# Attempt to import Plotly
+try:
+    import plotly.graph_objs as go
+except ModuleNotFoundError:
+    st.error(
+        "Plotly is not installed in this environment.\n"
+        "Please ensure `plotly>=5.0.0` is listed in `requirements.txt` and redeploy the app."
+    )
+    st.stop()
+
 from fetch_prices import fetch_prices
 from train_price_predictor import predict_prices
 
@@ -63,7 +73,7 @@ st.plotly_chart(fig, use_container_width=True)
 
 # Next-Hour Predictions Summary
 st.markdown("### Next-Hour Predictions")
-# fetch current prices once
+
 def load_current_prices():
     df = fetch_prices(COINS)
     return dict(zip(df.Coin, df.PriceUSD))
@@ -73,17 +83,16 @@ current_prices = load_current_prices()
 records = []
 cutoff_pred = datetime.now(timezone.utc) - timedelta(hours=WINDOW_HOURS)
 for coin in COINS:
-    # sentiment window
     window = data[(data.Coin == coin) & (data.Timestamp >= cutoff_pred)]["Sentiment"]
     if not window.empty:
         avg_sent = window.mean()
     else:
-        recent_all = data[data.Coin == coin]
-        avg_sent = recent_all.sort_values("Timestamp").iloc[-1].Sentiment if not recent_all.empty else None
+        all_vals = data[data.Coin == coin]
+        avg_sent = all_vals.sort_values("Timestamp").iloc[-1].Sentiment if not all_vals.empty else None
     current = current_prices.get(coin)
     if avg_sent is not None and current is not None:
-        predicted_label = predict_prices(pd.DataFrame({'AvgSentiment': [avg_sent]}))[0]
-        predicted = current * (1.01 if predicted_label == 1 else 0.99)
+        label = predict_prices(pd.DataFrame({'AvgSentiment': [avg_sent]}))[0]
+        predicted = current * (1.01 if label == 1 else 0.99)
         diff = (predicted - current) / current * 100
     else:
         predicted = None
