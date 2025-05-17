@@ -1,27 +1,31 @@
 # reddit_fetch.py
+
 import os
-from dotenv import load_dotenv
 import praw
-from analyze_sentiment import analyze_sentiment
+from datetime import datetime
 
-# load from .env (in production your CI / Streamlit secrets will also populate os.environ)
-load_dotenv()
+# no analyze_sentiment import here—just fetch raw posts!
 
-def fetch_reddit_posts(subreddit_name, keyword, limit=5):
+REDDIT_CLIENT = os.getenv("REDDIT_CLIENT_ID")
+REDDIT_SECRET = os.getenv("REDDIT_CLIENT_SECRET")
+USER_AGENT    = "AlphaPulse/1.0"
+
+def fetch_reddit_posts(coins):
     reddit = praw.Reddit(
-        client_id=os.getenv("REDDIT_CLIENT_ID"),
-        client_secret=os.getenv("REDDIT_CLIENT_SECRET"),
-        user_agent=f"cryptoSentimentApp by /u/{os.getenv('REDDIT_USERNAME')}",
-        username=os.getenv("REDDIT_USERNAME"),
-        password=os.getenv("REDDIT_PASSWORD"),
+        client_id=REDDIT_CLIENT,
+        client_secret=REDDIT_SECRET,
+        user_agent=USER_AGENT
     )
 
-    posts = []
-    for submission in reddit.subreddit(subreddit_name).search(keyword, limit=limit):
-        sentiment = analyze_sentiment(submission.title)
-        posts.append({
-            "text": submission.title,
-            "sentiment": sentiment,
-            "url": submission.url
-        })
-    return posts
+    items = []
+    for coin in coins:
+        subreddit = reddit.subreddit(coin.lower())
+        for post in subreddit.new(limit=10):
+            items.append({
+                "Timestamp":  datetime.fromtimestamp(post.created_utc, tz=datetime.timezone.utc).isoformat(),
+                "Coin":       coin,
+                "Source":     "reddit",
+                "Content":    post.title + "\n\n" + post.selftext,
+                # PriceUSD not known here
+            })
+    return items
