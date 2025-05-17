@@ -1,142 +1,88 @@
-# dashboard.py
-
-from dotenv import load_dotenv
-load_dotenv()
-
-import os, json
-from datetime import datetime, timezone
-import pandas as pd
 import streamlit as st
-import altair as alt
+import pandas as pd
+import json
+import plotly.graph_objects as go
+from datetime import datetime, timezone
 
-from fetch_prices import fetch_prices
-
-# ─── CONFIG ────────────────────────────────────────────────────────────────
-COINS         = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
-HIST_CSV      = "sentiment_history.csv"
-PRED_LOG_JSON = "prediction_log.json"
-LOGO_FILE     = "alpha_logo.jpg"
-
-# ─── HELPERS ────────────────────────────────────────────────────────────────
-@st.cache_data
-def load_history() -> pd.DataFrame:
-    if not os.path.exists(HIST_CSV):
-        cols = ["Timestamp","Coin","Source","Sentiment","PriceUSD","SuggestedAction"]
-        return pd.DataFrame(columns=cols)
-    df = pd.read_csv(HIST_CSV)
-    df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True, errors="coerce")
-    return df.dropna(subset=["Timestamp"])
+PRED_LOG        = "prediction_log.json"
+SENT_HIST_CSV   = "sentiment_history.csv"
 
 @st.cache_data
-def load_predictions() -> dict:
-    if not os.path.exists(PRED_LOG_JSON):
-        return {c: [] for c in COINS}
-    return json.load(open(PRED_LOG_JSON, "r", encoding="utf-8"))
+def load_sentiment_history():
+    df = pd.read_csv(SENT_HIST_CSV)
+    df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True, format="mixed")
+    return df
 
-# ─── PAGE SETUP ────────────────────────────────────────────────────────────
-st.set_page_config(page_title="AlphaPulse", layout="wide")
+@st.cache_data
+def load_predictions():
+    with open(PRED_LOG, "r") as f:
+        raw = json.load(f)
+    records = []
+    for entry in raw:
+        # ensure we have a dict
+        if not isinstance(entry, dict):
+            continue
+        records.append({
+            "coin":      entry.get("coin"),
+            "timestamp": entry.get("timestamp"),
+            "current":   entry.get("current_price"),
+            "predicted": entry.get("predicted_price"),
+            "accuracy":  entry.get("accurate")
+        })
+    return pd.DataFrame(records)
 
-# ─── LOGO (centered) ───────────────────────────────────────────────────────
-if os.path.exists(LOGO_FILE):
-    st.markdown(
-        f"<div style='text-align:center;'><img src='{LOGO_FILE}' " 
-        "style='max-width:300px; height:auto;'/></div>",
-        unsafe_allow_html=True
-    )
+st.title("🔮 Crypto Sentiment & Forecast Dashboard")
 
-# ─── SIDEBAR: Sentiment Summary ────────────────────────────────────────────
-st.sidebar.header("📌 Sentiment Summary")
-hist = load_history()
-now  = datetime.now(timezone.utc)
+# Sidebar: Sentiment Summary
+window = st.sidebar.selectbox("Sentiment window", ["1H","24H","7D"])
+hist = load_sentiment_history().set_index("Timestamp")
+summary = hist.last(window).groupby("Coin")["Sentiment"].agg(["mean","count"])
+st.sidebar.markdown("## Sentiment Summary")
+if summary.empty:
+    st.sidebar.write("No data for that window.")
+else:
+    for coin, row in summary.iterrows():
+        avg = row["mean"]
+        cnt = int(row["count"])
+        action = "BUY" if avg>0.05 else ("SELL" if avg< -0.05 else "HOLD")
+        st.sidebar.write(f"**{coin}**: {avg:+.3f} ({cnt} msgs) → {action}")
 
-window = st.sidebar.selectbox(
-    "Summary window",
-    ["Last 24 Hours", "Last 7 Days", "Last 30 Days"],
-    index=0
+# Next-Hour Price Forecasts
+st.header("⏳ Next-Hour Price Forecasts")
+preds = load_predictions()
+if preds.empty:
+    st.write("No prediction data yet.")
+else:
+    # show latest per coin
+    latest = preds.sort_values("timestamp").groupby("coin").tail(1)
+    cols = st.columns(len(latest))
+    for col, (_, r) in zip(cols, latest.iterrows()):
+        curr = r["current"]
+        pred = r["predicted"]
+        acc  = r["accuracy"]
+        change = (pred/curr - 1)*100 if curr and pred else None
+        color = "green" if change and change>0 else "red"
+        col.markdown(f"### {r['coin']}")
+        col.metric("Now", f"${curr:.2f}" if curr else "–",
+                   f"{change:+.2f}%" if change else "–", delta_color=color)
+        col.write(f"Predicted: **${pred:.2f}**  \nAccuracy: **{acc*100:.0f}%**" if acc is not None else "")
+
+# Trends Over Time
+st.header("📈 Trends Over Time")
+coin = st.selectbox("Select coin", hist["Coin"].unique())
+dfc = hist[hist["Coin"]==coin].resample("1H").agg({
+    "PriceUSD": "last",
+    "Sentiment":"mean"
+}).interpolate()
+fig = go.Figure()
+fig.add_trace(go.Scatter(
+    x=dfc.index, y=dfc["PriceUSD"], name="Price (USD)", yaxis="y1"))
+fig.add_trace(go.Scatter(
+    x=dfc.index, y=dfc["Sentiment"], name="Sentiment", yaxis="y2"))
+fig.update_layout(
+    xaxis=dict(rangeslider=dict(visible=True)),
+    yaxis=dict(title="Price (USD)"),
+    yaxis2=dict(title="Sentiment", overlaying="y", side="right"),
+    legend=dict(y=0.5, traceorder="reversed")
 )
-cutoff = {
-    "Last 24 Hours": now - pd.Timedelta(hours=24),
-    "Last 7 Days":   now - pd.Timedelta(days=7),
-    "Last 30 Days":  now - pd.Timedelta(days=30),
-}[window]
-
-recent = hist[hist.Timestamp >= cutoff]
-if hist.empty:
-    st.sidebar.info("No data yet.")
-else:
-    st.sidebar.info(f"Data newest at {hist.Timestamp.max():%Y-%m-%d %H:%M} UTC")
-
-for coin in COINS:
-    dfc    = recent[recent.Coin == coin]
-    avg    = dfc.Sentiment.mean() if not dfc.empty else float("nan")
-    action = "🤝 Hold" if abs(avg) < 0.2 else ("📈 Buy" if avg > 0 else "📉 Sell")
-    color  = "green" if avg > 0 else ("red" if avg < 0 else "black")
-    st.sidebar.markdown(
-        f"**{coin}**: <span style='color:{color}'>{avg:+.3f}</span> → {action}",
-        unsafe_allow_html=True
-    )
-
-# ─── MAIN CONTENT ──────────────────────────────────────────────────────────
-st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
-
-# ─── Next-Hour Price Forecasts ──────────────────────────────────────────────
-st.subheader("🤖 Next-Hour Price Forecasts")
-plog       = load_predictions()
-cur_prices = fetch_prices()  # :contentReference[oaicite:0]{index=0}:contentReference[oaicite:1]{index=1}
-
-cols = st.columns(len(COINS), gap="small")
-for col, coin in zip(cols, COINS):
-    entries = plog.get(coin, [])
-    if not entries:
-        col.write(f"**{coin}**")
-        col.info("No predictions yet")
-        continue
-
-    last     = entries[-1]
-    pred_p   = last.get("predicted", 0.0)
-    ts_short = pd.to_datetime(last["timestamp"], utc=True).strftime("%H:%M")
-    now_p    = cur_prices.get(coin, 0.0)
-
-    # % change on that next-hour forecast
-    dpct  = last.get("diff_pct",
-                     round((pred_p - now_p) / now_p * 100 if now_p else 0, 2))
-    delta = f"{dpct:+.1f}%"
-
-    col.metric(
-        label=f"**{coin}** by {ts_short}",
-        value=f"${pred_p:,.2f}",
-        delta=delta,
-        delta_color="normal",
-    )
-
-    # 24h accuracy badge
-    day_ago = now - pd.Timedelta(hours=24)
-    accs    = [
-        bool(e.get("accurate"))
-        for e in entries
-        if pd.to_datetime(e["timestamp"], utc=True) >= day_ago
-    ]
-    acc24   = f"{sum(accs)/len(accs)*100:.0f}%" if accs else "–"
-    col.caption(f"Now: ${now_p:,.2f} • {acc24} acc (24 h)")
-
-# ─── Trends Over Time: Price vs Sentiment ───────────────────────────────────
-st.subheader("📈 Trends Over Time")
-sel = st.selectbox("Select coin:", COINS)
-dfc = hist[hist.Coin == sel].sort_values("Timestamp")
-
-if dfc.empty:
-    st.info("No data for this coin yet.")
-else:
-    base = alt.Chart(dfc).encode(x=alt.X("Timestamp:T", title=None))
-    price_line = base.mark_line(color="#66c5ed").encode(
-        y=alt.Y("PriceUSD:Q", title="Price (USD)")
-    )
-    sent_line = base.mark_line(color="#fa8072").encode(
-        y=alt.Y("Sentiment:Q", title="Sentiment", axis=alt.Axis(orient="right"))
-    )
-    layered = alt.layer(price_line, sent_line).resolve_scale(y="independent")
-    st.altair_chart(layered, use_container_width=True)
-
-# ─── FOOTER ────────────────────────────────────────────────────────────────
-if not hist.empty:
-    st.caption(f"Last updated: {hist.Timestamp.max():%Y-%m-%d %H:%M} UTC")
+st.plotly_chart(fig, use_container_width=True)
