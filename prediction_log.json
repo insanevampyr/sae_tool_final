@@ -8,6 +8,13 @@
       "accurate": null
     },
     {
+      "timestamp": "2025-05-18T18:07:24+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-18T17:03:29+00:00",
       "current": NaN,
       "predicted": NaN,
@@ -397,6 +404,13 @@
     }
   ],
   "Ethereum": [
+    {
+      "timestamp": "2025-05-18T18:26:40+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
     {
       "timestamp": "2025-05-18T18:26:40+00:00",
       "current": NaN,
