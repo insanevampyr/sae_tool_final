@@ -1,6 +1,13 @@
 {
   "Bitcoin": [
     {
+      "timestamp": "2025-05-18T10:26:51+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-18T03:28:24+00:00",
       "current": NaN,
       "predicted": NaN,
@@ -334,6 +341,13 @@
     }
   ],
   "Ethereum": [
+    {
+      "timestamp": "2025-05-18T10:06:52+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
     {
       "timestamp": "2025-05-17T15:49:50+00:00",
       "current": NaN,
