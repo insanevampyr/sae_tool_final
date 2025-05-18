@@ -8,6 +8,13 @@
       "accurate": null
     },
     {
+      "timestamp": "2025-05-18T14:56:41+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-18T14:02:01+00:00",
       "current": NaN,
       "predicted": NaN,
