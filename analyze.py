@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 # analyze.py
 
-import os, csv, json, subprocess
+import os
+import csv
+import json
+import subprocess
 from datetime import datetime, timezone, timedelta
+
 import pandas as pd
 from dateutil import parser
 from dotenv import load_dotenv
@@ -53,11 +57,7 @@ def ensure_pred_log():
 def update_predictions_with_actuals():
     log  = load_json(PRED_LOG_JSON)
     hist = pd.read_csv(HIST_CSV)
-    hist["Timestamp"] = (
-        hist["Timestamp"]
-        .apply(parser.isoparse)
-        .apply(lambda dt: dt.replace(tzinfo=None))
-    )
+    hist["Timestamp"] = hist["Timestamp"].apply(parser.isoparse).apply(lambda dt: dt.replace(tzinfo=None))
     now     = datetime.utcnow()
     changed = False
 
@@ -68,12 +68,12 @@ def update_predictions_with_actuals():
             t0 = parser.isoparse(e["timestamp"]).replace(tzinfo=None)
             if now - t0 < timedelta(hours=1):
                 continue
-            sub = hist[(hist.Coin==coin) & (hist.Timestamp>t0)]
+            sub = hist[(hist.Coin == coin) & (hist.Timestamp > t0)]
             if not sub.empty:
                 actual      = float(sub.iloc[0].PriceUSD)
-                pct         = abs(e["predicted"]-actual)/actual*100 if actual else None
-                e["actual"]   = round(actual,2)
-                e["diff_pct"] = round(pct,2) if pct is not None else None
+                pct         = abs(e["predicted"] - actual) / actual * 100 if actual else None
+                e["actual"]   = round(actual, 2)
+                e["diff_pct"] = round(pct, 2) if pct is not None else None
                 e["accurate"] = (pct is not None and pct <= TOL_PCT)
                 changed = True
 
@@ -89,7 +89,7 @@ def main():
     rows = []
     for coin in COINS:
         for post in fetch_reddit_posts([coin])[:5]:
-            text = post["Text"]
+            text = post.get("Text", "")
             s    = analyze_sentiment(text)
             rows.append({
                 "Timestamp": ts_iso, "Coin": coin,
@@ -97,7 +97,7 @@ def main():
                 "Sentiment": s
             })
         for art in fetch_rss_articles(coin)[:5]:
-            text = art.get("text","")
+            text = art.get("text", "")
             s    = analyze_sentiment(text)
             rows.append({
                 "Timestamp": ts_iso, "Coin": coin,
@@ -105,7 +105,6 @@ def main():
                 "Sentiment": s
             })
 
-    # write sentiment_output.csv
     header1 = not os.path.exists(OUT_CSV)
     with open(OUT_CSV, "a", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(f, fieldnames=rows[0].keys())
@@ -134,6 +133,7 @@ def main():
                 "PriceUSD":        round(price, 2),
                 "SuggestedAction": action
             })
+
     header2 = not os.path.exists(HIST_CSV)
     with open(HIST_CSV, "a", newline="", encoding="utf-8") as f:
         w2 = csv.DictWriter(f, fieldnames=hist_rows[0].keys())
@@ -145,7 +145,7 @@ def main():
     ensure_pred_log()
     full = pd.read_csv(HIST_CSV)
     full["Timestamp"] = full["Timestamp"].apply(parser.isoparse)
-    cutoff = now - timedelta(hours=1)
+    cutoff   = now - timedelta(hours=1)
     avg_sents = [
         full[(full.Coin==coin)&(full.Timestamp>cutoff)]["Sentiment"].mean() or 0.0
         for coin in COINS
@@ -154,49 +154,53 @@ def main():
     preds = predict_prices(pd.DataFrame({"AvgSentiment": avg_sents}))
     log   = load_json(PRED_LOG_JSON)
     for coin, p in zip(COINS, preds):
-        entry = {"timestamp": ts_iso, "predicted": round(float(p),2)}
+        entry = {"timestamp": ts_iso, "predicted": round(float(p), 2)}
         log[coin].insert(0, entry)
     save_json(log, PRED_LOG_JSON)
     print(f"📝 prediction_log.json updated with: {dict(zip(COINS, preds))}")
 
     # ─── 4) Hourly Telegram Alert ───────────────────────────────────────────
-   if send:
-    # build the three sections
-    # 1) Sentiment last hour
-    sent_lines = ["Sentiment (last hr)"]
-    for coin, avg in zip(COINS, avg_sents):
-        sent_lines.append(f"{coin}: {avg:+.2f}")
+    alert = load_json(ALERT_LOG_JSON)
+    last  = parser.isoparse(alert["last_alert"]) if alert.get("last_alert") else None
+    send  = (last is None or (now - last >= timedelta(hours=1)))
 
-    # 2) 24h Prediction Accuracy
-    acc_lines = ["24h Prediction Acc"]
-    for coin in COINS:
-        last_entries = log.get(coin, [])
-        # find most recent actual->diff_pct
-        pct = next((e["accurate"] for e in last_entries if "accurate" in e), True)
-        acc_lines.append(f"{coin}: {int(pct)*100}%")
+    if send:
+        # 1) Sentiment (last hr)
+        sent_lines = ["Sentiment (last hr)"]
+        for coin, avg in zip(COINS, avg_sents):
+            sent_lines.append(f"{coin}: {avg:+.2f}")
 
-    # 3) Next Hour Forecast
-    next_lines = ["Next Hour Forecast"]
-    for coin, p in zip(COINS, preds):
-        t1 = (now + timedelta(hours=1)).strftime("%H:%M UTC")
-        curr = prices[coin]
-        change = (p - curr) / curr * 100 if curr else 0
-        arrow = "↑" if change>=0 else "↓"
-        next_lines.append(
-            f"{coin} by {t1}: ${p:,.2f} ({arrow}{abs(change):.1f}%)"
-        )
+        # 2) 24h Prediction Accuracy
+        acc_lines = ["24h Prediction Acc"]
+        for coin in COINS:
+            entries = log.get(coin, [])
+            # most recent 'accurate' flag
+            acc = next((e.get("accurate", True) for e in entries if "accurate" in e), True)
+            acc_lines.append(f"{coin}: {int(acc)*100}%")
 
-    body = "\n\n".join([
-        "⏰ Hourly Sentiment & Forecast",
-        "\n".join(sent_lines),
-        "\n".join(acc_lines),
-        "\n".join(next_lines),
-    ])
+        # 3) Next Hour Forecast
+        next_lines = ["Next Hour Forecast"]
+        for coin, p in zip(COINS, preds):
+            t1     = (now + timedelta(hours=1)).strftime("%H:%M UTC")
+            curr   = prices.get(coin, 0.0)
+            change = (p - curr) / curr * 100 if curr else 0.0
+            arrow  = "↑" if change >= 0 else "↓"
+            next_lines.append(f"{coin} by {t1}: ${p:,.2f} ({arrow}{abs(change):.1f}%)")
 
-    send_telegram_message(body)
-    alert["last_alert"] = ts_iso
-    save_json(alert, ALERT_LOG_JSON)
+        body = "\n\n".join([
+            "⏰ Hourly Sentiment & Forecast",
+            "\n".join(sent_lines),
+            "\n".join(acc_lines),
+            "\n".join(next_lines),
+        ])
 
+        send_telegram_message(body)
+        alert["last_alert"] = ts_iso
+        save_json(alert, ALERT_LOG_JSON)
+
+    # ─── 5) Update actuals & auto‐push ────────────────────────────────────
+    update_predictions_with_actuals()
+    auto_push.auto_push()
 
     # ─── 6) Commit‐diff helper ─────────────────────────────────────────────
     try:
