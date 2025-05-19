@@ -1,102 +1,104 @@
+#!/usr/bin/env python3
+# analyze.py
+
 import os
-import sys
 import json
-import csv
 import subprocess
 from datetime import datetime, timezone, timedelta
+
 import pandas as pd
+from dateutil import parser
+from dotenv import load_dotenv
+from telegram import Bot
 
 from fetch_prices import fetch_prices
 from analyze_sentiment import get_latest_sentiment
 from train_price_predictor import predict_prices
 
-# File paths
-HIST_SENT_CSV = "sentiment_history.csv"
-HIST_PRED_JSON = "prediction_log.json"
-
-# Telegram setup (optional)
+# ─── CONFIG ────────────────────────────────────────────────────────────────
+load_dotenv()
+HIST_SENT_CSV  = "sentiment_history.csv"
+PRED_LOG_JSON  = "prediction_log.json"
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
-TELEGRAM_CHAT_ID = os.getenv("TELEGRAM_CHAT_ID")
-try:
-    from telegram import Bot
-    bot = Bot(TELEGRAM_TOKEN) if TELEGRAM_TOKEN else None
-except ImportError:
-    bot = None
+TELEGRAM_CHAT  = os.getenv("TELEGRAM_CHAT_ID")
+bot = Bot(TELEGRAM_TOKEN) if TELEGRAM_TOKEN else None
+COINS = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
 
 
 def append_sentiment():
+    """Fetch latest sentiment rows and append to CSV."""
     records = get_latest_sentiment()  # list of dicts
-    # append CSV rows
     df = pd.read_csv(HIST_SENT_CSV) if os.path.exists(HIST_SENT_CSV) else pd.DataFrame()
-    pd.concat([df, pd.DataFrame(records)], ignore_index=True).to_csv(HIST_SENT_CSV, index=False)
+    pd.concat([df, pd.DataFrame(records)], ignore_index=True) \
+      .to_csv(HIST_SENT_CSV, index=False)
     print(f"✅ Appended {len(records)} sentiment rows")
 
 
-def log_predictions():
-    # auto-push via git
-    try:
-        subprocess.check_call(["git", "add", HIST_PRED_JSON])
-        subprocess.check_call(["git", "commit", "-m", f"auto-update @ {now_iso}"])
-        subprocess.check_call(["git", "push"])
+def log_predictions(window_hours: int = 3):
+    """Generate next-hour forecasts for every coin, record to JSON, commit & push."""
+    # load full history
+    hist = pd.read_csv(HIST_SENT_CSV)
+    # robust ISO-8601 parsing
+    hist["Timestamp"] = hist["Timestamp"].apply(parser.isoparse)
 
-        # **RESTORED PRINT OF UPDATED FILES**
-        files = subprocess.check_output(
-            ["git","diff-tree","--no-commit-id","--name-only","-r","HEAD"],
-            text=True
-        ).splitlines()
-        print("✅ Files updated/pushed:")
-        for f in files:
-            print("  -", f)
+    now = datetime.now(timezone.utc)
+    cutoff = now - timedelta(hours=window_hours)
 
-    except subprocess.CalledProcessError as e:
-        print("⚠️ Git push failed:", e)
+    # load or init log
+    if os.path.exists(PRED_LOG_JSON):
+        log = json.load(open(PRED_LOG_JSON))
+    else:
+        log = {coin: [] for coin in COINS}
+
+    # fetch live prices for all coins
+    price_df = fetch_prices(COINS)
+    curr_map = dict(zip(price_df.Coin, price_df.PriceUSD))
+
+    for coin in COINS:
+        curr = curr_map.get(coin)
+
+        # average sentiment in window
+        window = hist[(hist.Coin == coin) & (hist.Timestamp >= cutoff)]["Sentiment"]
+        if not window.empty:
+            avg_sent = window.mean()
+        else:
+            all_hist = hist[hist.Coin == coin]
+            avg_sent = all_hist["Sentiment"].iloc[-1] if not all_hist.empty else None
+
+        # predict up/down
+        if curr is not None and avg_sent is not None:
+            label = predict_prices(pd.DataFrame({"AvgSentiment": [avg_sent]}))[0]
+            predicted = curr * (1.01 if label == 1 else 0.99)
+            diff_pct = round((predicted - curr) / curr * 100, 2)
+        else:
+            predicted, diff_pct = None, None
+
+        entry = {
+            "timestamp": now.isoformat(),
+            "current":   curr,
+            "predicted": predicted,
+            "diff_pct":  diff_pct,
+            "accurate":  None
+        }
+        log.setdefault(coin, []).insert(0, entry)
 
     # write back
-    with open(HIST_PRED_JSON, "w", encoding="utf-8") as f:
+    with open(PRED_LOG_JSON, "w") as f:
         json.dump(log, f, indent=2)
-    print("✅ Logged predictions to", HIST_PRED_JSON)
 
-    # auto-push via git
+    # commit & push
     try:
-        subprocess.check_call(["git", "add", HIST_PRED_JSON])
-        subprocess.check_call(["git", "commit", "-m", f"auto-update @ {now_iso}"])
-        subprocess.check_call(["git", "push"]);
-        # list files
-        files = subprocess.check_output([
-            "git","diff-tree","--no-commit-id","--name-only","-r","HEAD"
-        ], text=True).splitlines()
-        print("✅ Files updated/pushed:")
-        for f in files:
-            print("  -", f)
+        subprocess.check_call(["git", "add", HIST_SENT_CSV, PRED_LOG_JSON])
+        subprocess.check_call(["git", "commit", "-m", f"auto-update @ {now.isoformat()}"])
+        subprocess.check_call(["git", "push"])
+        print("✅ Logged predictions and pushed to git")
     except subprocess.CalledProcessError as e:
-        print("⚠️ Git push failed:", e)
-
-
-def send_hourly_alert():
-    # prepare hourly summary
-    df = pd.read_csv(HIST_SENT_CSV, parse_dates=["Timestamp"] )
-    df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True)
-    cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
-    recent = df[df.Timestamp >= cutoff]
-    if recent.empty:
-        return
-
-    msg = [f"📈 Sentiment Summary (last hour):"]
-    for coin, grp in recent.groupby("Coin"):
-        avg_sent = grp.Sentiment.mean()
-        msg.append(f"*{coin}*: avg {avg_sent:+.3f} ({len(grp)} posts)")
-
-    alert = "\n".join(msg)
-    print(alert)
-    if bot and TELEGRAM_CHAT_ID:
-        bot.send_message(chat_id=TELEGRAM_CHAT_ID, text=alert, parse_mode='Markdown')
-        print("✅ Telegram alert sent.")
+        print("❌ Git operation failed:", e)
 
 
 def main():
     append_sentiment()
-    log_predictions()
-    send_hourly_alert()
+    log_predictions(window_hours=3)
 
 
 if __name__ == "__main__":
