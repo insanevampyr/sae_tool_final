@@ -160,17 +160,43 @@ def main():
     print(f"📝 prediction_log.json updated with: {dict(zip(COINS, preds))}")
 
     # ─── 4) Hourly Telegram Alert ───────────────────────────────────────────
-    alert = load_json(ALERT_LOG_JSON)
-    last  = parser.isoparse(alert.get("last_alert")) if alert.get("last_alert") else None
-    send  = (last is None or (now - last >= timedelta(hours=1)))
-    if send:
-        # … your existing alert‐formatting & send_telegram_message() …
-        alert["last_alert"] = ts_iso
-        save_json(alert, ALERT_LOG_JSON)
+   if send:
+    # build the three sections
+    # 1) Sentiment last hour
+    sent_lines = ["Sentiment (last hr)"]
+    for coin, avg in zip(COINS, avg_sents):
+        sent_lines.append(f"{coin}: {avg:+.2f}")
 
-    # ─── 5) Update actuals & auto‐push ────────────────────────────────────
-    update_predictions_with_actuals()
-    auto_push.auto_push()
+    # 2) 24h Prediction Accuracy
+    acc_lines = ["24h Prediction Acc"]
+    for coin in COINS:
+        last_entries = log.get(coin, [])
+        # find most recent actual->diff_pct
+        pct = next((e["accurate"] for e in last_entries if "accurate" in e), True)
+        acc_lines.append(f"{coin}: {int(pct)*100}%")
+
+    # 3) Next Hour Forecast
+    next_lines = ["Next Hour Forecast"]
+    for coin, p in zip(COINS, preds):
+        t1 = (now + timedelta(hours=1)).strftime("%H:%M UTC")
+        curr = prices[coin]
+        change = (p - curr) / curr * 100 if curr else 0
+        arrow = "↑" if change>=0 else "↓"
+        next_lines.append(
+            f"{coin} by {t1}: ${p:,.2f} ({arrow}{abs(change):.1f}%)"
+        )
+
+    body = "\n\n".join([
+        "⏰ Hourly Sentiment & Forecast",
+        "\n".join(sent_lines),
+        "\n".join(acc_lines),
+        "\n".join(next_lines),
+    ])
+
+    send_telegram_message(body)
+    alert["last_alert"] = ts_iso
+    save_json(alert, ALERT_LOG_JSON)
+
 
     # ─── 6) Commit‐diff helper ─────────────────────────────────────────────
     try:
