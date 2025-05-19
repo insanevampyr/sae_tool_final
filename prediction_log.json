@@ -1,6 +1,13 @@
 {
   "Bitcoin": [
     {
+      "timestamp": "2025-05-19T15:38:45+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-19T14:32:14+00:00",
       "current": NaN,
       "predicted": NaN,
@@ -510,6 +517,13 @@
   ],
   "Ethereum": [
     {
+      "timestamp": "2025-05-19T15:38:45+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-19T13:34:47+00:00",
       "current": NaN,
       "predicted": NaN,
@@ -885,6 +899,13 @@
     }
   ],
   "Solana": [
+    {
+      "timestamp": "2025-05-19T14:15:23+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
     {
       "timestamp": "2025-05-19T14:15:23+00:00",
       "current": NaN,
