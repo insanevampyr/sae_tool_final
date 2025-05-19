@@ -8,6 +8,13 @@
       "accurate": null
     },
     {
+      "timestamp": "2025-05-19T06:57:11+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-19T05:05:15+00:00",
       "current": NaN,
       "predicted": NaN,
@@ -461,6 +468,13 @@
   ],
   "Ethereum": [
     {
+      "timestamp": "2025-05-19T07:55:10+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-19T06:10:58+00:00",
       "current": NaN,
       "predicted": NaN,
@@ -801,6 +815,13 @@
     }
   ],
   "Solana": [
+    {
+      "timestamp": "2025-05-19T07:55:10+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 170.75,
