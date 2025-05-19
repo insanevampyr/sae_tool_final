@@ -1,6 +1,13 @@
 {
   "Bitcoin": [
     {
+      "timestamp": "2025-05-19T17:35:18.153323+00:00",
+      "current": 105204.0,
+      "predicted": 104151.95999999999,
+      "diff_pct": -1.0,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-19T17:16:27.912429+00:00",
       "current": 105212.0,
       "predicted": 104159.88,
@@ -545,6 +552,13 @@
   ],
   "Ethereum": [
     {
+      "timestamp": "2025-05-19T17:35:18.153323+00:00",
+      "current": 2524.3,
+      "predicted": 2499.0570000000002,
+      "diff_pct": -1.0,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-19T17:16:27.912429+00:00",
       "current": 2517.84,
       "predicted": 2492.6616,
@@ -956,6 +970,13 @@
   ],
   "Solana": [
     {
+      "timestamp": "2025-05-19T17:35:18.153323+00:00",
+      "current": 166.1,
+      "predicted": 164.439,
+      "diff_pct": -1.0,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-19T17:16:27.912429+00:00",
       "current": 165.96,
       "predicted": 164.3004,
@@ -1268,6 +1289,13 @@
     }
   ],
   "Dogecoin": [
+    {
+      "timestamp": "2025-05-19T17:35:18.153323+00:00",
+      "current": 0.224575,
+      "predicted": 0.22232925,
+      "diff_pct": -1.0,
+      "accurate": null
+    },
     {
       "timestamp": "2025-05-19T17:16:27.912429+00:00",
       "current": 0.224261,
