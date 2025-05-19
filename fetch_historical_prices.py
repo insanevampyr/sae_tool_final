@@ -20,11 +20,11 @@ def get_hourly_history(coin: str, days: int = 7) -> pd.DataFrame:
     Returns a DataFrame with columns ['Timestamp','PriceUSD'].
     """
     cg_id = ID_MAP[coin]
+    # Note: do NOT pass interval="hourly" here—CoinGecko will return hourly
     data = cg.get_coin_market_chart_by_id(
         id=cg_id,
         vs_currency="usd",
-        days=days,
-        interval="hourly"
+        days=days
     )
     prices = data["prices"]  # list of [timestamp_ms, price]
     df = pd.DataFrame(prices, columns=["ts_ms", "PriceUSD"])
