@@ -76,13 +76,13 @@ def main():
         coin = st.selectbox("Select coin", COINS)
         hist = load_history(coin)
 
-        # build uniform hourly index
+        # uniform hourly index
         hrs = pd.date_range(hist.index.min(), hist.index.max(), freq="h")
 
-        #  a) price: reindex + forward/backfill so no gaps
+        # price: forward/backfill to eliminate gaps
         price_series = hist["price"].reindex(hrs).ffill().bfill()
 
-        #  b) sentiment: average per hour, missing => 0
+        # sentiment: average per hour, missing => 0
         sent_hourly = (
             sent_df[sent_df["Coin"]==coin]
               .set_index("Timestamp")["Sentiment"]
@@ -97,15 +97,10 @@ def main():
         })
 
         # price trace
-        fig = px.line(
-            df,
-            x="Timestamp",
-            y="Price (USD)",
-            labels={"Price (USD)": "Price (USD)"}
-        )
+        fig = px.line(df, x="Timestamp", y="Price (USD)")
         fig.data[0].name = "Price"
 
-        # overlay sentiment on second y-axis
+        # overlay sentiment
         fig.add_scatter(
             x=df["Timestamp"],
             y=df["Sentiment"],
@@ -140,7 +135,7 @@ def main():
             latest  = entries[0] if entries else {}
             pred    = latest.get("predicted")
 
-            # percent change Δ%
+            # Δ %
             if pred is not None and curr:
                 pct   = (pred - curr) / curr * 100
                 arrow = "↑" if pct >= 0 else "↓"
