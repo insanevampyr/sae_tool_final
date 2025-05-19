@@ -1,65 +1,39 @@
-#!/usr/bin/env python3
-# fetch_prices.py
-
 import time
 import requests
 import pandas as pd
-from typing import List
-from requests.exceptions import HTTPError
 
-COINGECKO_URL = "https://api.coingecko.com/api/v3/simple/price"
-
-def fetch_prices(
-    coins: List[str],
-    vs_currency: str = "usd",
-    timeout: int = 10,
-    max_retries: int = 3,
-    backoff_factor: float = 1.0
-) -> pd.DataFrame:
+def fetch_prices(coins, timeout=10, retries=3):
     """
-    Fetch current prices for a list of coins from CoinGecko with retry/backoff for 429s.
-    Returns a DataFrame with columns ['Coin','PriceUSD'], may contain None on failure.
+    Fetch current USD prices for the given list of CoinGecko coin IDs.
+    Retries once on 429 with exponential backoff.
     """
-    # map display names to CoinGecko IDs
-    id_map = {
-        "Bitcoin":  "bitcoin",
-        "Ethereum": "ethereum",
-        "Solana":   "solana",
-        "Dogecoin": "dogecoin",
+    url = "https://api.coingecko.com/api/v3/simple/price"
+    params = {
+        "ids": ",".join([c.lower() for c in coins]),
+        "vs_currencies": "usd",
     }
-    ids = ",".join(id_map[c] for c in coins)
-    params = {"ids": ids, "vs_currencies": vs_currency}
 
-    # Attempt request with retries on 429
-    for attempt in range(1, max_retries + 1):
-        try:
-            resp = requests.get(COINGECKO_URL, params=params, timeout=timeout)
-            resp.raise_for_status()
-            data = resp.json()  # e.g. {"bitcoin":{"usd":10234}, ...}
-            break
-        except HTTPError as e:
-            code = e.response.status_code if e.response is not None else None
-            # only back‐off on rate limiting
-            if code == 429 and attempt < max_retries:
-                sleep_time = backoff_factor * (2 ** (attempt - 1))
-                time.sleep(sleep_time)
-                continue
-            # on any other HTTPError or final 429, build empty data
-            data = {}
-            break
+    for attempt in range(retries):
+        resp = requests.get(url, params=params, timeout=timeout)
+        if resp.status_code == 429:  # Too Many Requests
+            backoff = 1 * (2 ** attempt)
+            time.sleep(backoff)
+            continue
+        resp.raise_for_status()
+        break
+    else:
+        # If we exhausted retries, this will raise on the last attempt
+        resp.raise_for_status()
 
+    data = resp.json()
     rows = []
-    for coin in coins:
-        cg_id = id_map[coin]
-        price = None
-        if isinstance(data, dict):
-            price = data.get(cg_id, {}).get(vs_currency)
-        rows.append({"Coin": coin, "PriceUSD": price})
-
+    for c in coins:
+        usd = data.get(c.lower(), {}).get("usd")
+        rows.append({"Coin": c, "PriceUSD": usd})
     return pd.DataFrame(rows)
 
-
 if __name__ == "__main__":
-    # quick smoke-test
-    df = fetch_prices(["Bitcoin", "Ethereum", "Solana", "Dogecoin"])
-    print(df)
+    # Quick CLI check
+    coins = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
+    df = fetch_prices(coins)
+    print(df.to_string(index=False))
