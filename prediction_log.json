@@ -1,6 +1,13 @@
 {
   "Bitcoin": [
     {
+      "timestamp": "2025-05-19T10:13:44+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-19T06:57:11+00:00",
       "current": NaN,
       "predicted": NaN,
@@ -489,6 +496,13 @@
       "accurate": null
     },
     {
+      "timestamp": "2025-05-19T07:55:10+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-19T06:10:58+00:00",
       "current": NaN,
       "predicted": NaN,
@@ -829,6 +843,13 @@
     }
   ],
   "Solana": [
+    {
+      "timestamp": "2025-05-19T07:55:10+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
     {
       "timestamp": "2025-05-19T07:55:10+00:00",
       "current": NaN,
