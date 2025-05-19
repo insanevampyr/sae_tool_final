@@ -1,6 +1,13 @@
 {
   "Bitcoin": [
     {
+      "timestamp": "2025-05-19T12:12:49+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": null
+    },
+    {
       "timestamp": "2025-05-19T10:13:44+00:00",
       "current": NaN,
       "predicted": NaN,
