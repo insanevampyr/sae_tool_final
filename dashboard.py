@@ -1,124 +1,174 @@
-import json
 import streamlit as st
 import pandas as pd
-import plotly.graph_objs as go
-from datetime import datetime, timedelta
+import json, datetime
 from dateutil import parser
+import plotly.express as px
 
-from fetch_historical_prices import get_hourly_history
 from fetch_prices import fetch_prices
-from train_price_predictor import predict_prices
+from fetch_historical_prices import get_hourly_history
 
-# ─── Configuration ─────────────────────────────────────────────────────
+# ─── CONFIG ────────────────────────────────────────────────────────────────
 COINS         = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
-HISTORY_DAYS  = 7
+HIST_CSV      = "sentiment_history.csv"
 PRED_LOG_JSON = "prediction_log.json"
-SENT_HIST_CSV = "sentiment_history.csv"
-WINDOW_HOURS  = 24
+HISTORY_DAYS  = 7
 
-# ─── Streamlit Setup ───────────────────────────────────────────────────
-st.set_page_config(layout="wide", page_title="AlphaPulse Dashboard")
+st.set_page_config(layout="wide")
 
-# ─── Header ────────────────────────────────────────────────────────────
-st.markdown("<div style='text-align:center'>", unsafe_allow_html=True)
-st.image("alpha_logo.jpg", width=200)
-st.markdown("</div>", unsafe_allow_html=True)
-st.markdown("## AlphaPulse: Crypto Sentiment Dashboard")
-st.markdown("Real price history + sentiment trends + next-hour forecasts")
-
-# ─── Load Sentiment Data ───────────────────────────────────────────────
 @st.cache_data
 def load_sentiment():
-    df = pd.read_csv(SENT_HIST_CSV)
-    # Parse ISO8601 and strip timezone
-    df["Timestamp"] = (
-        df["Timestamp"]
-          .apply(parser.isoparse)
-          .apply(lambda dt: dt.replace(tzinfo=None))
-    )
+    df = pd.read_csv(HIST_CSV)
+    def _parse(s):
+        dt = parser.isoparse(s) if isinstance(s, str) else s
+        if dt.tzinfo:
+            dt = dt.astimezone(datetime.timezone.utc)
+        return dt.replace(tzinfo=None)
+    df["Timestamp"] = df["Timestamp"].apply(_parse)
     return df
 
-sent_df = load_sentiment()
-
-# ─── Sidebar: 24h Sentiment Summary ─────────────────────────────────────
-st.sidebar.markdown("### Sentiment Summary (24h)")
-cut24 = datetime.utcnow() - timedelta(hours=24)
-for coin in COINS:
-    vals = sent_df[(sent_df.Coin == coin) & (sent_df.Timestamp >= cut24)]["Sentiment"]
-    avg  = vals.mean() if not vals.empty else 0.0
-    st.sidebar.metric(label=coin, value=f"{avg:.3f}")
-
-# ─── Cached Loaders ────────────────────────────────────────────────────
 @st.cache_data
-def load_price_history(coin: str) -> pd.DataFrame:
+def load_history(coin: str):
     df = get_hourly_history(coin, days=HISTORY_DAYS)
-    df["Timestamp"] = df["Timestamp"].apply(lambda dt: dt.replace(tzinfo=None))
-    return df.set_index("Timestamp").resample("1h").ffill().bfill()
+    def _parse(s):
+        dt = parser.isoparse(s) if isinstance(s, str) else s
+        if dt.tzinfo:
+            dt = dt.astimezone(datetime.timezone.utc)
+        return dt.replace(tzinfo=None)
+    df["Timestamp"] = df["Timestamp"].apply(_parse)
+    return df.set_index("Timestamp").rename(columns={"PriceUSD": "price"})
 
-@st.cache_data(ttl=300)
-def load_current_prices() -> dict:
+@st.cache_data
+def load_current_prices():
     df = fetch_prices(COINS)
-    return df.set_index("Coin")["PriceUSD"].to_dict()
+    return dict(zip(df["Coin"], df["PriceUSD"]))
 
-# ─── Load Data ─────────────────────────────────────────────────────────
-with st.spinner("Loading data…"):
-    price_histories = {c: load_price_history(c) for c in COINS}
-    curr_map        = load_current_prices()
+@st.cache_data
+def load_prediction_log():
+    with open(PRED_LOG_JSON, "r", encoding="utf-8") as f:
+        return json.load(f)
 
-# ─── Main: Trends Over Time ─────────────────────────────────────────────
-coin = st.selectbox("Select coin for trends", COINS)
-st.markdown(f"### Trends Over Time: {coin}")
+def main():
+    st.image("alpha_logo.jpg", width=200)
+    st.title("AlphaPulse: Crypto Sentiment Dashboard")
 
-price_df  = price_histories[coin]
-raw_sent  = sent_df[sent_df.Coin == coin].set_index("Timestamp")["Sentiment"]
-hourly    = raw_sent.resample("1h").mean()
-aligned   = hourly.reindex(price_df.index, fill_value=0)
+    sent_df        = load_sentiment()
+    current_prices = load_current_prices()
+    pred_log       = load_prediction_log()
 
-chart_df  = price_df.copy()
-chart_df["Sentiment"] = aligned
+    tabs = st.tabs(["Sentiment Summary", "Trends Over Time", "Next Hour Predictions"])
 
-fig = go.Figure()
-fig.add_trace(go.Scatter(
-    x=chart_df.index, y=chart_df.PriceUSD,
-    name="Price (USD)", yaxis="y1"
-))
-fig.add_trace(go.Scatter(
-    x=chart_df.index, y=chart_df.Sentiment,
-    name="Avg Sentiment", yaxis="y2"
-))
-fig.update_layout(
-    xaxis=dict(rangeslider=dict(visible=True)),
-    yaxis=dict(title="Price (USD)"),
-    yaxis2=dict(
-        title="Avg Sentiment", overlaying="y", side="right",
-        rangemode="tozero"
-    ),
-    margin=dict(l=60, r=60, t=50, b=50)
-)
-st.plotly_chart(fig, use_container_width=True)
+    # ─── 1) Sentiment Summary ───────────────────────────────────────────────
+    with tabs[0]:
+        st.header("Sentiment Summary (Last 24 h)")
+        cutoff = datetime.datetime.utcnow() - datetime.timedelta(hours=24)
+        summary = []
+        for c in COINS:
+            avg = (
+                sent_df[(sent_df["Coin"]==c) & (sent_df["Timestamp"]>=cutoff)]
+                  .Sentiment
+                  .mean() or 0.0
+            )
+            summary.append({"Coin": c, "Avg Sentiment": round(avg,4)})
+        st.table(pd.DataFrame(summary))
 
-# ─── Main: Next-Hour Predictions ────────────────────────────────────────
-st.markdown("### Next-Hour Predictions")
-with open(PRED_LOG_JSON) as f:
-    logs = json.load(f)
+    # ─── 2) Trends Over Time ───────────────────────────────────────────────
+    with tabs[1]:
+        coin = st.selectbox("Select coin", COINS)
+        hist = load_history(coin)
 
-records = []
-for c in COINS:
-    entry = (logs.get(c) or [{}])[0]
-    curr  = entry.get("current", curr_map.get(c))
-    pred  = entry.get("predicted")
-    if curr is not None and pred is not None:
-        pct = round((pred - curr) / curr * 100, 2)
-        pct_str = f"{pct:+.2f}%"
-    else:
-        pct_str = "N/A"
+        # build uniform hourly index
+        hrs = pd.date_range(hist.index.min(), hist.index.max(), freq="h")
 
-    records.append({
-        "Coin":            c,
-        "Current Price":   f"${curr:,.2f}"   if curr is not None else "N/A",
-        "Predicted Price": f"${pred:,.2f}"   if pred is not None else "N/A",
-        "% Change":        pct_str
-    })
+        #  a) price: reindex + forward/backfill so no gaps
+        price_series = hist["price"].reindex(hrs).ffill().bfill()
 
-df_pred = pd.DataFrame(records).set_index("Coin")
-st.table(df_pred)
+        #  b) sentiment: average per hour, missing => 0
+        sent_hourly = (
+            sent_df[sent_df["Coin"]==coin]
+              .set_index("Timestamp")["Sentiment"]
+              .resample("h").mean()
+              .reindex(hrs, fill_value=0.0)
+        )
+
+        df = pd.DataFrame({
+            "Timestamp": hrs,
+            "Price (USD)": price_series,
+            "Sentiment":  sent_hourly
+        })
+
+        # price trace
+        fig = px.line(
+            df,
+            x="Timestamp",
+            y="Price (USD)",
+            labels={"Price (USD)": "Price (USD)"}
+        )
+        fig.data[0].name = "Price"
+
+        # overlay sentiment on second y-axis
+        fig.add_scatter(
+            x=df["Timestamp"],
+            y=df["Sentiment"],
+            mode="lines",
+            name="Avg Sentiment",
+            yaxis="y2"
+        )
+
+        fig.update_layout(
+            title=f"{coin} — Price vs Sentiment (Last {HISTORY_DAYS} Days)",
+            xaxis=dict(rangeslider=dict(visible=True)),
+            yaxis=dict(title="Price (USD)"),
+            yaxis2=dict(
+                title="Avg Sentiment",
+                overlaying="y",
+                side="right"
+            ),
+            legend=dict(y=1.1, orientation="h")
+        )
+        st.plotly_chart(fig, use_container_width=True)
+
+    # ─── 3) Next Hour Predictions ──────────────────────────────────────────
+    with tabs[2]:
+        st.header("Next Hour Predictions")
+        now      = datetime.datetime.utcnow()
+        cutoff24 = now - datetime.timedelta(hours=24)
+
+        rows = []
+        for c in COINS:
+            curr    = current_prices.get(c, 0.0)
+            entries = pred_log.get(c, [])
+            latest  = entries[0] if entries else {}
+            pred    = latest.get("predicted")
+
+            # percent change Δ%
+            if pred is not None and curr:
+                pct   = (pred - curr) / curr * 100
+                arrow = "↑" if pct >= 0 else "↓"
+                delta = f"{arrow}{abs(pct):.1f}%"
+            else:
+                delta = "N/A"
+
+            # 24h accuracy
+            recent = [
+                e for e in entries
+                if parser.isoparse(e["timestamp"]).replace(tzinfo=None) >= cutoff24
+                   and e.get("accurate") is not None
+            ]
+            if recent:
+                acc = sum(1 for e in recent if e["accurate"]) / len(recent) * 100
+                acc_str = f"{acc:.0f}%"
+            else:
+                acc_str = "N/A"
+
+            rows.append({
+                "Coin":      c,
+                "Current":   f"${curr:,.2f}",
+                "Predicted": f"${pred:,.2f}" if pred is not None else "N/A",
+                "Δ %":       delta,
+                "24 h Acc":  acc_str
+            })
+
+        st.table(pd.DataFrame(rows))
+
+if __name__ == "__main__":
+    main()

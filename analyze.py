@@ -63,6 +63,7 @@ def update_predictions_with_actuals():
 
     for coin, entries in log.items():
         for e in entries:
+            # skip if no predicted, or already filled
             if "actual" in e or "predicted" not in e:
                 continue
             t0 = parser.isoparse(e["timestamp"]).replace(tzinfo=None)
@@ -88,6 +89,7 @@ def main():
     # 1) Scrape & analyze
     rows = []
     for coin in COINS:
+        # reddit
         for post in fetch_reddit_posts([coin])[:5]:
             text = post.get("Text", "")
             s    = analyze_sentiment(text)
@@ -96,6 +98,7 @@ def main():
                 "Source":    "Reddit", "Text": text,
                 "Sentiment": s
             })
+        # news
         for art in fetch_rss_articles(coin)[:5]:
             text = art.get("text", "")
             s    = analyze_sentiment(text)
@@ -141,7 +144,7 @@ def main():
         w2.writerows(hist_rows)
     dedupe_csv(HIST_CSV, ["Timestamp", "Coin", "Source"])
 
-    # ─── 3) Always log next‐hour predictions ────────────────────────────────
+    # 3) Always log next-hour predictions
     ensure_pred_log()
     full = pd.read_csv(HIST_CSV)
     full["Timestamp"] = full["Timestamp"].apply(parser.isoparse)
@@ -159,26 +162,25 @@ def main():
     save_json(log, PRED_LOG_JSON)
     print(f"📝 prediction_log.json updated with: {dict(zip(COINS, preds))}")
 
-    # ─── 4) Hourly Telegram Alert ───────────────────────────────────────────
+    # 4) Hourly Telegram Alert
     alert = load_json(ALERT_LOG_JSON)
     last  = parser.isoparse(alert["last_alert"]) if alert.get("last_alert") else None
     send  = (last is None or (now - last >= timedelta(hours=1)))
 
     if send:
-        # 1) Sentiment (last hr)
+        # 4a) Sentiment (last hr)
         sent_lines = ["Sentiment (last hr)"]
         for coin, avg in zip(COINS, avg_sents):
             sent_lines.append(f"{coin}: {avg:+.2f}")
 
-        # 2) 24h Prediction Accuracy
+        # 4b) 24h Prediction Accuracy
         acc_lines = ["24h Prediction Acc"]
         for coin in COINS:
             entries = log.get(coin, [])
-            # most recent 'accurate' flag
             acc = next((e.get("accurate", True) for e in entries if "accurate" in e), True)
             acc_lines.append(f"{coin}: {int(acc)*100}%")
 
-        # 3) Next Hour Forecast
+        # 4c) Next Hour Forecast
         next_lines = ["Next Hour Forecast"]
         for coin, p in zip(COINS, preds):
             t1     = (now + timedelta(hours=1)).strftime("%H:%M UTC")
@@ -193,23 +195,23 @@ def main():
             "\n".join(acc_lines),
             "\n".join(next_lines),
         ])
-
         send_telegram_message(body)
         alert["last_alert"] = ts_iso
         save_json(alert, ALERT_LOG_JSON)
 
-    # ─── 5) Update actuals & auto‐push ────────────────────────────────────
+    # 5) Update actuals & auto-push
     update_predictions_with_actuals()
     auto_push.auto_push()
 
-    # ─── 6) Commit‐diff helper ─────────────────────────────────────────────
+    # 6) Commit-diff helper
     try:
         files = subprocess.check_output(
             ["git","diff-tree","--no-commit-id","--name-only","-r","HEAD"],
             text=True
         ).splitlines()
         print("✅ Files updated in last commit:")
-        for f in files: print(" -", f)
+        for f in files:
+            print(" -", f)
     except Exception as e:
         print("⚠️ Diff helper error:", e)
 
