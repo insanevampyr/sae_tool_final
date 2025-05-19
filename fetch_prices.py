@@ -36,6 +36,6 @@ def fetch_prices(coins: List[str], vs_currency: str = "usd", timeout: int = 10) 
     return pd.DataFrame(rows)
 
 if __name__ == "__main__":
-    # quick test
+    # quick smoke-test
     df = fetch_prices(["Bitcoin", "Ethereum", "Solana", "Dogecoin"])
     print(df)
