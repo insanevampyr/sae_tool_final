@@ -52,7 +52,6 @@ def safe_float(x):
         return np.nan
 
 def get_next_hour_predictions(df):
-    # Get latest sentiment for each coin
     preds = []
     for coin in COINS:
         coin_df = df[df["Coin"] == coin]
@@ -77,7 +76,7 @@ tabs = st.tabs([
 with tabs[0]:
     st.subheader("Sentiment Summary (Last 24h Average Per Coin)")
     sentiment = load_sentiment_history()
-    now = pd.Timestamp.utcnow().tz_localize("UTC")
+    now = pd.Timestamp.utcnow()
     cutoff = now - pd.Timedelta("24h")
     last24 = sentiment[sentiment["Timestamp"] >= cutoff]
     avg = (
@@ -97,7 +96,6 @@ with tabs[0]:
 # --- Trends Over Time Tab ---
 with tabs[1]:
     st.subheader("Trends Over Time")
-    # Show a focused, zoomed-in chart
     sentiment = load_sentiment_history()
     price_hist = load_price_history()
     coin = st.selectbox("Coin", COINS, key="trend_coin")
@@ -111,18 +109,16 @@ with tabs[1]:
     coin_price = coin_price.set_index("Timestamp").sort_index()
 
     if not coin_sent.empty and not coin_price.empty:
-        # Merge on nearest timestamp, forward-fill
         merged = pd.merge_asof(
-            coin_price, 
-            coin_sent, 
-            left_index=True, right_index=True, 
-            direction='nearest', 
+            coin_price,
+            coin_sent,
+            left_index=True, right_index=True,
+            direction='nearest',
             tolerance=pd.Timedelta('1H'),
             suffixes=("_price", "_sentiment")
         )
-        # Drop rows with missing sentiment after merge
         merged = merged[merged["Sentiment"].notnull()]
-        merged = merged.last("48h")  # zoom into the last 48h
+        merged = merged.last("48h")
 
         base = alt.Chart(merged.reset_index()).encode(
             x=alt.X("Timestamp:T", axis=alt.Axis(title="Time"))
