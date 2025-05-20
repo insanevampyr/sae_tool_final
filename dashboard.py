@@ -66,8 +66,8 @@ def load_model():
     model_path = "price_predictor.pkl"
     if os.path.exists(model_path):
         model = joblib.load(model_path)
-        return model, COINS
-    return None, None
+        return model
+    return None
 
 def load_prediction_log():
     if os.path.exists("prediction_log.json"):
@@ -170,7 +170,7 @@ with tabs[1]:
 # --- Next Hour Predictions Tab ---
 with tabs[2]:
     st.subheader("Next Hour Price Predictions (ML Model)")
-    model, coins = load_model()
+    model = load_model()
     curr_df = load_sentiment_output()
     if model is not None and not curr_df.empty:
         sents = get_next_hour_predictions(curr_df)
