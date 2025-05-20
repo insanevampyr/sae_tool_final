@@ -65,7 +65,12 @@ def load_price_history():
 def load_model():
     model_path = "price_predictor.pkl"
     if os.path.exists(model_path):
-        model = joblib.load(model_path)
+        obj = joblib.load(model_path)
+        # Handle if joblib dump is a tuple (model, extra) or just the model
+        if isinstance(obj, tuple):
+            model = obj[0]
+        else:
+            model = obj
         return model
     return None
 
@@ -144,7 +149,7 @@ with tabs[1]:
                 coin_sent,
                 left_index=True, right_index=True,
                 direction='nearest',
-                tolerance=pd.Timedelta('1H'),
+                tolerance=pd.Timedelta('1h'),
                 suffixes=("_price", "_sentiment")
             )
             merged = merged[merged["Sentiment"].notnull()]
@@ -205,5 +210,3 @@ with tabs[2]:
         st.dataframe(pd.DataFrame(pred_rows), use_container_width=True)
     else:
         st.info("No predictions logged yet.")
-
-# === End ===
