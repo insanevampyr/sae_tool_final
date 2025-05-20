@@ -5,6 +5,9 @@ import joblib
 import altair as alt
 import json
 import os
+import warnings
+warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
+
 
 COINS = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
 
@@ -134,6 +137,9 @@ with tabs[2]:
             row = sent_out[sent_out["Coin"] == c].sort_values("Timestamp")
             val = row.iloc[-1]["Sentiment"] if not row.empty else 0.0
             sents.append(val if not pd.isnull(val) else 0.0)
+        # If model is a tuple, take [0]
+        if isinstance(model, tuple):
+            model = model[0]
         preds = model.predict(np.array(sents).reshape(-1, 1))
         pred_df = pd.DataFrame({
             "Coin": COINS,
