@@ -121,19 +121,24 @@ with tabs[1]:
             direction='nearest',
             tolerance=pd.Timedelta('1h')
         ).reset_index()
-        merged = merged.dropna(subset=["PriceUSD", "Sentiment"])
-        # Normalize sentiment for graph overlay
-        sent_min, sent_max = merged["Sentiment"].min(), merged["Sentiment"].max()
-        price_min, price_max = merged["PriceUSD"].min(), merged["PriceUSD"].max()
-        scale = (price_max - price_min) / (sent_max - sent_min) if sent_max != sent_min else 1
-        merged["Sent_Scaled"] = price_min + (merged["Sentiment"] - sent_min) * scale
 
-        base = alt.Chart(merged).encode(x="Timestamp:T")
-        price_line = base.mark_line(y="PriceUSD:Q", color=alt.value("#0366d6")).properties(title=f"{coin} Price vs Sentiment (last 48h)")
-        sent_line = base.mark_line(y="Sent_Scaled:Q", color=alt.value("orange")).encode(tooltip=["Sentiment:Q"])
-        chart = price_line + sent_line
-        st.altair_chart(chart, use_container_width=True)
-        st.caption("Blue = Price (USD), Orange = Sentiment (overlayed & scaled to fit price range)")
+        # Fix: check columns before dropna
+        if "PriceUSD" in merged.columns and "Sentiment" in merged.columns:
+            merged = merged.dropna(subset=["PriceUSD", "Sentiment"])
+            # Normalize sentiment for graph overlay
+            sent_min, sent_max = merged["Sentiment"].min(), merged["Sentiment"].max()
+            price_min, price_max = merged["PriceUSD"].min(), merged["PriceUSD"].max()
+            scale = (price_max - price_min) / (sent_max - sent_min) if sent_max != sent_min else 1
+            merged["Sent_Scaled"] = price_min + (merged["Sentiment"] - sent_min) * scale
+
+            base = alt.Chart(merged).encode(x="Timestamp:T")
+            price_line = base.mark_line(y="PriceUSD:Q", color=alt.value("#0366d6")).properties(title=f"{coin} Price vs Sentiment (last 48h)")
+            sent_line = base.mark_line(y="Sent_Scaled:Q", color=alt.value("orange")).encode(tooltip=["Sentiment:Q"])
+            chart = price_line + sent_line
+            st.altair_chart(chart, use_container_width=True)
+            st.caption("Blue = Price (USD), Orange = Sentiment (overlayed & scaled to fit price range)")
+        else:
+            st.warning("No price or sentiment data available after merge for this coin and timeframe.")
     else:
         st.info("No data for this coin for the last 48h.")
 
