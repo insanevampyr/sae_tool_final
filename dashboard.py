@@ -1,169 +1,72 @@
 import streamlit as st
 import pandas as pd
-import numpy as np
-import joblib
-import json
+import altair as alt
 import os
 
-COINS = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
+DATA_FILE = "sentiment_output.csv"
+HIST_FILE = "sentiment_history.csv"
 
-def load_csv(path, date_cols=[], float_cols=[], str_cols=[]):
-    if not os.path.exists(path):
-        st.error(f"File not found: {path}")
-        return pd.DataFrame()
-    try:
+st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
+st.title("Crypto Sentiment Dashboard")
+
+# --- Data Loading ---
+def load_data(path):
+    if os.path.exists(path):
         df = pd.read_csv(path)
-        df.columns = df.columns.str.strip()
-        for c in date_cols:
-            if c in df.columns:
-                df[c] = pd.to_datetime(df[c], utc=True, errors='coerce')
-        for c in float_cols:
-            if c in df.columns:
-                df[c] = pd.to_numeric(df[c], errors='coerce')
-        for c in str_cols:
-            if c in df.columns:
-                df[c] = df[c].astype(str).str.strip()
+        # Standardize columns
+        df.columns = [c.strip() for c in df.columns]
+        # Force correct types for Timestamp
+        if "Timestamp" in df.columns:
+            df["Timestamp"] = pd.to_datetime(df["Timestamp"], errors='coerce')
         return df
-    except Exception as e:
-        st.error(f"Could not load {path}: {e}")
+    else:
+        st.warning(f"File not found: {path}")
         return pd.DataFrame()
 
-def load_model():
-    path = "price_predictor.pkl"
-    if not os.path.exists(path):
-        st.error("Missing price_predictor.pkl")
-        return None
-    obj = joblib.load(path)
-    if isinstance(obj, tuple):
-        return obj[0]
-    return obj
+df = load_data(DATA_FILE)
+hist = load_data(HIST_FILE)
 
-def load_prediction_log():
-    if not os.path.exists("prediction_log.json"):
-        return {}
-    with open("prediction_log.json") as f:
-        return json.load(f)
+if df.empty:
+    st.error("No data loaded! Check that sentiment_output.csv exists and is not empty.")
+    st.stop()
 
-# ---- Load All Data ----
-sent_hist = load_csv("sentiment_history.csv", date_cols=["Timestamp"], float_cols=["Sentiment"], str_cols=["Coin"])
-sent_out  = load_csv("sentiment_output.csv",  date_cols=["Timestamp"], float_cols=["Sentiment"], str_cols=["Coin"])
-price_hist = load_csv("btc_history.csv", date_cols=["Timestamp"], float_cols=["PriceUSD"], str_cols=["Coin"])
-model   = load_model()
-pred_log = load_prediction_log()
+required_cols = {"Coin", "Timestamp", "Sentiment", "PriceUSD", "SuggestedAction"}
+if not required_cols.issubset(set(df.columns)):
+    st.error(f"Missing columns in data: {required_cols - set(df.columns)}")
+    st.dataframe(df)
+    st.stop()
 
-st.set_page_config("Crypto Dashboard", layout="wide")
-st.title("📊 Crypto Sentiment & Price Dashboard")
+# --- Show Latest for Each Coin ---
+st.subheader("Latest Sentiment and Price per Coin")
+latest = df.sort_values("Timestamp").groupby("Coin").tail(1).sort_values("Coin")
+st.dataframe(latest[["Coin", "Timestamp", "Sentiment", "PriceUSD", "SuggestedAction"]].reset_index(drop=True))
 
-# ---- DEBUGGING SECTION ----
-with st.expander("Show loaded dataframes (debug)"):
-    st.subheader("sentiment_history.csv")
-    st.write(sent_hist.head())
-    st.subheader("sentiment_output.csv")
-    st.write(sent_out.head())
-    st.subheader("btc_history.csv")
-    st.write(price_hist.head())
-    st.subheader("Model loaded:")
-    st.write(type(model))
-    st.subheader("Prediction Log Example:")
-    st.write(str(pred_log)[:800])
+# --- All Recent Data Table ---
+st.subheader("All Recent Data")
+st.dataframe(df[["Coin", "Timestamp", "Sentiment", "PriceUSD", "SuggestedAction"]].sort_values("Timestamp", ascending=False).reset_index(drop=True))
 
-# ---- TABS ----
-tabs = st.tabs([
-    "Sentiment Summary (24hr Avg)",
-    "Trends Over Time",
-    "Next Hour Predictions"
-])
+# --- Charts for Each Coin ---
+st.subheader("Trend Charts")
+coins = latest["Coin"].unique().tolist()
+for coin in coins:
+    cdf = df[df["Coin"] == coin].sort_values("Timestamp")
+    st.markdown(f"#### {coin}")
+    # Price Chart
+    price_chart = alt.Chart(cdf).mark_line().encode(
+        x="Timestamp:T",
+        y="PriceUSD:Q"
+    ).properties(title=f"{coin} - Price")
+    # Sentiment Chart
+    sent_chart = alt.Chart(cdf).mark_line(color="orange").encode(
+        x="Timestamp:T",
+        y="Sentiment:Q"
+    ).properties(title=f"{coin} - Sentiment")
+    st.altair_chart(price_chart, use_container_width=True)
+    st.altair_chart(sent_chart, use_container_width=True)
 
-with tabs[0]:
-    st.header("Sentiment Summary (Last 24h Avg per Coin)")
-    if sent_hist.empty:
-        st.warning("No sentiment_history.csv data found.")
-    else:
-        now = pd.Timestamp.utcnow()
-        last24 = sent_hist[sent_hist["Timestamp"] >= now - pd.Timedelta(hours=24)]
-        if last24.empty:
-            st.warning("No rows in last 24h!")
-        else:
-            summary = (
-                last24.groupby("Coin")["Sentiment"]
-                .mean()
-                .reindex(COINS)
-                .reset_index()
-                .rename(columns={"Sentiment": "24h Avg Sentiment"})
-            )
-            summary["24h Avg Sentiment"] = summary["24h Avg Sentiment"].round(4)
-            st.dataframe(summary, hide_index=True, use_container_width=True)
+# --- (Optionally) Show all history ---
+if not hist.empty:
+    st.subheader("Full Sentiment History")
+    st.dataframe(hist.sort_values("Timestamp", ascending=False).reset_index(drop=True))
 
-with tabs[1]:
-    st.header("Trends Over Time")
-    coin = st.selectbox("Select coin", COINS, key="trend_coin")
-    s = sent_hist[sent_hist["Coin"] == coin].sort_values("Timestamp")
-    p = price_hist[price_hist["Coin"] == coin].sort_values("Timestamp")
-    if not s.empty and not p.empty:
-        max_time = min(s["Timestamp"].max(), p["Timestamp"].max())
-        recent_cut = max_time - pd.Timedelta(hours=48)
-        s = s[s["Timestamp"] >= recent_cut]
-        p = p[p["Timestamp"] >= recent_cut]
-        merged = pd.merge_asof(
-            p.set_index("Timestamp"),
-            s.set_index("Timestamp"),
-            left_index=True,
-            right_index=True,
-            direction='nearest',
-            tolerance=pd.Timedelta('1h')
-        ).reset_index()
-        if "PriceUSD" in merged.columns and "Sentiment" in merged.columns:
-            merged = merged.dropna(subset=["PriceUSD", "Sentiment"])
-            sent_min, sent_max = merged["Sentiment"].min(), merged["Sentiment"].max()
-            price_min, price_max = merged["PriceUSD"].min(), merged["PriceUSD"].max()
-            scale = (price_max - price_min) / (sent_max - sent_min) if sent_max != sent_min else 1
-            merged["Sent_Scaled"] = price_min + (merged["Sentiment"] - sent_min) * scale
-            import altair as alt
-            base = alt.Chart(merged).encode(x="Timestamp:T")
-            price_line = base.mark_line(y="PriceUSD:Q", color=alt.value("#0366d6"))
-            sent_line = base.mark_line(y="Sent_Scaled:Q", color=alt.value("orange")).encode(tooltip=["Sentiment:Q"])
-            chart = price_line + sent_line
-            st.altair_chart(chart, use_container_width=True)
-            st.caption("Blue = Price (USD), Orange = Sentiment (overlayed & scaled to fit price range)")
-        else:
-            st.warning("No price or sentiment data available after merge for this coin and timeframe.")
-    else:
-        st.info("No data for this coin for the last 48h.")
-
-with tabs[2]:
-    st.header("Next Hour Predictions")
-    if (model is not None) and (not sent_out.empty):
-        sents = []
-        for c in COINS:
-            row = sent_out[sent_out["Coin"] == c].sort_values("Timestamp")
-            val = row.iloc[-1]["Sentiment"] if not row.empty else 0.0
-            sents.append(val if not pd.isnull(val) else 0.0)
-        preds = model.predict(np.array(sents).reshape(-1, 1))
-        pred_df = pd.DataFrame({
-            "Coin": COINS,
-            "Latest Sentiment": np.round(sents, 4),
-            "Predicted Next Price": np.round(preds, 2)
-        })
-        st.dataframe(pred_df, use_container_width=True, hide_index=True)
-    else:
-        st.warning("Prediction model or sentiment_output.csv not available.")
-
-    st.markdown("----")
-    st.subheader("Last Predictions Log")
-    log_rows = []
-    for coin in COINS:
-        entries = pred_log.get(coin, [])
-        if entries:
-            entry = entries[-1]
-            log_rows.append({
-                "Coin": coin,
-                "Timestamp": entry.get("timestamp"),
-                "Predicted": entry.get("predicted"),
-                "Actual": entry.get("actual"),
-                "Diff %": entry.get("diff_pct"),
-                "Accurate?": entry.get("accurate"),
-            })
-    if log_rows:
-        st.dataframe(pd.DataFrame(log_rows), use_container_width=True, hide_index=True)
-    else:
-        st.info("No recent prediction log found.")
+st.success("Dashboard loaded and rendered successfully.")
