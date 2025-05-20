@@ -35,7 +35,6 @@ def load_model():
     if not os.path.exists(path):
         return None
     obj = joblib.load(path)
-    # Some joblibs save (model, extra), just use model
     if isinstance(obj, tuple):
         return obj[0]
     return obj
@@ -46,32 +45,16 @@ def load_prediction_log():
     with open("prediction_log.json") as f:
         return json.load(f)
 
-# --- Load Data Upfront ---
+# --- Load Data ---
 
-sent_hist = load_csv(
-    "sentiment_history.csv",
-    date_cols=["Timestamp"],
-    float_cols=["Sentiment"],
-    str_cols=["Coin"]
-)
-sent_out = load_csv(
-    "sentiment_output.csv",
-    date_cols=["Timestamp"],
-    float_cols=["Sentiment"],
-    str_cols=["Coin"]
-)
-price_hist = load_csv(
-    "btc_history.csv",
-    date_cols=["Timestamp"],
-    float_cols=["PriceUSD"],
-    str_cols=["Coin"]
-)
+sent_hist = load_csv("sentiment_history.csv", date_cols=["Timestamp"], float_cols=["Sentiment"], str_cols=["Coin"])
+sent_out  = load_csv("sentiment_output.csv",  date_cols=["Timestamp"], float_cols=["Sentiment"], str_cols=["Coin"])
+price_hist = load_csv("btc_history.csv", date_cols=["Timestamp"], float_cols=["PriceUSD"], str_cols=["Coin"])
 
-model = load_model()
+model   = load_model()
 pred_log = load_prediction_log()
 
-# --- Streamlit Config ---
-
+# --- Streamlit Layout ---
 st.set_page_config("Crypto Dashboard", layout="wide")
 st.title("📊 Crypto Sentiment & Price Dashboard")
 
@@ -122,10 +105,9 @@ with tabs[1]:
             tolerance=pd.Timedelta('1h')
         ).reset_index()
 
-        # Fix: check columns before dropna
         if "PriceUSD" in merged.columns and "Sentiment" in merged.columns:
             merged = merged.dropna(subset=["PriceUSD", "Sentiment"])
-            # Normalize sentiment for graph overlay
+            # Overlay sentiment, scaled to fit price
             sent_min, sent_max = merged["Sentiment"].min(), merged["Sentiment"].max()
             price_min, price_max = merged["PriceUSD"].min(), merged["PriceUSD"].max()
             scale = (price_max - price_min) / (sent_max - sent_min) if sent_max != sent_min else 1
