@@ -2,16 +2,14 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import joblib
-import altair as alt
 import json
 import os
-import warnings
-warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
 COINS = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
 
 def load_csv(path, date_cols=[], float_cols=[], str_cols=[]):
     if not os.path.exists(path):
+        st.error(f"File not found: {path}")
         return pd.DataFrame()
     try:
         df = pd.read_csv(path)
@@ -33,6 +31,7 @@ def load_csv(path, date_cols=[], float_cols=[], str_cols=[]):
 def load_model():
     path = "price_predictor.pkl"
     if not os.path.exists(path):
+        st.error("Missing price_predictor.pkl")
         return None
     obj = joblib.load(path)
     if isinstance(obj, tuple):
@@ -45,7 +44,7 @@ def load_prediction_log():
     with open("prediction_log.json") as f:
         return json.load(f)
 
-# Load Data
+# ---- Load All Data ----
 sent_hist = load_csv("sentiment_history.csv", date_cols=["Timestamp"], float_cols=["Sentiment"], str_cols=["Coin"])
 sent_out  = load_csv("sentiment_output.csv",  date_cols=["Timestamp"], float_cols=["Sentiment"], str_cols=["Coin"])
 price_hist = load_csv("btc_history.csv", date_cols=["Timestamp"], float_cols=["PriceUSD"], str_cols=["Coin"])
@@ -55,13 +54,26 @@ pred_log = load_prediction_log()
 st.set_page_config("Crypto Dashboard", layout="wide")
 st.title("📊 Crypto Sentiment & Price Dashboard")
 
+# ---- DEBUGGING SECTION ----
+with st.expander("Show loaded dataframes (debug)"):
+    st.subheader("sentiment_history.csv")
+    st.write(sent_hist.head())
+    st.subheader("sentiment_output.csv")
+    st.write(sent_out.head())
+    st.subheader("btc_history.csv")
+    st.write(price_hist.head())
+    st.subheader("Model loaded:")
+    st.write(type(model))
+    st.subheader("Prediction Log Example:")
+    st.write(str(pred_log)[:800])
+
+# ---- TABS ----
 tabs = st.tabs([
     "Sentiment Summary (24hr Avg)",
     "Trends Over Time",
     "Next Hour Predictions"
 ])
 
-# --- Tab 1: Sentiment Summary (24hr Avg) ---
 with tabs[0]:
     st.header("Sentiment Summary (Last 24h Avg per Coin)")
     if sent_hist.empty:
@@ -69,23 +81,24 @@ with tabs[0]:
     else:
         now = pd.Timestamp.utcnow()
         last24 = sent_hist[sent_hist["Timestamp"] >= now - pd.Timedelta(hours=24)]
-        summary = (
-            last24.groupby("Coin")["Sentiment"]
-            .mean()
-            .reindex(COINS)
-            .reset_index()
-            .rename(columns={"Sentiment": "24h Avg Sentiment"})
-        )
-        summary["24h Avg Sentiment"] = summary["24h Avg Sentiment"].round(4)
-        st.dataframe(summary, hide_index=True, use_container_width=True)
+        if last24.empty:
+            st.warning("No rows in last 24h!")
+        else:
+            summary = (
+                last24.groupby("Coin")["Sentiment"]
+                .mean()
+                .reindex(COINS)
+                .reset_index()
+                .rename(columns={"Sentiment": "24h Avg Sentiment"})
+            )
+            summary["24h Avg Sentiment"] = summary["24h Avg Sentiment"].round(4)
+            st.dataframe(summary, hide_index=True, use_container_width=True)
 
-# --- Tab 2: Trends Over Time ---
 with tabs[1]:
     st.header("Trends Over Time")
     coin = st.selectbox("Select coin", COINS, key="trend_coin")
     s = sent_hist[sent_hist["Coin"] == coin].sort_values("Timestamp")
     p = price_hist[price_hist["Coin"] == coin].sort_values("Timestamp")
-    # Merge by nearest timestamp within 1 hour, last 48h only
     if not s.empty and not p.empty:
         max_time = min(s["Timestamp"].max(), p["Timestamp"].max())
         recent_cut = max_time - pd.Timedelta(hours=48)
@@ -99,17 +112,15 @@ with tabs[1]:
             direction='nearest',
             tolerance=pd.Timedelta('1h')
         ).reset_index()
-
         if "PriceUSD" in merged.columns and "Sentiment" in merged.columns:
             merged = merged.dropna(subset=["PriceUSD", "Sentiment"])
-            # Overlay sentiment, scaled to fit price
             sent_min, sent_max = merged["Sentiment"].min(), merged["Sentiment"].max()
             price_min, price_max = merged["PriceUSD"].min(), merged["PriceUSD"].max()
             scale = (price_max - price_min) / (sent_max - sent_min) if sent_max != sent_min else 1
             merged["Sent_Scaled"] = price_min + (merged["Sentiment"] - sent_min) * scale
-
+            import altair as alt
             base = alt.Chart(merged).encode(x="Timestamp:T")
-            price_line = base.mark_line(y="PriceUSD:Q", color=alt.value("#0366d6")).properties(title=f"{coin} Price vs Sentiment (last 48h)")
+            price_line = base.mark_line(y="PriceUSD:Q", color=alt.value("#0366d6"))
             sent_line = base.mark_line(y="Sent_Scaled:Q", color=alt.value("orange")).encode(tooltip=["Sentiment:Q"])
             chart = price_line + sent_line
             st.altair_chart(chart, use_container_width=True)
@@ -119,7 +130,6 @@ with tabs[1]:
     else:
         st.info("No data for this coin for the last 48h.")
 
-# --- Tab 3: Next Hour Predictions ---
 with tabs[2]:
     st.header("Next Hour Predictions")
     if (model is not None) and (not sent_out.empty):
@@ -128,9 +138,6 @@ with tabs[2]:
             row = sent_out[sent_out["Coin"] == c].sort_values("Timestamp")
             val = row.iloc[-1]["Sentiment"] if not row.empty else 0.0
             sents.append(val if not pd.isnull(val) else 0.0)
-        # If model is a tuple, take [0]
-        if isinstance(model, tuple):
-            model = model[0]
         preds = model.predict(np.array(sents).reshape(-1, 1))
         pred_df = pd.DataFrame({
             "Coin": COINS,
@@ -160,5 +167,3 @@ with tabs[2]:
         st.dataframe(pd.DataFrame(log_rows), use_container_width=True, hide_index=True)
     else:
         st.info("No recent prediction log found.")
-
-# -- End of file --
