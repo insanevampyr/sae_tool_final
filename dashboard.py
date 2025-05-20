@@ -3,128 +3,161 @@ import pandas as pd
 import numpy as np
 import json
 import joblib
-import os
 from datetime import datetime, timedelta
+import os
 
-# CONFIG
+# -------- CONFIG ---------
 COINS = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
-SENTIMENT_CSV = "sentiment_history.csv"
-PREDICTION_LOG = "prediction_log.json"
-MODEL_PATH = "price_predictor.pkl"
-BTC_HISTORY_CSV = "btc_history.csv"
-SENTIMENT_OUTPUT = "sentiment_output.csv"
 
-st.set_page_config(page_title="Crypto Sentiment Dashboard", layout="wide")
-st.markdown("<h1 style='text-align: center; color: #3B82F6;'>Crypto Sentiment & Price Dashboard</h1>", unsafe_allow_html=True)
+BASE_DIR = os.path.dirname(__file__)
+HIST_CSV = os.path.join(BASE_DIR, "sentiment_history.csv")
+CURR_CSV = os.path.join(BASE_DIR, "sentiment_output.csv")
+BTC_CSV = os.path.join(BASE_DIR, "btc_history.csv")
+PRED_LOG = os.path.join(BASE_DIR, "prediction_log.json")
+MODEL_PATH = os.path.join(BASE_DIR, "price_predictor.pkl")
 
-# Helper to read data
-@st.cache_data(show_spinner=False)
+st.set_page_config(page_title="AlphaPulse Dashboard", layout="wide")
+
+# -------- HELPERS ---------
 def load_sentiment_history():
-    df = pd.read_csv(SENTIMENT_CSV)
+    df = pd.read_csv(HIST_CSV)
     df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True, errors="coerce")
-    df = df.dropna(subset=["Timestamp", "Coin", "Sentiment", "PriceUSD"])
+    df = df.dropna(subset=["Timestamp", "Coin", "Sentiment"])
     return df
 
-@st.cache_data(show_spinner=False)
 def load_sentiment_output():
-    df = pd.read_csv(SENTIMENT_OUTPUT)
+    df = pd.read_csv(CURR_CSV)
     df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True, errors="coerce")
     return df
 
-@st.cache_data(show_spinner=False)
 def load_btc_history():
-    df = pd.read_csv(BTC_HISTORY_CSV)
-    df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True, errors="coerce")
-    return df
+    try:
+        df = pd.read_csv(BTC_CSV)
+        df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True, errors="coerce")
+        return df
+    except Exception:
+        return pd.DataFrame()
 
 def load_prediction_log():
-    if not os.path.exists(PREDICTION_LOG):
+    try:
+        with open(PRED_LOG, "r") as f:
+            return json.load(f)
+    except Exception:
         return {}
-    with open(PREDICTION_LOG, "r") as f:
-        return json.load(f)
 
 def load_model():
-    return joblib.load(MODEL_PATH)
+    try:
+        model, coins = joblib.load(MODEL_PATH)
+        return model, coins
+    except Exception:
+        return None, None
 
-# Sidebar
-st.sidebar.header("Coins")
-selected_coin = st.sidebar.selectbox("Select Coin", COINS)
-
-# Main Tabs
-tabs = st.tabs(["Sentiment Summary", "Trends Over Time", "Next Hour Predictions"])
-
-# Load Data
-sentiment_df = load_sentiment_history()
-sentiment_output = load_sentiment_output()
-btc_history = load_btc_history()
-pred_log = load_prediction_log()
-
-### Sentiment Summary (Tab 1)
-with tabs[0]:
-    st.subheader("Sentiment Summary (Last 24h Avg per Coin)")
-    cutoff = pd.Timestamp.utcnow() - pd.Timedelta("24h")
-    recent = sentiment_df[sentiment_df["Timestamp"] > cutoff]
-    summary = (
-        recent.groupby("Coin")["Sentiment"].mean().reindex(COINS)
-        .round(3)
-        .reset_index()
-        .rename(columns={"Sentiment": "24h Avg Sentiment"})
+def get_last_24h_sentiment(df):
+    now = pd.Timestamp.utcnow()
+    day_ago = now - pd.Timedelta(hours=24)
+    return (
+        df[df["Timestamp"] >= day_ago]
+        .groupby("Coin")["Sentiment"]
+        .mean()
+        .reindex(COINS)
+        .round(4)
+        .fillna("N/A")
     )
-    st.dataframe(summary, hide_index=True, use_container_width=True)
 
-### Trends Over Time (Tab 2)
-with tabs[1]:
-    st.subheader(f"Trends Over Time — {selected_coin}")
-    coin_df = sentiment_df[sentiment_df["Coin"] == selected_coin].sort_values("Timestamp")
-    # Last 48h for more zoom
-    min_time = pd.Timestamp.utcnow() - pd.Timedelta("48h")
-    coin_df = coin_df[coin_df["Timestamp"] > min_time]
-
-    # Plot Price vs Sentiment overlay
-    import matplotlib.pyplot as plt
-    fig, ax1 = plt.subplots(figsize=(10, 4))
-    ax2 = ax1.twinx()
-    ax1.plot(coin_df["Timestamp"], coin_df["PriceUSD"], 'b-', label='Price', linewidth=2)
-    ax2.plot(coin_df["Timestamp"], coin_df["Sentiment"], 'g-', label='Sentiment', alpha=0.5)
-    ax1.set_xlabel("Time")
-    ax1.set_ylabel("Price (USD)", color='b')
-    ax2.set_ylabel("Sentiment", color='g')
-    fig.tight_layout()
-    st.pyplot(fig, use_container_width=True)
-    st.caption("Scroll horizontally or zoom with the chart's toolbar for closer analysis.")
-
-### Next Hour Predictions (Tab 3)
-with tabs[2]:
-    st.subheader("Next Hour Price Predictions (Live)")
-
-    # Show latest sentiment for each coin
-    latest = (
-        sentiment_output.groupby("Coin")
-        .apply(lambda x: x.sort_values("Timestamp").iloc[-1])
-        .reset_index(drop=True)
-    )
-    st.markdown("#### Current Sentiment (live)")
-    st.dataframe(latest[["Coin", "Sentiment"]], hide_index=True)
-
-    # Predict prices
-    avg_sents = [latest[latest["Coin"] == c]["Sentiment"].values[0] for c in COINS]
-    model, _ = load_model()
-    preds = model.predict(np.array(avg_sents).reshape(-1, 1))
-    pred_df = pd.DataFrame({
-        "Coin": COINS,
-        "Predicted Price (Next Hour)": [f"${x:,.2f}" for x in preds]
-    })
-    st.markdown("#### Predicted Next-Hour Prices")
-    st.dataframe(pred_df, hide_index=True)
-
-    # Show recent prediction accuracy
-    pred_log = load_prediction_log()
-    st.markdown("#### Recent Prediction Accuracy")
+def get_next_hour_predictions(df):
+    now = pd.Timestamp.utcnow()
+    # Find most recent sentiment per coin
+    recents = []
     for coin in COINS:
-        entries = pred_log.get(coin, [])
-        acc = [x for x in entries if x.get("accurate") is True]
-        if acc:
-            st.write(f"**{coin}:** {len(acc)} recent accurate predictions.")
+        coin_df = df[df["Coin"] == coin].sort_values("Timestamp")
+        if not coin_df.empty:
+            recents.append(coin_df.iloc[-1]["Sentiment"])
         else:
-            st.write(f"**{coin}:** No recent accurate predictions logged.")
-            
+            recents.append(0)
+    return recents
+
+# -------- MAIN UI ---------
+
+st.title("AlphaPulse Crypto Dashboard")
+st.markdown("**Live crypto sentiment & price tracking with ML predictions**")
+
+tabs = st.tabs(["Sentiment Summary (24h)", "Trends Over Time", "Next Hour Predictions"])
+
+## --- Sentiment Summary Tab ---
+with tabs[0]:
+    st.subheader("Sentiment Summary (Last 24h Average per Coin)")
+    hist_df = load_sentiment_history()
+    last24 = get_last_24h_sentiment(hist_df)
+    st.table(last24.rename("24h Avg Sentiment"))
+
+    # Current Price & Sentiment (from latest row in sentiment_output)
+    st.markdown("---")
+    curr_df = load_sentiment_output()
+    latest = curr_df.groupby("Coin").apply(lambda x: x.sort_values("Timestamp").iloc[-1])
+    st.subheader("Current Sentiment & Price")
+    st.dataframe(latest[["Coin", "Sentiment", "PriceUSD", "Timestamp"]].reset_index(drop=True), use_container_width=True)
+
+## --- Trends Over Time Tab ---
+with tabs[1]:
+    st.subheader("Trends Over Time: Price vs. Sentiment")
+    coin = st.selectbox("Select Coin:", COINS)
+    # Merge price & sentiment history for selected coin
+    sent_hist = hist_df[hist_df["Coin"] == coin].sort_values("Timestamp")
+    btc_hist = load_btc_history()
+    if not sent_hist.empty and not btc_hist.empty:
+        df_merged = sent_hist.set_index("Timestamp").join(
+            btc_hist.set_index("Timestamp")[["PriceUSD"]], how="inner", rsuffix="_price"
+        ).reset_index()
+        # Plot (zoom: last 7 days)
+        plot_df = df_merged[df_merged["Timestamp"] > (df_merged["Timestamp"].max() - pd.Timedelta(days=7))]
+        st.line_chart(
+            plot_df.set_index("Timestamp")[["Sentiment", "PriceUSD"]],
+            use_container_width=True
+        )
+        st.caption("Overlay: Blue=Sentiment (scaled), Orange=Price")
+    else:
+        st.warning("Not enough data for this coin or BTC price history.")
+
+## --- Next Hour Predictions Tab ---
+with tabs[2]:
+    st.subheader("Next Hour Price Predictions (ML Model)")
+    model, coins = load_model()
+    if model is not None:
+        # Get latest sentiment for each coin for prediction
+        curr_df = load_sentiment_output()
+        sents = get_next_hour_predictions(curr_df)
+        sents_np = np.array(sents).reshape(-1, 1)
+        preds = model.predict(sents_np)
+        pred_df = pd.DataFrame({
+            "Coin": COINS,
+            "Latest Sentiment": np.round(sents, 4),
+            "Predicted Next Price": np.round(preds, 3)
+        })
+        st.dataframe(pred_df, use_container_width=True)
+    else:
+        st.warning("Prediction model not available. Run `train_price_predictor.py` to train.")
+
+    # Show last predictions from log
+    st.markdown("---")
+    st.markdown("#### Last Predictions Log")
+    pred_log = load_prediction_log()
+    pred_rows = []
+    for coin in COINS:
+        if coin in pred_log and len(pred_log[coin]) > 0:
+            entry = pred_log[coin][-1]
+            pred_rows.append({
+                "Coin": coin,
+                "Timestamp": entry.get("timestamp"),
+                "Predicted": entry.get("predicted"),
+                "Actual": entry.get("actual", "N/A"),
+                "Diff %": entry.get("diff_pct", "N/A"),
+                "Accurate?": entry.get("accurate", "N/A"),
+            })
+    if pred_rows:
+        st.dataframe(pd.DataFrame(pred_rows), use_container_width=True)
+    else:
+        st.info("No predictions logged yet.")
+
+st.markdown("---")
+st.caption("AlphaPulse Dashboard - Live Data View - Powered by Streamlit")
+
