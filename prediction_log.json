@@ -1,375 +1,618 @@
 {
   "Bitcoin": [
     {
+      "timestamp": "2025-05-20T23:14:46.327556+00:00",
+      "predicted": 2839.2
+    },
+    {
+      "timestamp": "2025-05-20T22:45:01.975871+00:00",
+      "predicted": 2839.2
+    },
+    {
+      "timestamp": "2025-05-20T21:45:01.761114+00:00",
+      "predicted": 2839.2,
+      "actual": 106331.0,
+      "diff_pct": 97.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T21:11:16.499290+00:00",
+      "predicted": 2839.2,
+      "actual": 106461.0,
+      "diff_pct": 97.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T20:45:01.205675+00:00",
+      "predicted": 2839.2,
+      "actual": 107011.0,
+      "diff_pct": 97.35,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T19:44:51.682666+00:00",
+      "predicted": 100429.92,
+      "actual": 106675.0,
+      "diff_pct": 5.85,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T19:12:26.764424+00:00",
+      "predicted": 59145.84,
+      "actual": 106397.0,
+      "diff_pct": 44.41,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T19:03:04.701220+00:00",
+      "predicted": 59145.84,
+      "actual": 105631.0,
+      "diff_pct": 44.01,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T18:59:34.361164+00:00",
+      "predicted": 59145.84,
+      "actual": 105594.0,
+      "diff_pct": 43.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T18:16:35.276226+00:00",
+      "predicted": 91187.3,
+      "actual": 105639.0,
+      "diff_pct": 13.68,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T17:50:13.521989+00:00",
+      "predicted": 68099.96,
+      "actual": 106305.0,
+      "diff_pct": 35.94,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T17:37:05.570475+00:00",
+      "predicted": 68099.96,
+      "actual": 106181.0,
+      "diff_pct": 35.86,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T17:18:47.910595+00:00",
+      "predicted": 68099.96,
+      "actual": 106070.0,
+      "diff_pct": 35.8,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:59:42.448544+00:00",
+      "predicted": 68099.96,
+      "actual": 105921.0,
+      "diff_pct": 35.71,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:52:55.732505+00:00",
+      "predicted": 68099.96,
+      "actual": 105321.0,
+      "diff_pct": 35.34,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:36:31.187044+00:00",
+      "predicted": 68099.96,
+      "actual": 105359.0,
+      "diff_pct": 35.36,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:27:28.779187+00:00",
+      "predicted": 68099.96,
+      "actual": 105317.0,
+      "diff_pct": 35.34,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T01:16:01.798473+00:00",
+      "predicted": 8.41,
+      "actual": 105324.0,
+      "diff_pct": 99.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T22:04:54.485333+00:00",
+      "predicted": 0.22,
+      "actual": 105875.0,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T22:00:48.460170+00:00",
+      "predicted": 0.0,
+      "actual": 105431.0,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:45:00.678737+00:00",
+      "predicted": 0.0,
+      "actual": 105361.0,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:40:14.850692+00:00",
+      "predicted": 0.0,
+      "actual": 105583.0,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:12:48.365447+00:00",
+      "predicted": 0.0,
+      "actual": 105622.0,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:11:16.854171+00:00",
+      "predicted": 0.0,
+      "actual": 105495.0,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:06:37.196034+00:00",
+      "predicted": 0.0,
+      "actual": 105503.0,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:03:46.181906+00:00",
+      "predicted": 0.0,
+      "actual": 105483.0,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:03:31.443915+00:00",
+      "predicted": 0.0,
+      "actual": 105429.0,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T19:52:02.260841+00:00",
+      "predicted": 0.0,
+      "actual": 105429.0,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
       "timestamp": "2025-05-19T17:45:04.865305+00:00",
       "current": 105228.0,
       "predicted": 104175.72,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.7,
+      "accurate": true,
+      "actual": 104907.0
     },
     {
       "timestamp": "2025-05-19T17:35:18.153323+00:00",
       "current": 105204.0,
       "predicted": 104151.95999999999,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": NaN,
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T17:16:27.912429+00:00",
       "current": 105212.0,
       "predicted": 104159.88,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": NaN,
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T15:38:45+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T15:38:45+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T15:38:45+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T15:38:45+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T14:32:14+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T13:11:16+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T12:12:49+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T10:13:44+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T10:13:44+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T06:57:11+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T06:57:11+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T06:57:11+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T05:05:15+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T05:05:15+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T03:50:37+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T19:57:41+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T19:57:41+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T19:57:41+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T18:07:24+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T18:07:24+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T18:07:24+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T17:03:29+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T14:56:41+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T14:56:41+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T14:02:01+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T13:31:24+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T10:26:51+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T10:26:51+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T10:26:51+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T03:28:24+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T03:28:24+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T03:28:24+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T20:40:18+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T20:40:18+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T20:40:18+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T17:46:32+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T17:46:32+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T17:46:32+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T17:34:01+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T17:34:01+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T16:54:37+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 104007.0,
       "predicted": 102966.93,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.9,
+      "accurate": true,
+      "actual": 103906.0
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 104007.0,
       "predicted": 102966.93,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.9,
+      "accurate": true,
+      "actual": 103906.0
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 104007.0,
       "predicted": 102966.93,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.9,
+      "accurate": true,
+      "actual": 103906.0
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 104007.0,
       "predicted": 102966.93,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.9,
+      "accurate": true,
+      "actual": 103906.0
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 104007.0,
       "predicted": 102966.93,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.9,
+      "accurate": true,
+      "actual": 103906.0
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 104007.0,
       "predicted": 102966.93,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.9,
+      "accurate": true,
+      "actual": 103906.0
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 104007.0,
       "predicted": 102966.93,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.9,
+      "accurate": true,
+      "actual": 103906.0
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 104007.0,
       "predicted": 102966.93,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.9,
+      "accurate": true,
+      "actual": 103906.0
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 104007.0,
       "predicted": 102966.93,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.9,
+      "accurate": true,
+      "actual": 103906.0
     },
     {
       "coin": "Bitcoin",
@@ -377,7 +620,8 @@
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "coin": "Bitcoin",
@@ -385,15 +629,17 @@
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "coin": "Bitcoin",
       "timestamp": "2025-05-17T01:22:34.511265+00:00",
       "current": 0.217687,
       "predicted": 0.21551013,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": NaN,
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-16T15:54:32.749461+00:00",
@@ -559,242 +805,466 @@
   ],
   "Ethereum": [
     {
+      "timestamp": "2025-05-20T23:14:46.327556+00:00",
+      "predicted": 102731.29
+    },
+    {
+      "timestamp": "2025-05-20T22:45:01.975871+00:00",
+      "predicted": 102731.29
+    },
+    {
+      "timestamp": "2025-05-20T21:45:01.761114+00:00",
+      "predicted": 81101.37,
+      "actual": 2499.3,
+      "diff_pct": 3144.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T21:11:16.499290+00:00",
+      "predicted": 73286.29,
+      "actual": 2504.85,
+      "diff_pct": 2825.78,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T20:45:01.205675+00:00",
+      "predicted": 2201.23,
+      "actual": 2517.28,
+      "diff_pct": 12.56,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T19:44:51.682666+00:00",
+      "predicted": 64170.38,
+      "actual": 2506.42,
+      "diff_pct": 2460.24,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T19:12:26.764424+00:00",
+      "predicted": 64170.38,
+      "actual": 2482.83,
+      "diff_pct": 2484.57,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T19:03:04.701220+00:00",
+      "predicted": 64170.38,
+      "actual": 2460.59,
+      "diff_pct": 2507.93,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T18:59:34.361164+00:00",
+      "predicted": 64170.38,
+      "actual": 2464.98,
+      "diff_pct": 2503.28,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T18:16:35.276226+00:00",
+      "predicted": 489.19,
+      "actual": 2466.42,
+      "diff_pct": 80.17,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T17:50:13.521989+00:00",
+      "predicted": 2555.41,
+      "actual": 2500.39,
+      "diff_pct": 2.2,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-20T17:37:05.570475+00:00",
+      "predicted": 2555.41,
+      "actual": 2492.83,
+      "diff_pct": 2.51,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-20T17:18:47.910595+00:00",
+      "predicted": 489.19,
+      "actual": 2492.24,
+      "diff_pct": 80.37,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:59:42.448544+00:00",
+      "predicted": 489.19,
+      "actual": 2487.44,
+      "diff_pct": 80.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:52:55.732505+00:00",
+      "predicted": 489.19,
+      "actual": 2478.47,
+      "diff_pct": 80.26,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:36:31.187044+00:00",
+      "predicted": 489.19,
+      "actual": 2479.24,
+      "diff_pct": 80.27,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:27:28.779187+00:00",
+      "predicted": 489.19,
+      "actual": 2476.11,
+      "diff_pct": 80.24,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T01:16:01.798473+00:00",
+      "predicted": 101169.89,
+      "actual": 2477.54,
+      "diff_pct": 3983.48,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T22:04:54.485333+00:00",
+      "predicted": 15720.09,
+      "actual": 2520.3,
+      "diff_pct": 523.74,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T22:00:48.460170+00:00",
+      "predicted": 0.0,
+      "actual": 2518.25,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:45:00.678737+00:00",
+      "predicted": 0.0,
+      "actual": 2516.77,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:40:14.850692+00:00",
+      "predicted": 0.0,
+      "actual": 2522.15,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:12:48.365447+00:00",
+      "predicted": 0.0,
+      "actual": 2520.45,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:11:16.854171+00:00",
+      "predicted": 0.0,
+      "actual": 2518.53,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:06:37.196034+00:00",
+      "predicted": 0.0,
+      "actual": 2518.73,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:03:46.181906+00:00",
+      "predicted": 0.0,
+      "actual": 2519.62,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:03:31.443915+00:00",
+      "predicted": 0.0,
+      "actual": 2518.98,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T19:52:02.260841+00:00",
+      "predicted": 0.0,
+      "actual": 2518.98,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
       "timestamp": "2025-05-19T17:45:04.865305+00:00",
       "current": 2522.94,
       "predicted": 2497.7106,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.09,
+      "accurate": true,
+      "actual": 2499.97
     },
     {
       "timestamp": "2025-05-19T17:35:18.153323+00:00",
       "current": 2524.3,
       "predicted": 2499.0570000000002,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.04,
+      "accurate": true,
+      "actual": 2499.97
     },
     {
       "timestamp": "2025-05-19T17:16:27.912429+00:00",
       "current": 2517.84,
       "predicted": 2492.6616,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.29,
+      "accurate": true,
+      "actual": 2499.97
     },
     {
       "timestamp": "2025-05-19T15:38:45+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 2499.97
     },
     {
       "timestamp": "2025-05-19T15:38:45+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 2499.97
     },
     {
       "timestamp": "2025-05-19T15:38:45+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 2499.97
     },
     {
       "timestamp": "2025-05-19T15:38:45+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 2499.97
     },
     {
       "timestamp": "2025-05-19T13:34:47+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T13:34:47+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T07:55:10+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T07:55:10+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T07:55:10+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T06:10:58+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T06:10:58+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T18:26:40+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T18:26:40+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T18:26:40+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T18:26:40+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T10:06:52+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T10:06:52+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-18T10:06:52+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T15:49:50+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T15:49:50+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T15:49:50+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-17T15:49:50+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 2583.35,
       "predicted": 2557.5164999999997,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 1.03,
+      "accurate": true,
+      "actual": 2584.01
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 2583.35,
       "predicted": 2557.5164999999997,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 1.03,
+      "accurate": true,
+      "actual": 2584.01
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 2583.35,
       "predicted": 2557.5164999999997,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 1.03,
+      "accurate": true,
+      "actual": 2584.01
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 2583.35,
       "predicted": 2557.5164999999997,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 1.03,
+      "accurate": true,
+      "actual": 2584.01
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 2583.35,
       "predicted": 2557.5164999999997,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 1.03,
+      "accurate": true,
+      "actual": 2584.01
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 2583.35,
       "predicted": 2557.5164999999997,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 1.03,
+      "accurate": true,
+      "actual": 2584.01
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 2583.35,
       "predicted": 2557.5164999999997,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 1.03,
+      "accurate": true,
+      "actual": 2584.01
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 2583.35,
       "predicted": 2557.5164999999997,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 1.03,
+      "accurate": true,
+      "actual": 2584.01
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 2583.35,
       "predicted": 2557.5164999999997,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 1.03,
+      "accurate": true,
+      "actual": 2584.01
     },
     {
       "coin": "Ethereum",
@@ -802,7 +1272,8 @@
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "coin": "Ethereum",
@@ -810,15 +1281,17 @@
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "coin": "Ethereum",
       "timestamp": "2025-05-17T01:22:34.511265+00:00",
       "current": 0.217687,
       "predicted": 0.21551013,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": NaN,
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-16T15:54:32.749461+00:00",
@@ -984,144 +1457,354 @@
   ],
   "Solana": [
     {
+      "timestamp": "2025-05-20T23:14:46.327556+00:00",
+      "predicted": 0.23
+    },
+    {
+      "timestamp": "2025-05-20T22:45:01.975871+00:00",
+      "predicted": 0.23
+    },
+    {
+      "timestamp": "2025-05-20T21:45:01.761114+00:00",
+      "predicted": 101002.85,
+      "actual": 166.87,
+      "diff_pct": 60427.87,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T21:11:16.499290+00:00",
+      "predicted": 101002.85,
+      "actual": 167.81,
+      "diff_pct": 60088.81,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T20:45:01.205675+00:00",
+      "predicted": 101002.85,
+      "actual": 168.73,
+      "diff_pct": 59760.64,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T19:44:51.682666+00:00",
+      "predicted": 171.55,
+      "actual": 167.92,
+      "diff_pct": 2.16,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-20T19:12:26.764424+00:00",
+      "predicted": 173.07,
+      "actual": 166.56,
+      "diff_pct": 3.91,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-20T19:03:04.701220+00:00",
+      "predicted": 172.13,
+      "actual": 165.28,
+      "diff_pct": 4.14,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T18:59:34.361164+00:00",
+      "predicted": 18759.52,
+      "actual": 165.55,
+      "diff_pct": 11231.63,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T18:16:35.276226+00:00",
+      "predicted": 173.07,
+      "actual": 165.65,
+      "diff_pct": 4.48,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T17:50:13.521989+00:00",
+      "predicted": 86401.98,
+      "actual": 167.83,
+      "diff_pct": 51381.84,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T17:37:05.570475+00:00",
+      "predicted": 103724.95,
+      "actual": 167.44,
+      "diff_pct": 61847.53,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T17:18:47.910595+00:00",
+      "predicted": 101497.16,
+      "actual": 167.11,
+      "diff_pct": 60636.74,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:59:42.448544+00:00",
+      "predicted": 94144.38,
+      "actual": 166.54,
+      "diff_pct": 56429.59,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:52:55.732505+00:00",
+      "predicted": 99833.09,
+      "actual": 165.98,
+      "diff_pct": 60047.66,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:36:31.187044+00:00",
+      "predicted": 103061.69,
+      "actual": 166.09,
+      "diff_pct": 61951.71,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:27:28.779187+00:00",
+      "predicted": 59145.84,
+      "actual": 166.15,
+      "diff_pct": 35497.86,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T01:16:01.798473+00:00",
+      "predicted": 89542.75,
+      "actual": 166.41,
+      "diff_pct": 53708.52,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T22:04:54.485333+00:00",
+      "predicted": 6612.59,
+      "actual": 167.62,
+      "diff_pct": 3844.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T22:00:48.460170+00:00",
+      "predicted": 0.0,
+      "actual": 166.37,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:45:00.678737+00:00",
+      "predicted": 0.0,
+      "actual": 166.32,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:40:14.850692+00:00",
+      "predicted": 0.0,
+      "actual": 166.57,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:12:48.365447+00:00",
+      "predicted": 0.0,
+      "actual": 166.63,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:11:16.854171+00:00",
+      "predicted": 0.0,
+      "actual": 166.56,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:06:37.196034+00:00",
+      "predicted": 0.0,
+      "actual": 166.56,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:03:46.181906+00:00",
+      "predicted": 0.0,
+      "actual": 166.51,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:03:31.443915+00:00",
+      "predicted": 0.0,
+      "actual": 166.39,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T19:52:02.260841+00:00",
+      "predicted": 0.0,
+      "actual": 166.39,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
       "timestamp": "2025-05-19T17:45:04.865305+00:00",
       "current": 165.99,
       "predicted": 164.33010000000002,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.45,
+      "accurate": true,
+      "actual": 165.08
     },
     {
       "timestamp": "2025-05-19T17:35:18.153323+00:00",
       "current": 166.1,
       "predicted": 164.439,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.39,
+      "accurate": true,
+      "actual": 165.08
     },
     {
       "timestamp": "2025-05-19T17:16:27.912429+00:00",
       "current": 165.96,
       "predicted": 164.3004,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.47,
+      "accurate": true,
+      "actual": 165.08
     },
     {
       "timestamp": "2025-05-19T14:15:23+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 165.08
     },
     {
       "timestamp": "2025-05-19T14:15:23+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 165.08
     },
     {
       "timestamp": "2025-05-19T14:15:23+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 165.08
     },
     {
       "timestamp": "2025-05-19T14:15:23+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 165.08
     },
     {
       "timestamp": "2025-05-19T14:15:23+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 165.08
     },
     {
       "timestamp": "2025-05-19T07:55:10+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T07:55:10+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-19T07:55:10+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 170.75,
       "predicted": 169.0425,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.83,
+      "accurate": true,
+      "actual": 170.46
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 170.75,
       "predicted": 169.0425,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.83,
+      "accurate": true,
+      "actual": 170.46
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 170.75,
       "predicted": 169.0425,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.83,
+      "accurate": true,
+      "actual": 170.46
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 170.75,
       "predicted": 169.0425,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.83,
+      "accurate": true,
+      "actual": 170.46
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 170.75,
       "predicted": 169.0425,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.83,
+      "accurate": true,
+      "actual": 170.46
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 170.75,
       "predicted": 169.0425,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.83,
+      "accurate": true,
+      "actual": 170.46
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 170.75,
       "predicted": 169.0425,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.83,
+      "accurate": true,
+      "actual": 170.46
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 170.75,
       "predicted": 169.0425,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.83,
+      "accurate": true,
+      "actual": 170.46
     },
     {
       "timestamp": "2025-05-16T18:40:22.134270+00:00",
       "current": 170.75,
       "predicted": 169.0425,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.83,
+      "accurate": true,
+      "actual": 170.46
     },
     {
       "coin": "Solana",
@@ -1129,7 +1812,8 @@
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "coin": "Solana",
@@ -1137,15 +1821,17 @@
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": NaN
     },
     {
       "coin": "Solana",
       "timestamp": "2025-05-17T01:22:34.511265+00:00",
       "current": 0.217687,
       "predicted": 0.21551013,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": NaN,
+      "accurate": false,
+      "actual": NaN
     },
     {
       "timestamp": "2025-05-16T15:54:32.749461+00:00",
@@ -1311,100 +1997,304 @@
   ],
   "Dogecoin": [
     {
+      "timestamp": "2025-05-20T23:14:46.327556+00:00",
+      "predicted": 92933.53
+    },
+    {
+      "timestamp": "2025-05-20T22:45:01.975871+00:00",
+      "predicted": 3468.14
+    },
+    {
+      "timestamp": "2025-05-20T21:45:01.761114+00:00",
+      "predicted": 3468.14,
+      "actual": 0.22,
+      "diff_pct": 1576327.27,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T21:11:16.499290+00:00",
+      "predicted": 3468.14,
+      "actual": 0.23,
+      "diff_pct": 1507786.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T20:45:01.205675+00:00",
+      "predicted": 3468.14,
+      "actual": 0.23,
+      "diff_pct": 1507786.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T19:44:51.682666+00:00",
+      "predicted": 3468.14,
+      "actual": 0.22,
+      "diff_pct": 1576327.27,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T19:12:26.764424+00:00",
+      "predicted": 3468.14,
+      "actual": 0.22,
+      "diff_pct": 1576327.27,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T19:03:04.701220+00:00",
+      "predicted": 3468.14,
+      "actual": 0.22,
+      "diff_pct": 1576327.27,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T18:59:34.361164+00:00",
+      "predicted": 3468.14,
+      "actual": 0.22,
+      "diff_pct": 1576327.27,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T18:16:35.276226+00:00",
+      "predicted": 3468.14,
+      "actual": 0.22,
+      "diff_pct": 1576327.27,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T17:50:13.521989+00:00",
+      "predicted": 3468.14,
+      "actual": 0.22,
+      "diff_pct": 1576327.27,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T17:37:05.570475+00:00",
+      "predicted": 3468.14,
+      "actual": 0.22,
+      "diff_pct": 1576327.27,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T17:18:47.910595+00:00",
+      "predicted": 86695.1,
+      "actual": 0.22,
+      "diff_pct": 39406763.64,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:59:42.448544+00:00",
+      "predicted": 44.78,
+      "actual": 0.22,
+      "diff_pct": 20254.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:52:55.732505+00:00",
+      "predicted": 44.78,
+      "actual": 0.22,
+      "diff_pct": 20254.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:36:31.187044+00:00",
+      "predicted": 101398.06,
+      "actual": 0.22,
+      "diff_pct": 46089927.27,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T16:27:28.779187+00:00",
+      "predicted": 97225.33,
+      "actual": 0.22,
+      "diff_pct": 44193231.82,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T01:16:01.798473+00:00",
+      "predicted": 246.72,
+      "actual": 0.22,
+      "diff_pct": 112045.45,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T22:04:54.485333+00:00",
+      "predicted": 2482.42,
+      "actual": 0.23,
+      "diff_pct": 1079213.04,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T22:00:48.460170+00:00",
+      "predicted": 0.0,
+      "actual": 0.22,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:45:00.678737+00:00",
+      "predicted": 0.0,
+      "actual": 0.22,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:40:14.850692+00:00",
+      "predicted": 0.0,
+      "actual": 0.22,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:12:48.365447+00:00",
+      "predicted": 0.0,
+      "actual": 0.22,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:11:16.854171+00:00",
+      "predicted": 0.0,
+      "actual": 0.22,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:06:37.196034+00:00",
+      "predicted": 0.0,
+      "actual": 0.22,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:03:46.181906+00:00",
+      "predicted": 0.0,
+      "actual": 0.22,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T20:03:31.443915+00:00",
+      "predicted": 0.0,
+      "actual": 0.22,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-19T19:52:02.260841+00:00",
+      "predicted": 0.0,
+      "actual": 0.22,
+      "diff_pct": 100.0,
+      "accurate": false
+    },
+    {
       "timestamp": "2025-05-19T17:45:04.865305+00:00",
       "current": 0.224175,
       "predicted": 0.22193325,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.88,
+      "accurate": true,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-19T17:35:18.153323+00:00",
       "current": 0.224575,
       "predicted": 0.22232925,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 1.06,
+      "accurate": true,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-19T17:16:27.912429+00:00",
       "current": 0.224261,
       "predicted": 0.22201838999999998,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 0.92,
+      "accurate": true,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "coin": "Dogecoin",
@@ -1419,36 +2309,32 @@
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-17T01:13:18.765421+00:00",
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
-    },
-    {
-      "coin": "Dogecoin",
-      "timestamp": "2025-05-17T01:13:18.765421+00:00",
-      "current": NaN,
-      "predicted": NaN,
-      "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "coin": "Dogecoin",
@@ -1456,15 +2342,26 @@
       "current": NaN,
       "predicted": NaN,
       "diff_pct": NaN,
-      "accurate": null
+      "accurate": false,
+      "actual": 0.22
+    },
+    {
+      "coin": "Dogecoin",
+      "timestamp": "2025-05-17T01:13:18.765421+00:00",
+      "current": NaN,
+      "predicted": NaN,
+      "diff_pct": NaN,
+      "accurate": false,
+      "actual": 0.22
     },
     {
       "coin": "Dogecoin",
       "timestamp": "2025-05-17T01:22:34.511265+00:00",
       "current": 0.217687,
       "predicted": 0.21551013,
-      "diff_pct": -1.0,
-      "accurate": null
+      "diff_pct": 2.04,
+      "accurate": true,
+      "actual": 0.22
     },
     {
       "timestamp": "2025-05-16T15:54:32.749461+00:00",
