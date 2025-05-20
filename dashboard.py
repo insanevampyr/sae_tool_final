@@ -21,6 +21,8 @@ def load_sentiment_history():
             df = df[df["Timestamp"].notnull()]
         if "Coin" in df.columns:
             df["Coin"] = df["Coin"].astype(str).str.strip()
+        if "Sentiment" in df.columns:
+            df["Sentiment"] = pd.to_numeric(df["Sentiment"], errors="coerce")
         return df
     except Exception as e:
         error_box("Failed to load sentiment_history.csv", e)
@@ -36,6 +38,8 @@ def load_sentiment_output():
             df = df[df["Timestamp"].notnull()]
         if "Coin" in df.columns:
             df["Coin"] = df["Coin"].astype(str).str.strip()
+        if "Sentiment" in df.columns:
+            df["Sentiment"] = pd.to_numeric(df["Sentiment"], errors="coerce")
         return df
     except Exception as e:
         error_box("Failed to load sentiment_output.csv", e)
@@ -51,6 +55,8 @@ def load_price_history():
             df = df[df["Timestamp"].notnull()]
         if "Coin" in df.columns:
             df["Coin"] = df["Coin"].astype(str).str.strip()
+        if "PriceUSD" in df.columns:
+            df["PriceUSD"] = pd.to_numeric(df["PriceUSD"], errors="coerce")
         return df
     except Exception as e:
         error_box("Failed to load btc_history.csv", e)
@@ -69,12 +75,6 @@ def load_prediction_log():
             return json.load(f)
     return {}
 
-def safe_float(x):
-    try:
-        return float(x)
-    except Exception:
-        return np.nan
-
 def get_next_hour_predictions(df):
     preds = []
     for coin in COINS:
@@ -82,7 +82,7 @@ def get_next_hour_predictions(df):
             coin_df = df[df["Coin"] == coin]
             if not coin_df.empty:
                 val = coin_df.sort_values("Timestamp").iloc[-1]["Sentiment"]
-                preds.append(safe_float(val))
+                preds.append(float(val) if pd.notnull(val) else 0.0)
             else:
                 preds.append(0.0)
         else:
@@ -93,8 +93,8 @@ st.set_page_config("Crypto Dashboard", layout="wide")
 st.title("📈 Crypto Sentiment & Price Dashboard")
 
 tabs = st.tabs([
-    "Sentiment Summary (24hr Avg)", 
-    "Trends Over Time", 
+    "Sentiment Summary (24hr Avg)",
+    "Trends Over Time",
     "Next Hour Predictions"
 ])
 
@@ -109,8 +109,7 @@ with tabs[0]:
         cutoff = now - pd.Timedelta("24h")
         last24 = sentiment[sentiment["Timestamp"] >= cutoff]
         avg = (
-            last24[last24["Sentiment"].apply(lambda x: isinstance(x, (int, float, np.number)) or str(x).replace('.', '', 1).isdigit())]
-            .groupby("Coin")["Sentiment"]
+            last24.groupby("Coin")["Sentiment"]
             .mean()
             .reindex(COINS)
         )
@@ -132,11 +131,11 @@ with tabs[1]:
         error_box("History files missing required columns or data.", sentiment.columns if not sentiment.empty else "sentiment_history EMPTY")
     else:
         coin_sent = sentiment[sentiment["Coin"] == coin]
-        coin_sent = coin_sent[coin_sent["Sentiment"].apply(lambda x: isinstance(x, (int, float, np.number)) or str(x).replace('.', '', 1).isdigit())]
-        coin_sent["Sentiment"] = coin_sent["Sentiment"].astype(float)
+        coin_sent = coin_sent[coin_sent["Sentiment"].notnull()]
         coin_sent = coin_sent.set_index("Timestamp").sort_index()
 
         coin_price = price_hist[price_hist["Coin"] == coin]
+        coin_price = coin_price[coin_price["PriceUSD"].notnull()]
         coin_price = coin_price.set_index("Timestamp").sort_index()
 
         if not coin_sent.empty and not coin_price.empty:
@@ -158,11 +157,11 @@ with tabs[1]:
                 y=alt.Y("PriceUSD:Q", axis=alt.Axis(title="Price (USD)"), scale=alt.Scale(zero=False)),
                 color=alt.value("#007bff"),
                 tooltip=["Timestamp:T", "PriceUSD:Q"]
-            ).interactive()
+            )
             sent_line = base.mark_line(strokeDash=[5,5], color="orange").encode(
                 y=alt.Y("Sentiment:Q", axis=alt.Axis(title="Sentiment")),
                 tooltip=["Timestamp:T", "Sentiment:Q"]
-            ).interactive()
+            )
 
             st.altair_chart(price_line + sent_line, use_container_width=True)
         else:
@@ -173,7 +172,7 @@ with tabs[2]:
     st.subheader("Next Hour Price Predictions (ML Model)")
     model, coins = load_model()
     curr_df = load_sentiment_output()
-    if model is not None:
+    if model is not None and not curr_df.empty:
         sents = get_next_hour_predictions(curr_df)
         sents_clean = [x if not np.isnan(x) else 0.0 for x in sents]
         sents_np = np.array(sents_clean).reshape(-1, 1)
@@ -181,11 +180,11 @@ with tabs[2]:
         pred_df = pd.DataFrame({
             "Coin": COINS,
             "Latest Sentiment": np.round(sents_clean, 4),
-            "Predicted Next Price": np.round(preds, 3)
+            "Predicted Next Price": np.round(preds, 2)
         })
         st.dataframe(pred_df, use_container_width=True)
     else:
-        st.warning("Prediction model not available. Run `train_price_predictor.py` to train.")
+        st.warning("Prediction model or input data not available. Run `train_price_predictor.py` and update `sentiment_output.csv`.")
 
     st.markdown("---")
     st.markdown("#### Last Predictions Log")
