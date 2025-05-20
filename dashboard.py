@@ -8,10 +8,7 @@ import os
 import warnings
 warnings.filterwarnings("ignore", category=UserWarning, module="sklearn")
 
-
 COINS = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
-
-# --- Utility Functions ---
 
 def load_csv(path, date_cols=[], float_cols=[], str_cols=[]):
     if not os.path.exists(path):
@@ -48,16 +45,13 @@ def load_prediction_log():
     with open("prediction_log.json") as f:
         return json.load(f)
 
-# --- Load Data ---
-
+# Load Data
 sent_hist = load_csv("sentiment_history.csv", date_cols=["Timestamp"], float_cols=["Sentiment"], str_cols=["Coin"])
 sent_out  = load_csv("sentiment_output.csv",  date_cols=["Timestamp"], float_cols=["Sentiment"], str_cols=["Coin"])
 price_hist = load_csv("btc_history.csv", date_cols=["Timestamp"], float_cols=["PriceUSD"], str_cols=["Coin"])
-
 model   = load_model()
 pred_log = load_prediction_log()
 
-# --- Streamlit Layout ---
 st.set_page_config("Crypto Dashboard", layout="wide")
 st.title("📊 Crypto Sentiment & Price Dashboard")
 
@@ -68,7 +62,6 @@ tabs = st.tabs([
 ])
 
 # --- Tab 1: Sentiment Summary (24hr Avg) ---
-
 with tabs[0]:
     st.header("Sentiment Summary (Last 24h Avg per Coin)")
     if sent_hist.empty:
@@ -87,7 +80,6 @@ with tabs[0]:
         st.dataframe(summary, hide_index=True, use_container_width=True)
 
 # --- Tab 2: Trends Over Time ---
-
 with tabs[1]:
     st.header("Trends Over Time")
     coin = st.selectbox("Select coin", COINS, key="trend_coin")
@@ -128,7 +120,6 @@ with tabs[1]:
         st.info("No data for this coin for the last 48h.")
 
 # --- Tab 3: Next Hour Predictions ---
-
 with tabs[2]:
     st.header("Next Hour Predictions")
     if (model is not None) and (not sent_out.empty):
