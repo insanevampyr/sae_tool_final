@@ -5,9 +5,41 @@ import os
 import subprocess
 import sys
 from datetime import datetime
+from PIL import Image, ImageTk
 
 CSV_FILE = "clients.csv"
-REQUIRED_FIELDS = ["Name", "Legal Name", "Email"]  # Add more if needed
+REQUIRED_FIELDS = ["Name", "Legal Name", "Email"]
+
+class ScrollableFrame(ttk.Frame):
+    def __init__(self, container, *args, **kwargs):
+        super().__init__(container, *args, **kwargs)
+        canvas = tk.Canvas(self, borderwidth=0, background="#1e1e1e", highlightthickness=0)
+        scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
+        self.scrollable_frame = ttk.Frame(canvas, style="Custom.TFrame")
+
+        self.scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(
+                scrollregion=canvas.bbox("all")
+            )
+        )
+        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        self.canvas = canvas
+
+        # Mousewheel support (Windows/Mac)
+        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
+        self.canvas.bind_all("<Button-4>", self._on_mousewheel) # Linux scroll up
+        self.canvas.bind_all("<Button-5>", self._on_mousewheel) # Linux scroll down
+
+    def _on_mousewheel(self, event):
+        if event.num == 5 or event.delta == -120:
+            self.canvas.yview_scroll(1, "units")
+        elif event.num == 4 or event.delta == 120:
+            self.canvas.yview_scroll(-1, "units")
 
 class MegaApp:
     def __init__(self, root):
@@ -16,6 +48,19 @@ class MegaApp:
         self.root.configure(bg="#1e1e1e")
         self.root.resizable(False, False)
 
+        style = ttk.Style()
+        style.theme_use("default")
+        style.configure("TLabel", background="#1e1e1e", foreground="#f0f0f0")
+        style.configure("TButton", background="#2b2b2b", foreground="#f0f0f0")
+        style.configure("Custom.TFrame", background="#1e1e1e")
+        style.map("TButton", background=[("active", "#444")])
+
+        # SCROLLABLE FRAME SETUP
+        self.scrollframe = ScrollableFrame(root)
+        self.scrollframe.pack(fill="both", expand=True)
+
+        frame = self.scrollframe.scrollable_frame
+
         self.font_style = ("Helvetica", 10)
         self.bg_color = "#1e1e1e"
         self.fg_color = "#f0f0f0"
@@ -23,6 +68,30 @@ class MegaApp:
 
         self.status_var = tk.StringVar(value="")
         self.run_sync_and_set_status()
+
+        # Logo (centered)
+        logo_path = "MEGA_logo.jpg"
+        row = 0
+        if os.path.exists(logo_path):
+            img = Image.open(logo_path)
+            img = img.resize((250, 250), Image.LANCZOS)
+            self.logo_img = ImageTk.PhotoImage(img)
+            logo_label = tk.Label(frame, image=self.logo_img, bg=self.bg_color)
+            logo_label.grid(row=row, column=0, columnspan=4, pady=(20, 2))
+        else:
+            logo_label = tk.Label(frame, text="(Logo missing)", font=("Helvetica", 12, "italic"), bg=self.bg_color, fg="#FFD700")
+            logo_label.grid(row=row, column=0, columnspan=4, pady=(20, 2))
+        row += 1
+
+        # Header
+        tk.Label(frame, text="★ MEGA Client Manager", font=("Helvetica", 26, "bold"),
+                 bg=self.bg_color, fg="#FFD700").grid(row=row, column=0, columnspan=4, pady=(2, 0))
+        row += 1
+
+        # Sub-header
+        tk.Label(frame, text="Showcase June 2025", font=("Helvetica", 16, "italic"),
+                 bg=self.bg_color, fg="#f0f0f0").grid(row=row, column=0, columnspan=4, pady=(0, 16))
+        row += 1
 
         self.fields = {
             "Name": tk.StringVar(),
@@ -42,56 +111,64 @@ class MegaApp:
             "Emergency Contact Phone": tk.StringVar(),
             "Airport Code": tk.StringVar(),
             "Arrival Date": tk.StringVar(),
-            "Arrival Time": tk.StringVar()
+            "Arrival Time": tk.StringVar(),
+            "Departure Date": tk.StringVar(),  # <-- NEW
+            "Departure Time": tk.StringVar(),  # <-- NEW
         }
-
         self.entry_widgets = {}
-
-        style = ttk.Style()
-        style.theme_use("default")
-        style.configure("TLabel", background=self.bg_color, foreground=self.fg_color)
-        style.configure("TButton", background=self.entry_bg, foreground=self.fg_color)
-        style.map("TButton", background=[("active", "#444")])
 
         # Dropdown
         self.client_names = self.get_client_names()
         self.selected_name = tk.StringVar()
 
-        tk.Label(root, text="Select Client:", font=self.font_style,
-                 bg=self.bg_color, fg=self.fg_color).grid(row=0, column=0, pady=4, sticky="e")
-        self.name_dropdown = ttk.Combobox(root, textvariable=self.selected_name,
+        tk.Label(frame, text="Select Client:", font=self.font_style,
+                 bg=self.bg_color, fg=self.fg_color).grid(row=row, column=0, pady=4, sticky="e")
+        self.name_dropdown = ttk.Combobox(frame, textvariable=self.selected_name,
                                           values=self.client_names, width=45)
-        self.name_dropdown.grid(row=0, column=1, pady=4)
+        self.name_dropdown.grid(row=row, column=1, pady=4)
         self.name_dropdown.bind("<<ComboboxSelected>>", self.fill_from_dropdown)
 
-        tk.Button(root, text="Add New", command=self.clear_fields).grid(row=0, column=2, padx=5)
-        tk.Button(root, text="Save Client", command=self.save_client).grid(row=0, column=3, padx=5)
-        tk.Button(root, text="Delete Client", command=self.delete_client).grid(row=1, column=3, padx=5)
+        tk.Button(frame, text="Add New", command=self.clear_fields).grid(row=row, column=2, padx=5)
+        tk.Button(frame, text="Save Client", command=self.save_client).grid(row=row, column=3, padx=5)
+        tk.Button(frame, text="Delete Client", command=self.delete_client).grid(row=row+1, column=3, padx=5)
+        row += 1
 
-        # Entry fields
-        row = 1
-        for label, var in self.fields.items():
-            tk.Label(root, text=label + ":", font=self.font_style,
-                     bg=self.bg_color, fg=self.fg_color).grid(row=row + 1, column=0, sticky="e", pady=2)
-            entry = tk.Entry(root, textvariable=var, width=50,
+        # Entry fields (departure after arrival)
+        for label in [
+            "Name", "Legal Name", "Badge Name", "Bio",
+            "Date of Birth", "Gender", "Contact Phone", "Email",
+            "Company", "Address", "City", "State", "Zip",
+            "Emergency Contact", "Emergency Contact Phone",
+            "Airport Code", "Arrival Date", "Arrival Time",
+            "Departure Date", "Departure Time"
+        ]:
+            tk.Label(frame, text=label + ":", font=self.font_style,
+                     bg=self.bg_color, fg=self.fg_color).grid(row=row, column=0, sticky="e", pady=2)
+            entry = tk.Entry(frame, textvariable=self.fields[label], width=50,
                              font=self.font_style, bg=self.entry_bg, fg=self.fg_color,
                              insertbackground=self.fg_color)
-            entry.grid(row=row + 1, column=1, columnspan=3, pady=2, sticky="w")
+            entry.grid(row=row, column=1, columnspan=3, pady=2, sticky="w")
             self.entry_widgets[label] = entry
             row += 1
 
         # Bottom buttons
-        tk.Button(root, text="View All Clients", command=self.show_all_clients).grid(row=row + 1, column=0, pady=10)
-        tk.Button(root, text="Export Clients", command=self.export_clients).grid(row=row + 1, column=1, pady=10)
+        tk.Button(frame, text="View All Clients", command=self.show_all_clients).grid(row=row, column=0, pady=10)
+        tk.Button(frame, text="Export Clients", command=self.export_clients).grid(row=row, column=1, pady=10)
 
-        self.status_label = tk.Label(root, textvariable=self.status_var, fg="lightgreen",
+        self.status_label = tk.Label(frame, textvariable=self.status_var, fg="lightgreen",
                                      bg=self.bg_color, font=self.font_style)
-        self.status_label.grid(row=row + 2, column=0, columnspan=4, pady=(5, 10))
+        self.status_label.grid(row=row + 1, column=0, columnspan=4, pady=(5, 10))
 
         self.root.update_idletasks()
-        width = self.root.winfo_reqwidth()
-        height = self.root.winfo_reqheight()
+        width = 850
+        height = 700
         self.root.geometry(f"{width}x{height}")
+
+    # --- (all your previous methods stay the same, no change needed) ---
+    # (Paste the rest of your MegaApp class methods here: run_sync_and_set_status, get_client_names, etc.)
+    # Copy all class methods from the previous version
+
+    # ---- Paste from your working MegaApp implementation ----
 
     def run_sync_and_set_status(self):
         try:
@@ -141,7 +218,7 @@ class MegaApp:
         for field in REQUIRED_FIELDS:
             value = self.fields[field].get().strip()
             if not value:
-                self.entry_widgets[field].config(bg="#8B0000")  # red background
+                self.entry_widgets[field].config(bg="#8B0000")
                 missing.append(field)
         return missing
 
