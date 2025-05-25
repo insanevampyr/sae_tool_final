@@ -1,16 +1,16 @@
 import streamlit as st
 import pandas as pd
-from supabase import create_client, Client
 from datetime import datetime
 import uuid
 from PIL import Image
 from io import BytesIO
+from supabase import create_client, Client
+import os
 
-# Supabase connection
+# --- CONFIG ---
 url = "https://xxyfipfbnusrowhbtwkb.supabase.co"
 key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eWZpcGZibnVzcm93aGJ0d2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI4MTMsImV4cCI6MjA2MjgzODgxM30.7a1UswYWolt82zAiRNzp3RAJ3OqW0GHYgWXvjoCES5I"
 supabase: Client = create_client(url, key)
-
 st.set_page_config(page_title="MEGA Client Manager", layout="centered")
 MAX_MB = 5
 MAX_BYTES = MAX_MB * 1024 * 1024
@@ -30,8 +30,21 @@ def upload_image(bucket, file_obj, content_type):
     supabase.storage.from_(bucket).upload(path, file_obj, {"content-type": content_type})
     return f"https://xxyfipfbnusrowhbtwkb.supabase.co/storage/v1/object/public/{path}", path
 
-st.title("🌟 MEGA Client Manager")
+# --- HEADER ---
+logo_path = "MEGA_logo.jpg"  # Ensure this is in your working directory!
+# Centering logo + headers using columns for best Streamlit appearance
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    st.image(logo_path, use_container_width=True)
+    st.markdown(
+        "<div style='text-align: center; font-size:2.2em; font-weight: bold; margin-bottom:0;'>MEGA Client Manager</div>",
+        unsafe_allow_html=True)
+    st.markdown(
+        "<div style='text-align: center; color: #888; font-size:1.2em; margin-top:0;'>Showcase June 2025</div>",
+        unsafe_allow_html=True)
+st.markdown("---")
 
+# --- DATA ---
 @st.cache_data(ttl=60)
 def fetch_clients():
     res = supabase.table("clients").select("*").execute()
@@ -93,6 +106,9 @@ with st.expander("➕ Add or Edit Client"):
             airport = cols2.text_input("Airport Code", selected_row.get("airport_code", ""))
             arrival_date = cols1.text_input("Arrival Date", selected_row.get("arrival_date", ""))
             arrival_time = cols2.text_input("Arrival Time", selected_row.get("arrival_time", ""))
+            # ---- NEW DEPARTURE FIELDS ----
+            departure_date = cols1.text_input("Departure Date", selected_row.get("departure_date", ""))
+            departure_time = cols2.text_input("Departure Time", selected_row.get("departure_time", ""))
 
             old_logo_url = selected_row.get("logo_url", "")
             old_photo_url = selected_row.get("photo_url", "")
@@ -109,7 +125,6 @@ with st.expander("➕ Add or Edit Client"):
                     buffer.seek(0)
                     logo_url, _ = upload_image("logos", buffer, "image/jpeg")
                     st.success("✅ Logo uploaded!")
-
             if logo_url:
                 st.image(logo_url, caption="Logo", width=150)
 
@@ -125,7 +140,6 @@ with st.expander("➕ Add or Edit Client"):
                     buffer.seek(0)
                     photo_url, _ = upload_image("headshots", buffer, "image/jpeg")
                     st.success("✅ Headshot uploaded!")
-
             if photo_url:
                 st.image(photo_url, caption="Headshot", width=150)
 
@@ -137,9 +151,9 @@ with st.expander("➕ Add or Edit Client"):
                     "address": address, "city": city, "state": state, "zip": zip_code,
                     "emergency_contact": emergency, "emergency_contact_phone": emergency_phone,
                     "airport_code": airport, "arrival_date": arrival_date, "arrival_time": arrival_time,
+                    "departure_date": departure_date, "departure_time": departure_time,
                     "photo_url": photo_url, "last_update": datetime.utcnow().isoformat()
                 }
-
                 if mode == "Add New":
                     supabase.table("clients").insert(data).execute()
                     st.success("✅ New client added.")
@@ -156,7 +170,7 @@ with st.expander("➕ Add or Edit Client"):
     else:
         st.warning("⚠️ Select a client before editing.")
 
-# 🗑 DELETE
+# --- DELETE CLIENT ---
 with st.expander("🗑 Delete Client"):
     delete_name = st.selectbox("Choose Client to Delete", df["name"].dropna().unique())
     if st.button("❌ Confirm Delete"):
@@ -170,7 +184,7 @@ with st.expander("🗑 Delete Client"):
         st.cache_data.clear()
         st.rerun()
 
-# 📥 EXPORT
+# --- EXPORT CLIENTS ---
 st.subheader("⬇️ Export Clients")
 if not df.empty:
     csv = df.drop(columns=["id"], errors="ignore").to_csv(index=False).encode("utf-8")
