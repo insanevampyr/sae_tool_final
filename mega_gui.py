@@ -35,7 +35,7 @@ logo_path = "MEGA_logo.jpg"  # Ensure this is in your working directory!
 # Centering logo + headers using columns for best Streamlit appearance
 col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
-    st.image(logo_path, width=180, use_column_width=False)
+    st.image(logo_path, use_container_width=True)
     st.markdown(
         "<div style='text-align: center; font-size:2.2em; font-weight: bold; margin-bottom:0;'>MEGA Client Manager</div>",
         unsafe_allow_html=True)
