@@ -1,332 +1,193 @@
-import tkinter as tk
-from tkinter import messagebox, ttk, Toplevel, filedialog
+import streamlit as st
 import pandas as pd
-import os
-import subprocess
-import sys
 from datetime import datetime
-from PIL import Image, ImageTk
+import uuid
+from PIL import Image
+from io import BytesIO
+from supabase import create_client, Client
+import os
 
-CSV_FILE = "clients.csv"
-REQUIRED_FIELDS = ["Name", "Legal Name", "Email"]
+# --- CONFIG ---
+url = "https://xxyfipfbnusrowhbtwkb.supabase.co"
+key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh4eWZpcGZibnVzcm93aGJ0d2tiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDcyNjI4MTMsImV4cCI6MjA2MjgzODgxM30.7a1UswYWolt82zAiRNzp3RAJ3OqW0GHYgWXvjoCES5I"
+supabase: Client = create_client(url, key)
+st.set_page_config(page_title="MEGA Client Manager", layout="centered")
+MAX_MB = 5
+MAX_BYTES = MAX_MB * 1024 * 1024
 
-class ScrollableFrame(ttk.Frame):
-    def __init__(self, container, *args, **kwargs):
-        super().__init__(container, *args, **kwargs)
-        canvas = tk.Canvas(self, borderwidth=0, background="#1e1e1e", highlightthickness=0)
-        scrollbar = ttk.Scrollbar(self, orient="vertical", command=canvas.yview)
-        self.scrollable_frame = ttk.Frame(canvas, style="Custom.TFrame")
+def crop_center_square(image_file):
+    img = Image.open(image_file)
+    width, height = img.size
+    min_dim = min(width, height)
+    left = (width - min_dim) / 2
+    top = (height - min_dim) / 2
+    right = (width + min_dim) / 2
+    bottom = (height + min_dim) / 2
+    return img.crop((left, top, right, bottom))
 
-        self.scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(
-                scrollregion=canvas.bbox("all")
-            )
-        )
-        canvas.create_window((0, 0), window=self.scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
+def upload_image(bucket, file_obj, content_type):
+    path = f"{bucket}/{uuid.uuid4().hex}.jpg"
+    supabase.storage.from_(bucket).upload(path, file_obj, {"content-type": content_type})
+    return f"https://xxyfipfbnusrowhbtwkb.supabase.co/storage/v1/object/public/{path}", path
 
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        self.canvas = canvas
+# --- HEADER ---
+logo_path = "MEGA_logo.jpg"  # Ensure this is in your working directory!
+# Centering logo + headers using columns for best Streamlit appearance
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    st.image(logo_path, width=180, use_column_width=False)
+    st.markdown(
+        "<div style='text-align: center; font-size:2.2em; font-weight: bold; margin-bottom:0;'>MEGA Client Manager</div>",
+        unsafe_allow_html=True)
+    st.markdown(
+        "<div style='text-align: center; color: #888; font-size:1.2em; margin-top:0;'>Showcase June 2025</div>",
+        unsafe_allow_html=True)
+st.markdown("---")
 
-        # Mousewheel support (Windows/Mac)
-        self.canvas.bind_all("<MouseWheel>", self._on_mousewheel)
-        self.canvas.bind_all("<Button-4>", self._on_mousewheel) # Linux scroll up
-        self.canvas.bind_all("<Button-5>", self._on_mousewheel) # Linux scroll down
+# --- DATA ---
+@st.cache_data(ttl=60)
+def fetch_clients():
+    res = supabase.table("clients").select("*").execute()
+    return pd.DataFrame(res.data or [])
 
-    def _on_mousewheel(self, event):
-        if event.num == 5 or event.delta == -120:
-            self.canvas.yview_scroll(1, "units")
-        elif event.num == 4 or event.delta == 120:
-            self.canvas.yview_scroll(-1, "units")
+df = fetch_clients()
+if "id" in df.columns:
+    df = df.drop(columns=["id"])
 
-class MegaApp:
-    def __init__(self, root):
-        self.root = root
-        self.root.title("MEGA Client Manager")
-        self.root.configure(bg="#1e1e1e")
-        self.root.resizable(False, False)
+selected_row = {}
+with st.expander("🔍 Find Client"):
+    col1, col2 = st.columns(2)
+    search_name = col1.text_input("Search by Name").strip().lower()
+    search_legal = col2.text_input("Search by Legal Name").strip().lower()
 
-        style = ttk.Style()
-        style.theme_use("default")
-        style.configure("TLabel", background="#1e1e1e", foreground="#f0f0f0")
-        style.configure("TButton", background="#2b2b2b", foreground="#f0f0f0")
-        style.configure("Custom.TFrame", background="#1e1e1e")
-        style.map("TButton", background=[("active", "#444")])
+    df["display"] = df.apply(
+        lambda x: f'{x["name"]} — {x["legal_name"]}' if pd.notna(x["legal_name"]) else x["name"], axis=1
+    )
+    selected_combo = st.selectbox("🔽 Or Select from Full List", df["display"].sort_values())
 
-        # SCROLLABLE FRAME SETUP
-        self.scrollframe = ScrollableFrame(root)
-        self.scrollframe.pack(fill="both", expand=True)
+    if selected_combo:
+        base_name = selected_combo.split(" — ")[0]
+        selected_df = df[df["name"] == base_name]
+    elif search_name:
+        selected_df = df[df["name"].str.lower().str.contains(search_name)]
+    elif search_legal:
+        selected_df = df[df["legal_name"].str.lower().str.contains(search_legal)]
+    else:
+        selected_df = pd.DataFrame()
 
-        frame = self.scrollframe.scrollable_frame
+    if not selected_df.empty:
+        selected_row = selected_df.iloc[0].to_dict()
 
-        self.font_style = ("Helvetica", 10)
-        self.bg_color = "#1e1e1e"
-        self.fg_color = "#f0f0f0"
-        self.entry_bg = "#2b2b2b"
+with st.expander("➕ Add or Edit Client"):
+    mode = st.radio("Mode", ["Add New", "Edit Selected"], horizontal=True)
 
-        self.status_var = tk.StringVar(value="")
-        self.run_sync_and_set_status()
+    if mode == "Add New":
+        selected_row = {}
 
-        # Logo (centered)
-        logo_path = "MEGA_logo.jpg"
-        row = 0
-        if os.path.exists(logo_path):
-            img = Image.open(logo_path)
-            img = img.resize((250, 250), Image.LANCZOS)
-            self.logo_img = ImageTk.PhotoImage(img)
-            logo_label = tk.Label(frame, image=self.logo_img, bg=self.bg_color)
-            logo_label.grid(row=row, column=0, columnspan=4, pady=(20, 2))
-        else:
-            logo_label = tk.Label(frame, text="(Logo missing)", font=("Helvetica", 12, "italic"), bg=self.bg_color, fg="#FFD700")
-            logo_label.grid(row=row, column=0, columnspan=4, pady=(20, 2))
-        row += 1
+    if mode == "Add New" or (mode == "Edit Selected" and selected_row):
+        with st.form("client_form", clear_on_submit=(mode == "Add New")):
+            cols1, cols2 = st.columns(2)
 
-        # Header
-        tk.Label(frame, text="★ MEGA Client Manager", font=("Helvetica", 26, "bold"),
-                 bg=self.bg_color, fg="#FFD700").grid(row=row, column=0, columnspan=4, pady=(2, 0))
-        row += 1
+            name = cols1.text_input("Name", selected_row.get("name", ""))
+            legal_name = cols2.text_input("Legal Name", selected_row.get("legal_name", ""))
+            badge_name = cols1.text_input("Badge Name", selected_row.get("badge_name", ""))
+            bio = cols2.text_input("Bio", selected_row.get("bio", ""))
+            dob = cols1.text_input("Date of Birth", selected_row.get("dob", ""))
+            gender = cols2.text_input("Gender", selected_row.get("gender", ""))
+            phone = cols1.text_input("Phone", selected_row.get("phone", ""))
+            email = cols2.text_input("Email", selected_row.get("email", ""))
+            company = cols1.text_input("Company", selected_row.get("company", ""))
+            address = cols2.text_input("Address", selected_row.get("address", ""))
+            city = cols1.text_input("City", selected_row.get("city", ""))
+            state = cols2.text_input("State", selected_row.get("state", ""))
+            zip_code = cols1.text_input("Zip", selected_row.get("zip", ""))
+            emergency = cols2.text_input("Emergency Contact", selected_row.get("emergency_contact", ""))
+            emergency_phone = cols1.text_input("Emergency Phone", selected_row.get("emergency_contact_phone", ""))
+            airport = cols2.text_input("Airport Code", selected_row.get("airport_code", ""))
+            arrival_date = cols1.text_input("Arrival Date", selected_row.get("arrival_date", ""))
+            arrival_time = cols2.text_input("Arrival Time", selected_row.get("arrival_time", ""))
+            # ---- NEW DEPARTURE FIELDS ----
+            departure_date = cols1.text_input("Departure Date", selected_row.get("departure_date", ""))
+            departure_time = cols2.text_input("Departure Time", selected_row.get("departure_time", ""))
 
-        # Sub-header
-        tk.Label(frame, text="Showcase June 2025", font=("Helvetica", 16, "italic"),
-                 bg=self.bg_color, fg="#f0f0f0").grid(row=row, column=0, columnspan=4, pady=(0, 16))
-        row += 1
+            old_logo_url = selected_row.get("logo_url", "")
+            old_photo_url = selected_row.get("photo_url", "")
 
-        self.fields = {
-            "Name": tk.StringVar(),
-            "Legal Name": tk.StringVar(),
-            "Badge Name": tk.StringVar(),
-            "Bio": tk.StringVar(),
-            "Date of Birth": tk.StringVar(),
-            "Gender": tk.StringVar(),
-            "Contact Phone": tk.StringVar(),
-            "Email": tk.StringVar(),
-            "Company": tk.StringVar(),
-            "Address": tk.StringVar(),
-            "City": tk.StringVar(),
-            "State": tk.StringVar(),
-            "Zip": tk.StringVar(),
-            "Emergency Contact": tk.StringVar(),
-            "Emergency Contact Phone": tk.StringVar(),
-            "Airport Code": tk.StringVar(),
-            "Arrival Date": tk.StringVar(),
-            "Arrival Time": tk.StringVar(),
-            "Departure Date": tk.StringVar(),  # <-- NEW
-            "Departure Time": tk.StringVar(),  # <-- NEW
-        }
-        self.entry_widgets = {}
+            logo_file = st.file_uploader("📎 Upload Company Logo (Max 5MB, JPG/PNG)", type=["jpg", "jpeg", "png"])
+            logo_url = old_logo_url
+            if logo_file:
+                if logo_file.size > MAX_BYTES:
+                    st.error("Logo file too large (5MB max)")
+                else:
+                    cropped = crop_center_square(logo_file)
+                    buffer = BytesIO()
+                    cropped.save(buffer, format="JPEG")
+                    buffer.seek(0)
+                    logo_url, _ = upload_image("logos", buffer, "image/jpeg")
+                    st.success("✅ Logo uploaded!")
+            if logo_url:
+                st.image(logo_url, caption="Logo", width=150)
 
-        # Dropdown
-        self.client_names = self.get_client_names()
-        self.selected_name = tk.StringVar()
+            photo_file = st.file_uploader("📷 Upload Headshot (Max 5MB, JPG/PNG)", type=["jpg", "jpeg", "png"])
+            photo_url = old_photo_url
+            if photo_file:
+                if photo_file.size > MAX_BYTES:
+                    st.error("Photo file too large (5MB max)")
+                else:
+                    cropped = crop_center_square(photo_file)
+                    buffer = BytesIO()
+                    cropped.save(buffer, format="JPEG")
+                    buffer.seek(0)
+                    photo_url, _ = upload_image("headshots", buffer, "image/jpeg")
+                    st.success("✅ Headshot uploaded!")
+            if photo_url:
+                st.image(photo_url, caption="Headshot", width=150)
 
-        tk.Label(frame, text="Select Client:", font=self.font_style,
-                 bg=self.bg_color, fg=self.fg_color).grid(row=row, column=0, pady=4, sticky="e")
-        self.name_dropdown = ttk.Combobox(frame, textvariable=self.selected_name,
-                                          values=self.client_names, width=45)
-        self.name_dropdown.grid(row=row, column=1, pady=4)
-        self.name_dropdown.bind("<<ComboboxSelected>>", self.fill_from_dropdown)
+            submitted = st.form_submit_button("💾 Save Client")
+            if submitted:
+                data = {
+                    "name": name, "legal_name": legal_name, "badge_name": badge_name, "bio": bio, "dob": dob,
+                    "gender": gender, "phone": phone, "email": email, "company": company, "logo_url": logo_url,
+                    "address": address, "city": city, "state": state, "zip": zip_code,
+                    "emergency_contact": emergency, "emergency_contact_phone": emergency_phone,
+                    "airport_code": airport, "arrival_date": arrival_date, "arrival_time": arrival_time,
+                    "departure_date": departure_date, "departure_time": departure_time,
+                    "photo_url": photo_url, "last_update": datetime.utcnow().isoformat()
+                }
+                if mode == "Add New":
+                    supabase.table("clients").insert(data).execute()
+                    st.success("✅ New client added.")
+                else:
+                    supabase.table("clients").update(data).eq("name", selected_row["name"]).execute()
+                    if logo_file and old_logo_url:
+                        supabase.storage.from_("logos").remove(old_logo_url.split("/")[-1])
+                    if photo_file and old_photo_url:
+                        supabase.storage.from_("headshots").remove(old_photo_url.split("/")[-1])
+                    st.success("✅ Client updated.")
 
-        tk.Button(frame, text="Add New", command=self.clear_fields).grid(row=row, column=2, padx=5)
-        tk.Button(frame, text="Save Client", command=self.save_client).grid(row=row, column=3, padx=5)
-        tk.Button(frame, text="Delete Client", command=self.delete_client).grid(row=row+1, column=3, padx=5)
-        row += 1
+                st.cache_data.clear()
+                st.rerun()
+    else:
+        st.warning("⚠️ Select a client before editing.")
 
-        # Entry fields (departure after arrival)
-        for label in [
-            "Name", "Legal Name", "Badge Name", "Bio",
-            "Date of Birth", "Gender", "Contact Phone", "Email",
-            "Company", "Address", "City", "State", "Zip",
-            "Emergency Contact", "Emergency Contact Phone",
-            "Airport Code", "Arrival Date", "Arrival Time",
-            "Departure Date", "Departure Time"
-        ]:
-            tk.Label(frame, text=label + ":", font=self.font_style,
-                     bg=self.bg_color, fg=self.fg_color).grid(row=row, column=0, sticky="e", pady=2)
-            entry = tk.Entry(frame, textvariable=self.fields[label], width=50,
-                             font=self.font_style, bg=self.entry_bg, fg=self.fg_color,
-                             insertbackground=self.fg_color)
-            entry.grid(row=row, column=1, columnspan=3, pady=2, sticky="w")
-            self.entry_widgets[label] = entry
-            row += 1
+# --- DELETE CLIENT ---
+with st.expander("🗑 Delete Client"):
+    delete_name = st.selectbox("Choose Client to Delete", df["name"].dropna().unique())
+    if st.button("❌ Confirm Delete"):
+        row = df[df["name"] == delete_name].iloc[0]
+        if row.get("photo_url"):
+            supabase.storage.from_("headshots").remove(row["photo_url"].split("/")[-1])
+        if row.get("logo_url"):
+            supabase.storage.from_("logos").remove(row["logo_url"].split("/")[-1])
+        supabase.table("clients").delete().eq("name", delete_name).execute()
+        st.success(f"✅ Deleted {delete_name}")
+        st.cache_data.clear()
+        st.rerun()
 
-        # Bottom buttons
-        tk.Button(frame, text="View All Clients", command=self.show_all_clients).grid(row=row, column=0, pady=10)
-        tk.Button(frame, text="Export Clients", command=self.export_clients).grid(row=row, column=1, pady=10)
-
-        self.status_label = tk.Label(frame, textvariable=self.status_var, fg="lightgreen",
-                                     bg=self.bg_color, font=self.font_style)
-        self.status_label.grid(row=row + 1, column=0, columnspan=4, pady=(5, 10))
-
-        self.root.update_idletasks()
-        width = 850
-        height = 700
-        self.root.geometry(f"{width}x{height}")
-
-    # --- (all your previous methods stay the same, no change needed) ---
-    # (Paste the rest of your MegaApp class methods here: run_sync_and_set_status, get_client_names, etc.)
-    # Copy all class methods from the previous version
-
-    # ---- Paste from your working MegaApp implementation ----
-
-    def run_sync_and_set_status(self):
-        try:
-            subprocess.run([sys.executable, "sync_form_to_csv.py"], check=True, capture_output=True, text=True)
-            self.status_var.set("✅ Sync successful.")
-        except subprocess.CalledProcessError as e:
-            self.status_var.set(f"❌ Sync failed: {e.stderr.strip() or str(e)}")
-        except Exception as e:
-            self.status_var.set(f"❌ Sync error: {str(e)}")
-
-        self.root.after(10000, lambda: self.status_var.set(""))
-
-    def get_client_names(self):
-        if not os.path.exists(CSV_FILE):
-            return []
-        df = pd.read_csv(CSV_FILE)
-        return sorted(df["Name"].dropna().unique().tolist())
-
-    def fill_from_dropdown(self, event):
-        self.fields["Name"].set(self.selected_name.get())
-        self.load_client()
-
-    def load_client(self):
-        if not os.path.exists(CSV_FILE):
-            return
-        df = pd.read_csv(CSV_FILE)
-        name = self.fields["Name"].get()
-        match = df[df["Name"].str.lower() == name.lower()]
-        if not match.empty:
-            row = match.iloc[0]
-            for key in self.fields:
-                self.fields[key].set(row.get(key, ""))
-
-    def clear_fields(self):
-        for var in self.fields.values():
-            var.set("")
-        self.selected_name.set("")
-        self.reset_entry_colors()
-
-    def reset_entry_colors(self):
-        for entry in self.entry_widgets.values():
-            entry.config(bg=self.entry_bg)
-
-    def validate_required_fields(self):
-        self.reset_entry_colors()
-        missing = []
-        for field in REQUIRED_FIELDS:
-            value = self.fields[field].get().strip()
-            if not value:
-                self.entry_widgets[field].config(bg="#8B0000")
-                missing.append(field)
-        return missing
-
-    def save_client(self):
-        missing = self.validate_required_fields()
-        if missing:
-            messagebox.showerror("Missing Info", f"Required fields missing: {', '.join(missing)}")
-            return
-
-        confirm = messagebox.askyesno("Confirm Save", "Are you sure you want to save this client?")
-        if not confirm:
-            return
-
-        new_data = {k: v.get() for k, v in self.fields.items()}
-        new_data["LastUpdate"] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-
-        if os.path.exists(CSV_FILE):
-            df = pd.read_csv(CSV_FILE)
-            if "Timestamp" in df.columns:
-                df = df.rename(columns={"Timestamp": "LastUpdate"})
-            df = df[df["Name"].str.lower() != new_data["Name"].lower()]
-            df = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
-        else:
-            df = pd.DataFrame([new_data])
-
-        df.to_csv(CSV_FILE, index=False)
-        messagebox.showinfo("Saved", "Client data saved!")
-
-        self.client_names = self.get_client_names()
-        self.name_dropdown["values"] = self.client_names
-        self.clear_fields()
-
-    def delete_client(self):
-        name = self.fields["Name"].get()
-        if not name:
-            messagebox.showwarning("No Client Selected", "Please select a client to delete.")
-            return
-
-        confirm = messagebox.askyesno("Confirm Deletion", f"Are you sure you want to delete {name}?")
-        if not confirm:
-            return
-
-        if os.path.exists(CSV_FILE):
-            df = pd.read_csv(CSV_FILE)
-            df = df[df["Name"].str.lower() != name.lower()]
-            df.to_csv(CSV_FILE, index=False)
-            messagebox.showinfo("Deleted", f"{name} has been deleted.")
-
-        self.client_names = self.get_client_names()
-        self.name_dropdown["values"] = self.client_names
-        self.clear_fields()
-
-    def show_all_clients(self):
-        if not os.path.exists(CSV_FILE):
-            messagebox.showerror("Error", "clients.csv not found.")
-            return
-
-        df = pd.read_csv(CSV_FILE)
-        win = Toplevel(self.root)
-        win.title("All Clients — MEGA")
-        win.configure(bg=self.bg_color)
-
-        frame = tk.Frame(win, bg=self.bg_color)
-        frame.pack(fill="both", expand=True)
-
-        tree = ttk.Treeview(frame)
-        tree["columns"] = list(df.columns)
-        tree["show"] = "headings"
-        for col in df.columns:
-            tree.heading(col, text=col)
-            tree.column(col, anchor="center", width=150)
-
-        for _, row in df.iterrows():
-            tree.insert("", "end", values=list(row))
-
-        vsb = ttk.Scrollbar(frame, orient="vertical", command=tree.yview)
-        hsb = ttk.Scrollbar(frame, orient="horizontal", command=tree.xview)
-        tree.configure(yscrollcommand=vsb.set, xscrollcommand=hsb.set)
-
-        tree.grid(row=0, column=0, sticky="nsew")
-        vsb.grid(row=0, column=1, sticky="ns")
-        hsb.grid(row=1, column=0, sticky="ew")
-
-        frame.grid_rowconfigure(0, weight=1)
-        frame.grid_columnconfigure(0, weight=1)
-
-    def export_clients(self):
-        if not os.path.exists(CSV_FILE):
-            messagebox.showerror("Error", "clients.csv not found.")
-            return
-
-        file_path = filedialog.asksaveasfilename(defaultextension=".csv",
-                                                 filetypes=[("CSV Files", "*.csv"), ("Excel Files", "*.xlsx")])
-        if not file_path:
-            return
-
-        df = pd.read_csv(CSV_FILE)
-        try:
-            if file_path.endswith(".xlsx"):
-                df.to_excel(file_path, index=False)
-            else:
-                df.to_csv(file_path, index=False)
-            messagebox.showinfo("Exported", f"Client list saved to:\n{file_path}")
-        except Exception as e:
-            messagebox.showerror("Export Error", str(e))
-
-# Launch app
-if __name__ == "__main__":
-    root = tk.Tk()
-    app = MegaApp(root)
-    root.mainloop()
+# --- EXPORT CLIENTS ---
+st.subheader("⬇️ Export Clients")
+if not df.empty:
+    csv = df.drop(columns=["id"], errors="ignore").to_csv(index=False).encode("utf-8")
+    st.download_button("Download CSV", data=csv, file_name="clients.csv", mime="text/csv")
+else:
+    st.warning("Nothing to export.")
