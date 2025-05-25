@@ -1,12 +1,687 @@
 {
   "Bitcoin": [
     {
+      "timestamp": "2025-05-24T23:45:01.508748+00:00",
+      "predicted": 88374.52
+    },
+    {
+      "timestamp": "2025-05-24T22:45:01.919589+00:00",
+      "predicted": 88374.52,
+      "actual": 108007.0,
+      "diff_pct": 18.18,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T21:45:01.785522+00:00",
+      "predicted": 8.41,
+      "actual": 108463.0,
+      "diff_pct": 99.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T20:45:01.284341+00:00",
+      "predicted": 8.41,
+      "actual": 108761.0,
+      "diff_pct": 99.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T19:45:01.226108+00:00",
+      "predicted": 25.48,
+      "actual": 109060.0,
+      "diff_pct": 99.98,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T19:03:04.673612+00:00",
+      "predicted": 25.48,
+      "actual": 108913.0,
+      "diff_pct": 99.98,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T18:45:11.132780+00:00",
+      "predicted": 25.48,
+      "actual": 108895.0,
+      "diff_pct": 99.98,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T17:45:01.751146+00:00",
+      "predicted": 1581.11,
+      "actual": 108984.0,
+      "diff_pct": 98.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T16:45:01.208499+00:00",
+      "predicted": 1581.11,
+      "actual": 108993.0,
+      "diff_pct": 98.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T15:45:01.889929+00:00",
+      "predicted": 1581.11,
+      "actual": 108818.0,
+      "diff_pct": 98.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T14:45:01.884827+00:00",
+      "predicted": 1581.11,
+      "actual": 108966.0,
+      "diff_pct": 98.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T13:45:01.208091+00:00",
+      "predicted": 1581.11,
+      "actual": 108877.0,
+      "diff_pct": 98.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T12:45:09.868185+00:00",
+      "predicted": 1581.11,
+      "actual": 108746.0,
+      "diff_pct": 98.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T11:45:01.240087+00:00",
+      "predicted": 8.41,
+      "actual": 108894.0,
+      "diff_pct": 99.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T10:45:01.805604+00:00",
+      "predicted": 38.53,
+      "actual": 109366.0,
+      "diff_pct": 99.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T09:45:01.226967+00:00",
+      "predicted": 38.53,
+      "actual": 108674.0,
+      "diff_pct": 99.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T08:45:01.774150+00:00",
+      "predicted": 290.83,
+      "actual": 108320.0,
+      "diff_pct": 99.73,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T07:45:01.736805+00:00",
+      "predicted": 290.83,
+      "actual": 107937.0,
+      "diff_pct": 99.73,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T06:45:01.229521+00:00",
+      "predicted": 8.41,
+      "actual": 108139.0,
+      "diff_pct": 99.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T05:45:01.917485+00:00",
+      "predicted": 8.41,
+      "actual": 107980.0,
+      "diff_pct": 99.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T04:45:01.898098+00:00",
+      "predicted": 765.71,
+      "actual": 108312.0,
+      "diff_pct": 99.29,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T03:45:01.266557+00:00",
+      "predicted": 765.71,
+      "actual": 108461.0,
+      "diff_pct": 99.29,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T02:45:01.997707+00:00",
+      "predicted": 765.71,
+      "actual": 108177.0,
+      "diff_pct": 99.29,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T01:45:01.377026+00:00",
+      "predicted": 489.19,
+      "actual": 107814.0,
+      "diff_pct": 99.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T00:45:01.962425+00:00",
+      "predicted": 100911.61,
+      "actual": 107698.0,
+      "diff_pct": 6.3,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T19:03:05.294541+00:00",
+      "predicted": 18759.52,
+      "actual": 107481.0,
+      "diff_pct": 82.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T18:45:08.375308+00:00",
+      "predicted": 102854.42,
+      "actual": 108888.0,
+      "diff_pct": 5.54,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T17:45:10.077556+00:00",
+      "predicted": 103569.44,
+      "actual": 109070.0,
+      "diff_pct": 5.04,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T16:45:01.611708+00:00",
+      "predicted": 292.13,
+      "actual": 109533.0,
+      "diff_pct": 99.73,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T15:45:10.854765+00:00",
+      "predicted": 1300.95,
+      "actual": 108697.0,
+      "diff_pct": 98.8,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T14:45:01.819237+00:00",
+      "predicted": 1204.76,
+      "actual": 109520.0,
+      "diff_pct": 98.9,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T13:45:01.248689+00:00",
+      "predicted": 172.13,
+      "actual": 109740.0,
+      "diff_pct": 99.84,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T12:45:01.820269+00:00",
+      "predicted": 26763.17,
+      "actual": 109037.0,
+      "diff_pct": 75.45,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T11:45:01.279969+00:00",
+      "predicted": 84932.93,
+      "actual": 108462.0,
+      "diff_pct": 21.69,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T10:45:01.809287+00:00",
+      "predicted": 69726.08,
+      "actual": 110798.0,
+      "diff_pct": 37.07,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T09:45:01.234893+00:00",
+      "predicted": 44.78,
+      "actual": 110979.0,
+      "diff_pct": 99.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T08:45:01.865754+00:00",
+      "predicted": 101202.77,
+      "actual": 111163.0,
+      "diff_pct": 8.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T07:45:01.262216+00:00",
+      "predicted": 100499.84,
+      "actual": 110890.0,
+      "diff_pct": 9.37,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T06:45:01.925409+00:00",
+      "predicted": 9563.14,
+      "actual": 110716.0,
+      "diff_pct": 91.36,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T05:45:01.868841+00:00",
+      "predicted": 9563.14,
+      "actual": 110594.0,
+      "diff_pct": 91.35,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T04:45:01.249292+00:00",
+      "predicted": 98859.12,
+      "actual": 110791.0,
+      "diff_pct": 10.77,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T03:45:01.912063+00:00",
+      "predicted": 98859.12,
+      "actual": 110716.0,
+      "diff_pct": 10.71,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T02:45:01.273708+00:00",
+      "predicted": 1529.8,
+      "actual": 111175.0,
+      "diff_pct": 98.62,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T01:45:01.883725+00:00",
+      "predicted": 489.19,
+      "actual": 111451.0,
+      "diff_pct": 99.56,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T00:45:01.844953+00:00",
+      "predicted": 100860.16,
+      "actual": 111342.0,
+      "diff_pct": 9.41,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T23:45:01.797416+00:00",
+      "predicted": 101498.41,
+      "actual": 111520.0,
+      "diff_pct": 8.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T22:45:01.252929+00:00",
+      "predicted": 101498.41,
+      "actual": 111336.0,
+      "diff_pct": 8.84,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T21:45:01.881748+00:00",
+      "predicted": 101498.41,
+      "actual": 111167.0,
+      "diff_pct": 8.7,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T20:45:01.311269+00:00",
+      "predicted": 10634.37,
+      "actual": 110943.0,
+      "diff_pct": 90.41,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T19:45:01.230509+00:00",
+      "predicted": 1531.61,
+      "actual": 111025.0,
+      "diff_pct": 98.62,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T19:03:04.636766+00:00",
+      "predicted": 62326.5,
+      "actual": 111568.0,
+      "diff_pct": 44.14,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T18:45:01.852314+00:00",
+      "predicted": 62326.5,
+      "actual": 111785.0,
+      "diff_pct": 44.24,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T17:45:07.672158+00:00",
+      "predicted": 101918.43,
+      "actual": 111812.0,
+      "diff_pct": 8.85,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T16:45:08.200173+00:00",
+      "predicted": 73237.28,
+      "actual": 111758.0,
+      "diff_pct": 34.47,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T15:45:02.186552+00:00",
+      "predicted": 101759.92,
+      "actual": 111359.0,
+      "diff_pct": 8.62,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T14:45:02.055460+00:00",
+      "predicted": 101759.92,
+      "actual": 111274.0,
+      "diff_pct": 8.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T13:45:01.998779+00:00",
+      "predicted": 81.39,
+      "actual": 110958.0,
+      "diff_pct": 99.93,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T12:45:01.256358+00:00",
+      "predicted": 2583.97,
+      "actual": 111299.0,
+      "diff_pct": 97.68,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T11:45:01.776936+00:00",
+      "predicted": 3589.11,
+      "actual": 111295.0,
+      "diff_pct": 96.78,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T10:45:01.232101+00:00",
+      "predicted": 15564.07,
+      "actual": 110651.0,
+      "diff_pct": 85.93,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T09:45:01.803651+00:00",
+      "predicted": 101002.85,
+      "actual": 110863.0,
+      "diff_pct": 8.89,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T08:45:01.245186+00:00",
+      "predicted": 86695.1,
+      "actual": 110583.0,
+      "diff_pct": 21.6,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T07:45:02.127532+00:00",
+      "predicted": 3468.14,
+      "actual": 110759.0,
+      "diff_pct": 96.87,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T06:45:01.738129+00:00",
+      "predicted": 3468.14,
+      "actual": 110897.0,
+      "diff_pct": 96.87,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T05:45:01.227901+00:00",
+      "predicted": 68218.24,
+      "actual": 110867.0,
+      "diff_pct": 38.47,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T04:45:01.779621+00:00",
+      "predicted": 25737.72,
+      "actual": 111393.0,
+      "diff_pct": 76.89,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T03:45:01.389687+00:00",
+      "predicted": 2555.41,
+      "actual": 111471.0,
+      "diff_pct": 97.71,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T02:45:01.940424+00:00",
+      "predicted": 8.41,
+      "actual": 110931.0,
+      "diff_pct": 99.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T01:45:01.559032+00:00",
+      "predicted": 290.83,
+      "actual": 110562.0,
+      "diff_pct": 99.74,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T00:45:10.441800+00:00",
+      "predicted": 290.83,
+      "actual": 109902.0,
+      "diff_pct": 99.74,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T23:45:01.435440+00:00",
+      "predicted": 2555.41,
+      "actual": 109585.0,
+      "diff_pct": 97.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T22:45:02.074296+00:00",
+      "predicted": 2555.41,
+      "actual": 109709.0,
+      "diff_pct": 97.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T21:45:01.873102+00:00",
+      "predicted": 62363.49,
+      "actual": 108748.0,
+      "diff_pct": 42.65,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T20:45:01.393562+00:00",
+      "predicted": 2839.2,
+      "actual": 108256.0,
+      "diff_pct": 97.38,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T19:45:09.347497+00:00",
+      "predicted": 34976.44,
+      "actual": 108195.0,
+      "diff_pct": 67.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T19:03:05.060745+00:00",
+      "predicted": 16594.58,
+      "actual": 107777.0,
+      "diff_pct": 84.6,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T18:45:01.268826+00:00",
+      "predicted": 4597.13,
+      "actual": 107083.0,
+      "diff_pct": 95.71,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T17:45:01.825195+00:00",
+      "predicted": 2555.41,
+      "actual": 106967.0,
+      "diff_pct": 97.61,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T16:45:01.359966+00:00",
+      "predicted": 72450.1,
+      "actual": 107349.0,
+      "diff_pct": 32.51,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T15:45:01.950204+00:00",
+      "predicted": 102184.13,
+      "actual": 109435.0,
+      "diff_pct": 6.63,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T14:45:01.471688+00:00",
+      "predicted": 73237.28,
+      "actual": 108928.0,
+      "diff_pct": 32.77,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T13:45:01.988788+00:00",
+      "predicted": 73237.28,
+      "actual": 107560.0,
+      "diff_pct": 31.91,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T12:45:02.158249+00:00",
+      "predicted": 73237.28,
+      "actual": 106674.0,
+      "diff_pct": 31.34,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T11:45:01.226974+00:00",
+      "predicted": 182.39,
+      "actual": 106671.0,
+      "diff_pct": 99.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T10:45:01.737885+00:00",
+      "predicted": 29856.08,
+      "actual": 106606.0,
+      "diff_pct": 71.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T09:45:01.232088+00:00",
+      "predicted": 4486.23,
+      "actual": 106350.0,
+      "diff_pct": 95.78,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T08:45:01.789664+00:00",
+      "predicted": 652.59,
+      "actual": 106272.0,
+      "diff_pct": 99.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T07:45:01.243604+00:00",
+      "predicted": 2453.31,
+      "actual": 106467.0,
+      "diff_pct": 97.7,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T06:45:01.817702+00:00",
+      "predicted": 29856.08,
+      "actual": 106828.0,
+      "diff_pct": 72.05,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T05:45:01.770454+00:00",
+      "predicted": 1529.8,
+      "actual": 107810.0,
+      "diff_pct": 98.58,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T04:45:01.277554+00:00",
+      "predicted": 2201.23,
+      "actual": 107496.0,
+      "diff_pct": 97.95,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T03:45:03.077398+00:00",
+      "predicted": 2201.23,
+      "actual": 107201.0,
+      "diff_pct": 97.95,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T02:45:02.605584+00:00",
+      "predicted": 2201.23,
+      "actual": 107028.0,
+      "diff_pct": 97.94,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T01:45:07.188905+00:00",
+      "predicted": 34976.44,
+      "actual": 106671.0,
+      "diff_pct": 67.21,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T00:45:10.100895+00:00",
+      "predicted": 2839.2,
+      "actual": 106869.0,
+      "diff_pct": 97.34,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T23:45:02.043946+00:00",
+      "predicted": 2839.2,
+      "actual": 106693.0,
+      "diff_pct": 97.34,
+      "accurate": false
+    },
+    {
       "timestamp": "2025-05-20T23:14:46.327556+00:00",
-      "predicted": 2839.2
+      "predicted": 2839.2,
+      "actual": 106862.0,
+      "diff_pct": 97.34,
+      "accurate": false
     },
     {
       "timestamp": "2025-05-20T22:45:01.975871+00:00",
-      "predicted": 2839.2
+      "predicted": 2839.2,
+      "actual": 106833.0,
+      "diff_pct": 97.34,
+      "accurate": false
     },
     {
       "timestamp": "2025-05-20T21:45:01.761114+00:00",
@@ -805,12 +1480,687 @@
   ],
   "Ethereum": [
     {
+      "timestamp": "2025-05-24T23:45:01.508748+00:00",
+      "predicted": 1529.8
+    },
+    {
+      "timestamp": "2025-05-24T22:45:01.919589+00:00",
+      "predicted": 1529.8,
+      "actual": 2530.15,
+      "diff_pct": 39.54,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T21:45:01.785522+00:00",
+      "predicted": 74834.11,
+      "actual": 2532.15,
+      "diff_pct": 2855.36,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T20:45:01.284341+00:00",
+      "predicted": 173.01,
+      "actual": 2540.24,
+      "diff_pct": 93.19,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T19:45:01.226108+00:00",
+      "predicted": 173.01,
+      "actual": 2554.7,
+      "diff_pct": 93.23,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T19:03:04.673612+00:00",
+      "predicted": 173.01,
+      "actual": 2551.95,
+      "diff_pct": 93.22,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T18:45:11.132780+00:00",
+      "predicted": 173.01,
+      "actual": 2553.88,
+      "diff_pct": 93.23,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T17:45:01.751146+00:00",
+      "predicted": 173.01,
+      "actual": 2560.92,
+      "diff_pct": 93.24,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T16:45:01.208499+00:00",
+      "predicted": 173.01,
+      "actual": 2559.34,
+      "diff_pct": 93.24,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T15:45:01.889929+00:00",
+      "predicted": 173.01,
+      "actual": 2552.23,
+      "diff_pct": 93.22,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T14:45:01.884827+00:00",
+      "predicted": 173.01,
+      "actual": 2556.04,
+      "diff_pct": 93.23,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T13:45:01.208091+00:00",
+      "predicted": 1205.29,
+      "actual": 2553.31,
+      "diff_pct": 52.79,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T12:45:09.868185+00:00",
+      "predicted": 1205.29,
+      "actual": 2555.81,
+      "diff_pct": 52.84,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T11:45:01.240087+00:00",
+      "predicted": 173.01,
+      "actual": 2558.84,
+      "diff_pct": 93.24,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T10:45:01.805604+00:00",
+      "predicted": 102854.42,
+      "actual": 2568.37,
+      "diff_pct": 3904.66,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T09:45:01.226967+00:00",
+      "predicted": 102854.42,
+      "actual": 2565.32,
+      "diff_pct": 3909.42,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T08:45:01.774150+00:00",
+      "predicted": 102854.42,
+      "actual": 2558.18,
+      "diff_pct": 3920.61,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T07:45:01.736805+00:00",
+      "predicted": 102854.42,
+      "actual": 2550.62,
+      "diff_pct": 3932.53,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T06:45:01.229521+00:00",
+      "predicted": 101919.32,
+      "actual": 2555.86,
+      "diff_pct": 3887.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T05:45:01.917485+00:00",
+      "predicted": 101919.32,
+      "actual": 2546.31,
+      "diff_pct": 3902.63,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T04:45:01.898098+00:00",
+      "predicted": 101919.32,
+      "actual": 2549.93,
+      "diff_pct": 3896.95,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T03:45:01.266557+00:00",
+      "predicted": 171.55,
+      "actual": 2553.83,
+      "diff_pct": 93.28,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T02:45:01.997707+00:00",
+      "predicted": 18759.52,
+      "actual": 2550.84,
+      "diff_pct": 635.43,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T01:45:01.377026+00:00",
+      "predicted": 18759.52,
+      "actual": 2538.39,
+      "diff_pct": 639.03,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T00:45:01.962425+00:00",
+      "predicted": 18759.52,
+      "actual": 2530.9,
+      "diff_pct": 641.22,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T19:03:05.294541+00:00",
+      "predicted": 652.59,
+      "actual": 2533.47,
+      "diff_pct": 74.24,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T18:45:08.375308+00:00",
+      "predicted": 1204.76,
+      "actual": 2562.71,
+      "diff_pct": 52.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T17:45:10.077556+00:00",
+      "predicted": 1205.29,
+      "actual": 2568.05,
+      "diff_pct": 53.07,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T16:45:01.611708+00:00",
+      "predicted": 18759.52,
+      "actual": 2579.54,
+      "diff_pct": 627.24,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T15:45:10.854765+00:00",
+      "predicted": 56965.31,
+      "actual": 2563.55,
+      "diff_pct": 2122.13,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T14:45:01.819237+00:00",
+      "predicted": 18759.5,
+      "actual": 2577.71,
+      "diff_pct": 627.76,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T13:45:01.248689+00:00",
+      "predicted": 62269.23,
+      "actual": 2578.84,
+      "diff_pct": 2314.62,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T12:45:01.820269+00:00",
+      "predicted": 2590.84,
+      "actual": 2569.03,
+      "diff_pct": 0.85,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-23T11:45:01.279969+00:00",
+      "predicted": 2404.83,
+      "actual": 2546.7,
+      "diff_pct": 5.57,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T10:45:01.809287+00:00",
+      "predicted": 0.23,
+      "actual": 2649.79,
+      "diff_pct": 99.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T09:45:01.234893+00:00",
+      "predicted": 2404.83,
+      "actual": 2664.13,
+      "diff_pct": 9.73,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T08:45:01.865754+00:00",
+      "predicted": 2404.83,
+      "actual": 2681.12,
+      "diff_pct": 10.31,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T07:45:01.262216+00:00",
+      "predicted": 0.23,
+      "actual": 2664.93,
+      "diff_pct": 99.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T06:45:01.925409+00:00",
+      "predicted": 1589.7,
+      "actual": 2664.41,
+      "diff_pct": 40.34,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T05:45:01.868841+00:00",
+      "predicted": 1589.7,
+      "actual": 2666.09,
+      "diff_pct": 40.37,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T04:45:01.249292+00:00",
+      "predicted": 8.41,
+      "actual": 2693.67,
+      "diff_pct": 99.69,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T03:45:01.912063+00:00",
+      "predicted": 290.83,
+      "actual": 2695.29,
+      "diff_pct": 89.21,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T02:45:01.273708+00:00",
+      "predicted": 765.71,
+      "actual": 2713.18,
+      "diff_pct": 71.78,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T01:45:01.883725+00:00",
+      "predicted": 765.71,
+      "actual": 2715.87,
+      "diff_pct": 71.81,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T00:45:01.844953+00:00",
+      "predicted": 765.71,
+      "actual": 2673.76,
+      "diff_pct": 71.36,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T23:45:01.797416+00:00",
+      "predicted": 765.71,
+      "actual": 2653.27,
+      "diff_pct": 71.14,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T22:45:01.252929+00:00",
+      "predicted": 765.71,
+      "actual": 2652.29,
+      "diff_pct": 71.13,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T21:45:01.881748+00:00",
+      "predicted": 765.71,
+      "actual": 2648.08,
+      "diff_pct": 71.08,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T20:45:01.311269+00:00",
+      "predicted": 765.71,
+      "actual": 2636.28,
+      "diff_pct": 70.95,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T19:45:01.230509+00:00",
+      "predicted": 1531.61,
+      "actual": 2637.24,
+      "diff_pct": 41.92,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T19:03:04.636766+00:00",
+      "predicted": 70592.0,
+      "actual": 2650.96,
+      "diff_pct": 2562.88,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T18:45:01.852314+00:00",
+      "predicted": 97225.33,
+      "actual": 2662.41,
+      "diff_pct": 3551.78,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T17:45:07.672158+00:00",
+      "predicted": 103431.58,
+      "actual": 2664.02,
+      "diff_pct": 3782.54,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T16:45:08.200173+00:00",
+      "predicted": 172.13,
+      "actual": 2662.86,
+      "diff_pct": 93.54,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T15:45:02.186552+00:00",
+      "predicted": 182.39,
+      "actual": 2658.69,
+      "diff_pct": 93.14,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T14:45:02.055460+00:00",
+      "predicted": 182.39,
+      "actual": 2671.93,
+      "diff_pct": 93.17,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T13:45:01.998779+00:00",
+      "predicted": 182.39,
+      "actual": 2660.49,
+      "diff_pct": 93.14,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T12:45:01.256358+00:00",
+      "predicted": 29856.08,
+      "actual": 2647.28,
+      "diff_pct": 1027.8,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T11:45:01.776936+00:00",
+      "predicted": 29856.08,
+      "actual": 2651.45,
+      "diff_pct": 1026.03,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T10:45:01.232101+00:00",
+      "predicted": 29856.08,
+      "actual": 2648.18,
+      "diff_pct": 1027.42,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T09:45:01.803651+00:00",
+      "predicted": 29856.08,
+      "actual": 2666.51,
+      "diff_pct": 1019.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T08:45:01.245186+00:00",
+      "predicted": 100764.98,
+      "actual": 2676.71,
+      "diff_pct": 3664.51,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T07:45:02.127532+00:00",
+      "predicted": 100764.98,
+      "actual": 2660.56,
+      "diff_pct": 3687.36,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T06:45:01.738129+00:00",
+      "predicted": 182.39,
+      "actual": 2624.21,
+      "diff_pct": 93.05,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T05:45:01.227901+00:00",
+      "predicted": 182.39,
+      "actual": 2611.16,
+      "diff_pct": 93.01,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T04:45:01.779621+00:00",
+      "predicted": 182.39,
+      "actual": 2637.38,
+      "diff_pct": 93.08,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T03:45:01.389687+00:00",
+      "predicted": 182.39,
+      "actual": 2622.01,
+      "diff_pct": 93.04,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T02:45:01.940424+00:00",
+      "predicted": 29856.08,
+      "actual": 2608.95,
+      "diff_pct": 1044.37,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T01:45:01.559032+00:00",
+      "predicted": 71.54,
+      "actual": 2590.9,
+      "diff_pct": 97.24,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T00:45:10.441800+00:00",
+      "predicted": 139.41,
+      "actual": 2585.92,
+      "diff_pct": 94.61,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T23:45:01.435440+00:00",
+      "predicted": 139.41,
+      "actual": 2567.11,
+      "diff_pct": 94.57,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T22:45:02.074296+00:00",
+      "predicted": 139.41,
+      "actual": 2560.88,
+      "diff_pct": 94.56,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T21:45:01.873102+00:00",
+      "predicted": 139.41,
+      "actual": 2520.81,
+      "diff_pct": 94.47,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T20:45:01.393562+00:00",
+      "predicted": 29856.08,
+      "actual": 2505.37,
+      "diff_pct": 1091.68,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T19:45:09.347497+00:00",
+      "predicted": 2453.31,
+      "actual": 2505.04,
+      "diff_pct": 2.07,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-21T19:03:05.060745+00:00",
+      "predicted": 1204.76,
+      "actual": 2489.67,
+      "diff_pct": 51.61,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T18:45:01.268826+00:00",
+      "predicted": 18759.5,
+      "actual": 2480.81,
+      "diff_pct": 656.18,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T17:45:01.825195+00:00",
+      "predicted": 652.59,
+      "actual": 2481.9,
+      "diff_pct": 73.71,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T16:45:01.359966+00:00",
+      "predicted": 104122.55,
+      "actual": 2503.59,
+      "diff_pct": 4058.93,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T15:45:01.950204+00:00",
+      "predicted": 99896.19,
+      "actual": 2584.44,
+      "diff_pct": 3765.29,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T14:45:01.471688+00:00",
+      "predicted": 100817.11,
+      "actual": 2566.99,
+      "diff_pct": 3827.44,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T13:45:01.988788+00:00",
+      "predicted": 81126.39,
+      "actual": 2547.75,
+      "diff_pct": 3084.24,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T12:45:02.158249+00:00",
+      "predicted": 2551.74,
+      "actual": 2536.91,
+      "diff_pct": 0.58,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-21T11:45:01.226974+00:00",
+      "predicted": 2551.74,
+      "actual": 2540.47,
+      "diff_pct": 0.44,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-21T10:45:01.737885+00:00",
+      "predicted": 2551.74,
+      "actual": 2547.98,
+      "diff_pct": 0.15,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-21T09:45:01.232088+00:00",
+      "predicted": 2551.74,
+      "actual": 2526.12,
+      "diff_pct": 1.01,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-21T08:45:01.789664+00:00",
+      "predicted": 2551.74,
+      "actual": 2528.95,
+      "diff_pct": 0.9,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-21T07:45:01.243604+00:00",
+      "predicted": 2551.74,
+      "actual": 2548.39,
+      "diff_pct": 0.13,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-21T06:45:01.817702+00:00",
+      "predicted": 2551.74,
+      "actual": 2554.07,
+      "diff_pct": 0.09,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-21T05:45:01.770454+00:00",
+      "predicted": 100758.05,
+      "actual": 2599.5,
+      "diff_pct": 3776.06,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T04:45:01.277554+00:00",
+      "predicted": 100429.92,
+      "actual": 2587.28,
+      "diff_pct": 3781.68,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T03:45:03.077398+00:00",
+      "predicted": 100758.05,
+      "actual": 2548.16,
+      "diff_pct": 3854.15,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T02:45:02.605584+00:00",
+      "predicted": 74795.26,
+      "actual": 2546.59,
+      "diff_pct": 2837.08,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T01:45:07.188905+00:00",
+      "predicted": 102731.29,
+      "actual": 2530.58,
+      "diff_pct": 3959.59,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T00:45:10.100895+00:00",
+      "predicted": 102731.29,
+      "actual": 2539.77,
+      "diff_pct": 3944.91,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T23:45:02.043946+00:00",
+      "predicted": 102731.29,
+      "actual": 2527.22,
+      "diff_pct": 3964.99,
+      "accurate": false
+    },
+    {
       "timestamp": "2025-05-20T23:14:46.327556+00:00",
-      "predicted": 102731.29
+      "predicted": 102731.29,
+      "actual": 2525.72,
+      "diff_pct": 3967.41,
+      "accurate": false
     },
     {
       "timestamp": "2025-05-20T22:45:01.975871+00:00",
-      "predicted": 102731.29
+      "predicted": 102731.29,
+      "actual": 2515.23,
+      "diff_pct": 3984.37,
+      "accurate": false
     },
     {
       "timestamp": "2025-05-20T21:45:01.761114+00:00",
@@ -1457,12 +2807,687 @@
   ],
   "Solana": [
     {
+      "timestamp": "2025-05-24T23:45:01.508748+00:00",
+      "predicted": 2108.97
+    },
+    {
+      "timestamp": "2025-05-24T22:45:01.919589+00:00",
+      "predicted": 2108.97,
+      "actual": 176.23,
+      "diff_pct": 1096.71,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T21:45:01.785522+00:00",
+      "predicted": 2108.97,
+      "actual": 176.42,
+      "diff_pct": 1095.43,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T20:45:01.284341+00:00",
+      "predicted": 1870.85,
+      "actual": 176.99,
+      "diff_pct": 957.04,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T19:45:01.226108+00:00",
+      "predicted": 1870.85,
+      "actual": 177.63,
+      "diff_pct": 953.23,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T19:03:04.673612+00:00",
+      "predicted": 1870.85,
+      "actual": 177.14,
+      "diff_pct": 956.14,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T18:45:11.132780+00:00",
+      "predicted": 1870.85,
+      "actual": 176.89,
+      "diff_pct": 957.63,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T17:45:01.751146+00:00",
+      "predicted": 1870.85,
+      "actual": 177.07,
+      "diff_pct": 956.56,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T16:45:01.208499+00:00",
+      "predicted": 1870.85,
+      "actual": 176.92,
+      "diff_pct": 957.46,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T15:45:01.889929+00:00",
+      "predicted": 1870.85,
+      "actual": 175.96,
+      "diff_pct": 963.22,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T14:45:01.884827+00:00",
+      "predicted": 1870.85,
+      "actual": 176.35,
+      "diff_pct": 960.87,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T13:45:01.208091+00:00",
+      "predicted": 1870.85,
+      "actual": 176.34,
+      "diff_pct": 960.93,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T12:45:09.868185+00:00",
+      "predicted": 1870.85,
+      "actual": 176.34,
+      "diff_pct": 960.93,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T11:45:01.240087+00:00",
+      "predicted": 98859.12,
+      "actual": 176.67,
+      "diff_pct": 55856.94,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T10:45:01.805604+00:00",
+      "predicted": 98859.12,
+      "actual": 177.65,
+      "diff_pct": 55548.25,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T09:45:01.226967+00:00",
+      "predicted": 98859.12,
+      "actual": 176.22,
+      "diff_pct": 55999.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T08:45:01.774150+00:00",
+      "predicted": 98859.12,
+      "actual": 175.45,
+      "diff_pct": 56246.04,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T07:45:01.736805+00:00",
+      "predicted": 98859.12,
+      "actual": 173.76,
+      "diff_pct": 56794.06,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T06:45:01.229521+00:00",
+      "predicted": 62363.49,
+      "actual": 174.61,
+      "diff_pct": 35615.88,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T05:45:01.917485+00:00",
+      "predicted": 98859.12,
+      "actual": 174.59,
+      "diff_pct": 56523.59,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T04:45:01.898098+00:00",
+      "predicted": 765.71,
+      "actual": 175.17,
+      "diff_pct": 337.12,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T03:45:01.266557+00:00",
+      "predicted": 765.71,
+      "actual": 175.31,
+      "diff_pct": 336.77,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T02:45:01.997707+00:00",
+      "predicted": 765.71,
+      "actual": 175.38,
+      "diff_pct": 336.6,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T01:45:01.377026+00:00",
+      "predicted": 765.71,
+      "actual": 174.82,
+      "diff_pct": 338.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T00:45:01.962425+00:00",
+      "predicted": 765.71,
+      "actual": 174.34,
+      "diff_pct": 339.21,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T19:03:05.294541+00:00",
+      "predicted": 70780.33,
+      "actual": 174.99,
+      "diff_pct": 40348.21,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T18:45:08.375308+00:00",
+      "predicted": 72450.1,
+      "actual": 179.77,
+      "diff_pct": 40201.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T17:45:10.077556+00:00",
+      "predicted": 2555.41,
+      "actual": 180.33,
+      "diff_pct": 1317.07,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T16:45:01.611708+00:00",
+      "predicted": 2555.41,
+      "actual": 181.37,
+      "diff_pct": 1308.95,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T15:45:10.854765+00:00",
+      "predicted": 2555.41,
+      "actual": 180.85,
+      "diff_pct": 1313.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T14:45:01.819237+00:00",
+      "predicted": 2555.41,
+      "actual": 182.52,
+      "diff_pct": 1300.07,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T13:45:01.248689+00:00",
+      "predicted": 100911.61,
+      "actual": 180.53,
+      "diff_pct": 55797.42,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T12:45:01.820269+00:00",
+      "predicted": 104115.31,
+      "actual": 177.93,
+      "diff_pct": 58414.76,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T11:45:01.279969+00:00",
+      "predicted": 81.39,
+      "actual": 176.9,
+      "diff_pct": 53.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T10:45:01.809287+00:00",
+      "predicted": 101118.6,
+      "actual": 184.92,
+      "diff_pct": 54582.35,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T09:45:01.234893+00:00",
+      "predicted": 3219.99,
+      "actual": 186.29,
+      "diff_pct": 1628.48,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T08:45:01.865754+00:00",
+      "predicted": 100052.1,
+      "actual": 186.77,
+      "diff_pct": 53469.68,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T07:45:01.262216+00:00",
+      "predicted": 100052.1,
+      "actual": 184.62,
+      "diff_pct": 54093.53,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T06:45:01.925409+00:00",
+      "predicted": 100052.1,
+      "actual": 182.37,
+      "diff_pct": 54762.15,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T05:45:01.868841+00:00",
+      "predicted": 100052.1,
+      "actual": 180.58,
+      "diff_pct": 55305.97,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T04:45:01.249292+00:00",
+      "predicted": 78510.66,
+      "actual": 182.2,
+      "diff_pct": 42990.37,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T03:45:01.912063+00:00",
+      "predicted": 78510.66,
+      "actual": 183.06,
+      "diff_pct": 42787.94,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T02:45:01.273708+00:00",
+      "predicted": 78510.66,
+      "actual": 184.46,
+      "diff_pct": 42462.43,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T01:45:01.883725+00:00",
+      "predicted": 78510.66,
+      "actual": 184.16,
+      "diff_pct": 42531.77,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T00:45:01.844953+00:00",
+      "predicted": 78510.66,
+      "actual": 182.2,
+      "diff_pct": 42990.37,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T23:45:01.797416+00:00",
+      "predicted": 78510.66,
+      "actual": 180.36,
+      "diff_pct": 43429.97,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T22:45:01.252929+00:00",
+      "predicted": 2839.2,
+      "actual": 179.38,
+      "diff_pct": 1482.79,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T21:45:01.881748+00:00",
+      "predicted": 2590.84,
+      "actual": 179.05,
+      "diff_pct": 1346.99,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T20:45:01.311269+00:00",
+      "predicted": 2590.84,
+      "actual": 178.0,
+      "diff_pct": 1355.53,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T19:45:01.230509+00:00",
+      "predicted": 3468.14,
+      "actual": 178.26,
+      "diff_pct": 1845.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T19:03:04.636766+00:00",
+      "predicted": 97225.33,
+      "actual": 178.4,
+      "diff_pct": 54398.5,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T18:45:01.852314+00:00",
+      "predicted": 62143.79,
+      "actual": 179.56,
+      "diff_pct": 34508.93,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T17:45:07.672158+00:00",
+      "predicted": 81.39,
+      "actual": 179.6,
+      "diff_pct": 54.68,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T16:45:08.200173+00:00",
+      "predicted": 100764.98,
+      "actual": 179.43,
+      "diff_pct": 56058.38,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T15:45:02.186552+00:00",
+      "predicted": 81126.39,
+      "actual": 179.09,
+      "diff_pct": 45199.23,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T14:45:02.055460+00:00",
+      "predicted": 81126.39,
+      "actual": 179.38,
+      "diff_pct": 45126.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T13:45:01.998779+00:00",
+      "predicted": 74787.02,
+      "actual": 178.46,
+      "diff_pct": 41806.88,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T12:45:01.256358+00:00",
+      "predicted": 102750.51,
+      "actual": 178.1,
+      "diff_pct": 57592.59,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T11:45:01.776936+00:00",
+      "predicted": 102750.51,
+      "actual": 178.24,
+      "diff_pct": 57547.28,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T10:45:01.232101+00:00",
+      "predicted": 104007.44,
+      "actual": 177.76,
+      "diff_pct": 58410.04,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T09:45:01.803651+00:00",
+      "predicted": 173.01,
+      "actual": 179.1,
+      "diff_pct": 3.4,
+      "accurate": true
+    },
+    {
+      "timestamp": "2025-05-22T08:45:01.245186+00:00",
+      "predicted": 102750.51,
+      "actual": 179.72,
+      "diff_pct": 57072.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T07:45:02.127532+00:00",
+      "predicted": 103061.69,
+      "actual": 179.0,
+      "diff_pct": 57476.36,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T06:45:01.738129+00:00",
+      "predicted": 103061.69,
+      "actual": 177.1,
+      "diff_pct": 58094.07,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T05:45:01.227901+00:00",
+      "predicted": 102750.51,
+      "actual": 175.86,
+      "diff_pct": 58327.45,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T04:45:01.779621+00:00",
+      "predicted": 97399.41,
+      "actual": 177.02,
+      "diff_pct": 54921.7,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T03:45:01.389687+00:00",
+      "predicted": 97399.41,
+      "actual": 176.55,
+      "diff_pct": 55068.17,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T02:45:01.940424+00:00",
+      "predicted": 97399.41,
+      "actual": 175.28,
+      "diff_pct": 55467.9,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T01:45:01.559032+00:00",
+      "predicted": 79937.95,
+      "actual": 174.33,
+      "diff_pct": 45754.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T00:45:10.441800+00:00",
+      "predicted": 102791.16,
+      "actual": 174.2,
+      "diff_pct": 58907.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T23:45:01.435440+00:00",
+      "predicted": 102791.16,
+      "actual": 174.16,
+      "diff_pct": 58921.11,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T22:45:02.074296+00:00",
+      "predicted": 102791.16,
+      "actual": 174.07,
+      "diff_pct": 58951.62,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T21:45:01.873102+00:00",
+      "predicted": 102791.16,
+      "actual": 171.04,
+      "diff_pct": 59997.73,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T20:45:01.393562+00:00",
+      "predicted": 97355.0,
+      "actual": 170.13,
+      "diff_pct": 57123.89,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T19:45:09.347497+00:00",
+      "predicted": 24691.17,
+      "actual": 170.62,
+      "diff_pct": 14371.44,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T19:03:05.060745+00:00",
+      "predicted": 73325.34,
+      "actual": 168.92,
+      "diff_pct": 43308.32,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T18:45:01.268826+00:00",
+      "predicted": 73325.34,
+      "actual": 168.39,
+      "diff_pct": 43444.95,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T17:45:01.825195+00:00",
+      "predicted": 73325.34,
+      "actual": 167.67,
+      "diff_pct": 43631.94,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T16:45:01.359966+00:00",
+      "predicted": 91425.17,
+      "actual": 168.33,
+      "diff_pct": 54213.06,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T15:45:01.950204+00:00",
+      "predicted": 91425.17,
+      "actual": 173.47,
+      "diff_pct": 52603.74,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T14:45:01.471688+00:00",
+      "predicted": 0.23,
+      "actual": 172.5,
+      "diff_pct": 99.87,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T13:45:01.988788+00:00",
+      "predicted": 0.24,
+      "actual": 170.17,
+      "diff_pct": 99.86,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T12:45:02.158249+00:00",
+      "predicted": 25.48,
+      "actual": 169.31,
+      "diff_pct": 84.95,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T11:45:01.226974+00:00",
+      "predicted": 25.48,
+      "actual": 169.64,
+      "diff_pct": 84.98,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T10:45:01.737885+00:00",
+      "predicted": 25.48,
+      "actual": 169.08,
+      "diff_pct": 84.93,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T09:45:01.232088+00:00",
+      "predicted": 25.48,
+      "actual": 168.24,
+      "diff_pct": 84.85,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T08:45:01.789664+00:00",
+      "predicted": 25.48,
+      "actual": 167.97,
+      "diff_pct": 84.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T07:45:01.243604+00:00",
+      "predicted": 25.48,
+      "actual": 168.83,
+      "diff_pct": 84.91,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T06:45:01.817702+00:00",
+      "predicted": 25.48,
+      "actual": 169.25,
+      "diff_pct": 84.95,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T05:45:01.770454+00:00",
+      "predicted": 25.48,
+      "actual": 170.92,
+      "diff_pct": 85.09,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T04:45:01.277554+00:00",
+      "predicted": 70780.33,
+      "actual": 171.07,
+      "diff_pct": 41275.07,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T03:45:03.077398+00:00",
+      "predicted": 101202.77,
+      "actual": 170.13,
+      "diff_pct": 59385.55,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T02:45:02.605584+00:00",
+      "predicted": 101202.77,
+      "actual": 170.02,
+      "diff_pct": 59424.04,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T01:45:07.188905+00:00",
+      "predicted": 2590.84,
+      "actual": 167.85,
+      "diff_pct": 1443.54,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T00:45:10.100895+00:00",
+      "predicted": 0.23,
+      "actual": 168.65,
+      "diff_pct": 99.86,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T23:45:02.043946+00:00",
+      "predicted": 0.23,
+      "actual": 168.28,
+      "diff_pct": 99.86,
+      "accurate": false
+    },
+    {
       "timestamp": "2025-05-20T23:14:46.327556+00:00",
-      "predicted": 0.23
+      "predicted": 0.23,
+      "actual": 168.41,
+      "diff_pct": 99.86,
+      "accurate": false
     },
     {
       "timestamp": "2025-05-20T22:45:01.975871+00:00",
-      "predicted": 0.23
+      "predicted": 0.23,
+      "actual": 167.88,
+      "diff_pct": 99.86,
+      "accurate": false
     },
     {
       "timestamp": "2025-05-20T21:45:01.761114+00:00",
@@ -1997,12 +4022,687 @@
   ],
   "Dogecoin": [
     {
+      "timestamp": "2025-05-24T23:45:01.508748+00:00",
+      "predicted": 0.23
+    },
+    {
+      "timestamp": "2025-05-24T22:45:01.919589+00:00",
+      "predicted": 8.41,
+      "actual": 0.23,
+      "diff_pct": 3556.52,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T21:45:01.785522+00:00",
+      "predicted": 8.41,
+      "actual": 0.23,
+      "diff_pct": 3556.52,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T20:45:01.284341+00:00",
+      "predicted": 8.41,
+      "actual": 0.23,
+      "diff_pct": 3556.52,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T19:45:01.226108+00:00",
+      "predicted": 8.41,
+      "actual": 0.23,
+      "diff_pct": 3556.52,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T19:03:04.673612+00:00",
+      "predicted": 8.41,
+      "actual": 0.23,
+      "diff_pct": 3556.52,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T18:45:11.132780+00:00",
+      "predicted": 8.41,
+      "actual": 0.23,
+      "diff_pct": 3556.52,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T17:45:01.751146+00:00",
+      "predicted": 8.41,
+      "actual": 0.23,
+      "diff_pct": 3556.52,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T16:45:01.208499+00:00",
+      "predicted": 2555.41,
+      "actual": 0.23,
+      "diff_pct": 1110947.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T15:45:01.889929+00:00",
+      "predicted": 2555.41,
+      "actual": 0.23,
+      "diff_pct": 1110947.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T14:45:01.884827+00:00",
+      "predicted": 2555.41,
+      "actual": 0.23,
+      "diff_pct": 1110947.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T13:45:01.208091+00:00",
+      "predicted": 2555.41,
+      "actual": 0.23,
+      "diff_pct": 1110947.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T12:45:09.868185+00:00",
+      "predicted": 2555.41,
+      "actual": 0.23,
+      "diff_pct": 1110947.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T11:45:01.240087+00:00",
+      "predicted": 2555.41,
+      "actual": 0.23,
+      "diff_pct": 1110947.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T10:45:01.805604+00:00",
+      "predicted": 2555.41,
+      "actual": 0.23,
+      "diff_pct": 1110947.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T09:45:01.226967+00:00",
+      "predicted": 765.71,
+      "actual": 0.23,
+      "diff_pct": 332817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T08:45:01.774150+00:00",
+      "predicted": 765.71,
+      "actual": 0.23,
+      "diff_pct": 332817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T07:45:01.736805+00:00",
+      "predicted": 765.71,
+      "actual": 0.23,
+      "diff_pct": 332817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T06:45:01.229521+00:00",
+      "predicted": 12580.28,
+      "actual": 0.23,
+      "diff_pct": 5469586.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T05:45:01.917485+00:00",
+      "predicted": 12580.28,
+      "actual": 0.23,
+      "diff_pct": 5469586.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T04:45:01.898098+00:00",
+      "predicted": 12580.28,
+      "actual": 0.23,
+      "diff_pct": 5469586.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T03:45:01.266557+00:00",
+      "predicted": 103726.9,
+      "actual": 0.23,
+      "diff_pct": 45098552.17,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T02:45:01.997707+00:00",
+      "predicted": 4486.23,
+      "actual": 0.23,
+      "diff_pct": 1950434.78,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T01:45:01.377026+00:00",
+      "predicted": 4486.23,
+      "actual": 0.23,
+      "diff_pct": 1950434.78,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-24T00:45:01.962425+00:00",
+      "predicted": 4486.23,
+      "actual": 0.23,
+      "diff_pct": 1950434.78,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T19:03:05.294541+00:00",
+      "predicted": 652.59,
+      "actual": 0.23,
+      "diff_pct": 283634.78,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T18:45:08.375308+00:00",
+      "predicted": 18759.5,
+      "actual": 0.23,
+      "diff_pct": 8156204.35,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T17:45:10.077556+00:00",
+      "predicted": 18759.5,
+      "actual": 0.24,
+      "diff_pct": 7816358.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T16:45:01.611708+00:00",
+      "predicted": 18759.5,
+      "actual": 0.24,
+      "diff_pct": 7816358.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T15:45:10.854765+00:00",
+      "predicted": 18759.5,
+      "actual": 0.23,
+      "diff_pct": 8156204.35,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T14:45:01.819237+00:00",
+      "predicted": 18759.5,
+      "actual": 0.24,
+      "diff_pct": 7816358.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T13:45:01.248689+00:00",
+      "predicted": 99649.83,
+      "actual": 0.24,
+      "diff_pct": 41520662.5,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T12:45:01.820269+00:00",
+      "predicted": 99649.83,
+      "actual": 0.23,
+      "diff_pct": 43325913.04,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T11:45:01.279969+00:00",
+      "predicted": 171.55,
+      "actual": 0.23,
+      "diff_pct": 74486.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T10:45:01.809287+00:00",
+      "predicted": 652.59,
+      "actual": 0.24,
+      "diff_pct": 271812.5,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T09:45:01.234893+00:00",
+      "predicted": 652.59,
+      "actual": 0.25,
+      "diff_pct": 260936.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T08:45:01.865754+00:00",
+      "predicted": 652.59,
+      "actual": 0.25,
+      "diff_pct": 260936.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T07:45:01.262216+00:00",
+      "predicted": 171.55,
+      "actual": 0.24,
+      "diff_pct": 71379.17,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T06:45:01.925409+00:00",
+      "predicted": 171.55,
+      "actual": 0.25,
+      "diff_pct": 68520.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T05:45:01.868841+00:00",
+      "predicted": 171.55,
+      "actual": 0.24,
+      "diff_pct": 71379.17,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T04:45:01.249292+00:00",
+      "predicted": 25.48,
+      "actual": 0.25,
+      "diff_pct": 10092.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T03:45:01.912063+00:00",
+      "predicted": 25.48,
+      "actual": 0.25,
+      "diff_pct": 10092.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T02:45:01.273708+00:00",
+      "predicted": 62208.31,
+      "actual": 0.25,
+      "diff_pct": 24883224.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T01:45:01.883725+00:00",
+      "predicted": 62208.31,
+      "actual": 0.25,
+      "diff_pct": 24883224.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-23T00:45:01.844953+00:00",
+      "predicted": 62208.31,
+      "actual": 0.25,
+      "diff_pct": 24883224.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T23:45:01.797416+00:00",
+      "predicted": 62208.31,
+      "actual": 0.25,
+      "diff_pct": 24883224.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T22:45:01.252929+00:00",
+      "predicted": 62208.31,
+      "actual": 0.24,
+      "diff_pct": 25920029.17,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T21:45:01.881748+00:00",
+      "predicted": 62208.31,
+      "actual": 0.24,
+      "diff_pct": 25920029.17,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T20:45:01.311269+00:00",
+      "predicted": 8707.16,
+      "actual": 0.24,
+      "diff_pct": 3627883.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T19:45:01.230509+00:00",
+      "predicted": 8707.16,
+      "actual": 0.24,
+      "diff_pct": 3627883.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T19:03:04.636766+00:00",
+      "predicted": 8707.16,
+      "actual": 0.24,
+      "diff_pct": 3627883.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T18:45:01.852314+00:00",
+      "predicted": 8707.16,
+      "actual": 0.24,
+      "diff_pct": 3627883.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T17:45:07.672158+00:00",
+      "predicted": 8707.16,
+      "actual": 0.24,
+      "diff_pct": 3627883.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T16:45:08.200173+00:00",
+      "predicted": 8707.16,
+      "actual": 0.24,
+      "diff_pct": 3627883.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T15:45:02.186552+00:00",
+      "predicted": 8707.16,
+      "actual": 0.24,
+      "diff_pct": 3627883.33,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T14:45:02.055460+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T13:45:01.998779+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T12:45:01.256358+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T11:45:01.776936+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T10:45:01.232101+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T09:45:01.803651+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T08:45:01.245186+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T07:45:02.127532+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T06:45:01.738129+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T05:45:01.227901+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T04:45:01.779621+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T03:45:01.389687+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T02:45:01.940424+00:00",
+      "predicted": 26582.02,
+      "actual": 0.24,
+      "diff_pct": 11075741.67,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T01:45:01.559032+00:00",
+      "predicted": 1531.61,
+      "actual": 0.24,
+      "diff_pct": 638070.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-22T00:45:10.441800+00:00",
+      "predicted": 1531.61,
+      "actual": 0.24,
+      "diff_pct": 638070.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T23:45:01.435440+00:00",
+      "predicted": 1531.61,
+      "actual": 0.24,
+      "diff_pct": 638070.83,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T22:45:02.074296+00:00",
+      "predicted": 1531.61,
+      "actual": 0.23,
+      "diff_pct": 665817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T21:45:01.873102+00:00",
+      "predicted": 1531.61,
+      "actual": 0.23,
+      "diff_pct": 665817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T20:45:01.393562+00:00",
+      "predicted": 1531.61,
+      "actual": 0.23,
+      "diff_pct": 665817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T19:45:09.347497+00:00",
+      "predicted": 1531.61,
+      "actual": 0.23,
+      "diff_pct": 665817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T19:03:05.060745+00:00",
+      "predicted": 1531.61,
+      "actual": 0.23,
+      "diff_pct": 665817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T18:45:01.268826+00:00",
+      "predicted": 1531.61,
+      "actual": 0.23,
+      "diff_pct": 665817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T17:45:01.825195+00:00",
+      "predicted": 1531.61,
+      "actual": 0.23,
+      "diff_pct": 665817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T16:45:01.359966+00:00",
+      "predicted": 1531.61,
+      "actual": 0.23,
+      "diff_pct": 665817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T15:45:01.950204+00:00",
+      "predicted": 1531.61,
+      "actual": 0.23,
+      "diff_pct": 665817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T14:45:01.471688+00:00",
+      "predicted": 1531.61,
+      "actual": 0.23,
+      "diff_pct": 665817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T13:45:01.988788+00:00",
+      "predicted": 1531.61,
+      "actual": 0.23,
+      "diff_pct": 665817.39,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T12:45:02.158249+00:00",
+      "predicted": 26582.02,
+      "actual": 0.23,
+      "diff_pct": 11557300.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T11:45:01.226974+00:00",
+      "predicted": 26582.02,
+      "actual": 0.23,
+      "diff_pct": 11557300.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T10:45:01.737885+00:00",
+      "predicted": 26582.02,
+      "actual": 0.23,
+      "diff_pct": 11557300.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T09:45:01.232088+00:00",
+      "predicted": 26582.02,
+      "actual": 0.23,
+      "diff_pct": 11557300.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T08:45:01.789664+00:00",
+      "predicted": 26582.02,
+      "actual": 0.23,
+      "diff_pct": 11557300.0,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T07:45:01.243604+00:00",
+      "predicted": 85219.49,
+      "actual": 0.23,
+      "diff_pct": 37051852.17,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T06:45:01.817702+00:00",
+      "predicted": 102883.79,
+      "actual": 0.23,
+      "diff_pct": 44731982.61,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T05:45:01.770454+00:00",
+      "predicted": 102883.79,
+      "actual": 0.23,
+      "diff_pct": 44731982.61,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T04:45:01.277554+00:00",
+      "predicted": 101685.73,
+      "actual": 0.23,
+      "diff_pct": 44211086.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T03:45:03.077398+00:00",
+      "predicted": 101685.73,
+      "actual": 0.23,
+      "diff_pct": 44211086.96,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T02:45:02.605584+00:00",
+      "predicted": 100710.98,
+      "actual": 0.23,
+      "diff_pct": 43787282.61,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T01:45:07.188905+00:00",
+      "predicted": 101412.76,
+      "actual": 0.23,
+      "diff_pct": 44092404.35,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-21T00:45:10.100895+00:00",
+      "predicted": 94144.38,
+      "actual": 0.23,
+      "diff_pct": 40932239.13,
+      "accurate": false
+    },
+    {
+      "timestamp": "2025-05-20T23:45:02.043946+00:00",
+      "predicted": 94144.38,
+      "actual": 0.23,
+      "diff_pct": 40932239.13,
+      "accurate": false
+    },
+    {
       "timestamp": "2025-05-20T23:14:46.327556+00:00",
-      "predicted": 92933.53
+      "predicted": 92933.53,
+      "actual": 0.23,
+      "diff_pct": 40405782.61,
+      "accurate": false
     },
     {
       "timestamp": "2025-05-20T22:45:01.975871+00:00",
-      "predicted": 3468.14
+      "predicted": 3468.14,
+      "actual": 0.23,
+      "diff_pct": 1507786.96,
+      "accurate": false
     },
     {
       "timestamp": "2025-05-20T21:45:01.761114+00:00",

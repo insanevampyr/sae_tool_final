@@ -1,112 +1,140 @@
 #!/usr/bin/env python3
+import argparse
 import os
 import csv
-import argparse
 from datetime import datetime, timedelta, timezone
 
-import praw
-from dateutil import parser as dtparser
-from analyze_sentiment import analyze_sentiment
+import requests
+import pandas as pd
+from dateutil import parser as isoparser
+from dotenv import load_dotenv
+
+# ─── Load .env for optional Reddit creds ────────────────────────────────────
+load_dotenv()
 
 # ─── CONFIG ────────────────────────────────────────────────────────────────
-COINS     = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
-SUBREDDIT = "CryptoCurrency"
-HIST_CSV  = "sentiment_history.csv"
+COINS          = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
+SUBREDDIT      = "CryptoCurrency"
+HIST_CSV       = "sentiment_history.csv"
+PUSHSHIFT_URL  = "https://api.pushshift.io/reddit/search/submission"
+PUSHSHIFT_SIZE = 500
+HEADERS        = {"User-Agent": "backfill-sentiment-script"}
 
-# ─── HELPERS ────────────────────────────────────────────────────────────────
-def init_writer(path):
-    """Open CSV for append, write header if missing."""
-    header = not os.path.exists(path)
-    f = open(path, "a", newline="", encoding="utf-8")
-    w = csv.DictWriter(f, fieldnames=[
-        "Timestamp", "Coin", "Source", "Sentiment", "PriceUSD", "SuggestedAction"
-    ])
-    if header:
-        w.writeheader()
-    return f, w
+# ─── USER’S SENTIMENT FUNCTION ─────────────────────────────────────────────
+from analyze_sentiment import analyze_sentiment
 
-# ─── BACKFILL LOGIC ─────────────────────────────────────────────────────────
-def backfill(start: datetime, end: datetime):
-    """Backfill sentiment_history.csv hour-by-hour from start→end UTC."""
-    # initialize PRAW (must have these in your env)
-    reddit = praw.Reddit(
-        client_id=os.environ["REDDIT_CLIENT_ID"],
-        client_secret=os.environ["REDDIT_CLIENT_SECRET"],
-        user_agent=os.environ.get("REDDIT_USER_AGENT", "backfill-sentiment-script"),
-    )
+# ─── PUSHSHIFT FETCH ───────────────────────────────────────────────────────
+def fetch_pushshift(coin: str, after: int, before: int) -> list[str]:
+    try:
+        resp = requests.get(
+            PUSHSHIFT_URL,
+            params={
+                "subreddit": SUBREDDIT,
+                "q":         coin,
+                "after":     after,
+                "before":    before,
+                "size":      PUSHSHIFT_SIZE,
+                "sort":      "asc",
+            },
+            headers=HEADERS,
+            timeout=20
+        )
+        resp.raise_for_status()
+        data = resp.json().get("data", [])
+        texts = []
+        for item in data:
+            t = item.get("selftext") or item.get("title") or ""
+            if t:
+                texts.append(t)
+        return texts
+    except Exception as e:
+        print(f"⚠️  Pushshift error for {coin} @ {datetime.fromtimestamp(after, timezone.utc).isoformat()}, skipping → {e}")
+        return []
 
-    f, writer = init_writer(HIST_CSV)
-    cur = start.replace(minute=0, second=0, microsecond=0)
-    while cur < end:
-        nxt  = cur + timedelta(hours=1)
-        # ISO timestamp bucket
-        iso_ts = cur.replace(tzinfo=timezone.utc).isoformat()
-        after  = int(cur.replace(tzinfo=timezone.utc).timestamp())
-        before = int(nxt.replace(tzinfo=timezone.utc).timestamp())
+# ─── OPTIONAL PRAW FALLBACK ─────────────────────────────────────────────────
+def fetch_reddit_api(coin: str, after: int, before: int) -> list[str]:
+    client_id     = os.getenv("REDDIT_CLIENT_ID")
+    client_secret = os.getenv("REDDIT_CLIENT_SECRET")
+    user_agent    = os.getenv("REDDIT_USER_AGENT")
+    if not (client_id and client_secret and user_agent):
+        return []
+    try:
+        import praw
+        reddit = praw.Reddit(
+            client_id     = client_id,
+            client_secret = client_secret,
+            user_agent    = user_agent
+        )
+        query = f'title:{coin} timestamp:{after}.{before}'
+        texts = []
+        for sub in reddit.subreddit(SUBREDDIT).search(
+            query, sort="new", limit=PUSHSHIFT_SIZE, syntax="cloudsearch"
+        ):
+            t = sub.selftext or sub.title or ""
+            if t:
+                texts.append(t)
+        return texts
+    except Exception as e:
+        print(f"⚠️  Reddit API error for {coin} @ {datetime.fromtimestamp(after, timezone.utc).isoformat()}, skipping → {e}")
+        return []
+
+# ─── PARSE ISO8601 INTO UTC ─────────────────────────────────────────────────
+def parse_iso(ts: str) -> datetime:
+    dt = isoparser.isoparse(ts)
+    if dt.tzinfo is None:
+        dt = dt.replace(tzinfo=timezone.utc)
+    return dt.astimezone(timezone.utc)
+
+# ─── BACKFILL LOOP ─────────────────────────────────────────────────────────
+def backfill(start_iso: str, end_iso: str):
+    start = parse_iso(start_iso).replace(minute=0, second=0, microsecond=0)
+    end   = parse_iso(end_iso)
+
+    # load existing history
+    if os.path.exists(HIST_CSV):
+        hist_df = pd.read_csv(HIST_CSV)
+    else:
+        hist_df = pd.DataFrame(columns=["Timestamp","Coin","Sentiment","PriceUSD"])
+
+    records = []
+    curr = start
+    while curr < end:
+        after  = int(curr.timestamp())
+        before = int((curr + timedelta(hours=1)).timestamp())
+        iso_ts = curr.astimezone(timezone.utc).isoformat()
 
         for coin in COINS:
-            # — Reddit posts in this window mentioning the coin
-            query = f'timestamp:{after}..{before} "{coin}"'
-            try:
-                subs = reddit.subreddit(SUBREDDIT).search(
-                    query,
-                    sort="asc",
-                    syntax="cloudsearch",
-                    limit=500
-                )
-                texts = []
-                for sub in subs:
-                    txt = (sub.title or "") + "\n" + (getattr(sub, "selftext", "") or "")
-                    texts.append(txt)
-            except Exception:
-                texts = []
+            texts = fetch_pushshift(coin, after, before)
+            if not texts:
+                texts = fetch_reddit_api(coin, after, before)
 
-            if texts:
-                scores = [analyze_sentiment(t) for t in texts]
-                avg_s  = round(sum(scores) / len(scores), 4)
-            else:
-                avg_s = 0.0
+            sents = [analyze_sentiment(t) for t in texts]
+            avg   = round(sum(sents)/len(sents), 4) if sents else 0.0
 
-            # write the Reddit‐source row
-            writer.writerow({
-                "Timestamp":       iso_ts,
-                "Coin":            coin,
-                "Source":          "Reddit",
-                "Sentiment":       avg_s,
-                "PriceUSD":        "",   # leave blank; dashboard ignores it here
-                "SuggestedAction": ""
-            })
-            # write a News‐source placeholder (0 sentiment)
-            writer.writerow({
-                "Timestamp":       iso_ts,
-                "Coin":            coin,
-                "Source":          "News",
-                "Sentiment":       0.0,
-                "PriceUSD":        "",
-                "SuggestedAction": ""
+            records.append({
+                "Timestamp": iso_ts,
+                "Coin":      coin,
+                "Sentiment": avg,
+                "PriceUSD":  0.0
             })
 
-        print(f"Backfilled hour {iso_ts}")
-        cur = nxt
+        curr += timedelta(hours=1)
 
-    f.close()
-    print(f"✅ Finished backfill from {start.isoformat()} to {end.isoformat()}.")
+    # merge + dedupe + write
+    new_df   = pd.DataFrame(records)
+    combined = pd.concat([hist_df, new_df], ignore_index=True)
+    combined.drop_duplicates(subset=["Timestamp","Coin"], keep="last", inplace=True)
+    combined.to_csv(HIST_CSV, index=False)
+    print(f"✅ Finished backfill from {start_iso} to {end_iso}")
 
-# ─── CLI ────────────────────────────────────────────────────────────────────
+# ─── CLI ───────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     p = argparse.ArgumentParser(
-        description="Backfill sentiment_history.csv from Reddit hour-by-hour"
+        description="Backfill sentiment_history.csv with real Reddit data"
     )
-    p.add_argument(
-        "--start", required=True,
-        help="ISO8601 start time inclusive, e.g. 2025-05-16T00:00:00+00:00"
-    )
-    p.add_argument(
-        "--end",   required=True,
-        help="ISO8601 end time exclusive"
-    )
+    p.add_argument("--start", required=True,
+                   help="Inclusive ISO8601 start e.g. 2025-05-16T00:00:00+00:00")
+    p.add_argument("--end",   required=True,
+                   help="Exclusive ISO8601 end   e.g. 2025-05-19T00:00:00+00:00")
     args = p.parse_args()
-
-    start = dtparser.isoparse(args.start)
-    end   = dtparser.isoparse(args.end)
-    backfill(start, end)
+    backfill(args.start, args.end)

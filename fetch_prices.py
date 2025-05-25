@@ -2,38 +2,28 @@ import time
 import requests
 import pandas as pd
 
-def fetch_prices(coins, timeout=10, retries=3):
-    """
-    Fetch current USD prices for the given list of CoinGecko coin IDs.
-    Retries once on 429 with exponential backoff.
-    """
-    url = "https://api.coingecko.com/api/v3/simple/price"
-    params = {
-        "ids": ",".join([c.lower() for c in coins]),
-        "vs_currencies": "usd",
-    }
+CACHE_FILE = "latest_prices.csv"
+CACHE_TIME = 60  # seconds
 
-    for attempt in range(retries):
-        resp = requests.get(url, params=params, timeout=timeout)
-        if resp.status_code == 429:  # Too Many Requests
-            backoff = 1 * (2 ** attempt)
-            time.sleep(backoff)
-            continue
-        resp.raise_for_status()
-        break
-    else:
-        # If we exhausted retries, this will raise on the last attempt
-        resp.raise_for_status()
-
+def fetch_prices(coins):
+    # Simple cache: reuse data if <CACHE_TIME old
+    import os
+    if os.path.exists(CACHE_FILE):
+        mtime = os.path.getmtime(CACHE_FILE)
+        if time.time() - mtime < CACHE_TIME:
+            return pd.read_csv(CACHE_FILE)
+    ids = ','.join([c.lower() for c in coins])
+    url = f"https://api.coingecko.com/api/v3/simple/price?ids={ids}&vs_currencies=usd"
+    resp = requests.get(url)
+    if resp.status_code == 429:
+        print("429 error, sleeping 60s and retrying...")
+        time.sleep(60)
+        resp = requests.get(url)
+    resp.raise_for_status()
     data = resp.json()
-    rows = []
-    for c in coins:
-        usd = data.get(c.lower(), {}).get("usd")
-        rows.append({"Coin": c, "PriceUSD": usd})
-    return pd.DataFrame(rows)
-
-if __name__ == "__main__":
-    # Quick CLI check
-    coins = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
-    df = fetch_prices(coins)
-    print(df.to_string(index=False))
+    df = pd.DataFrame([
+        {"Coin": c, "PriceUSD": data[c.lower()]["usd"] if c.lower() in data else None}
+        for c in coins
+    ])
+    df.to_csv(CACHE_FILE, index=False)
+    return df

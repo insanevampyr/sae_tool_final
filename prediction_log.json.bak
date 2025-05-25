@@ -1,0 +1,8 @@
+{
+  "Bitcoin": [
+    {
+      "timestamp": "2025-05-16T13:58:32.351118+00:00",
+      "predicted": 103695.71,
+      "actual": 103841.0,
+      "diff_pct": 0.14,
+      "accurate": 

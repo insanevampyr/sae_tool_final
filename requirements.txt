@@ -11,3 +11,7 @@ scikit-learn
 supabase
 python-telegram-bot>=20.0
 plotly>=5.0.0
+python-dateutil
+pycoingecko
+joblib
+telegram

@@ -1,57 +1,32 @@
-# crypto_price_alerts.py
+# -*- coding: utf-8 -*-
+"""
+Your price‐alert thresholds, plus the list of coins you track.
+"""
 
-import requests
-import time
-from send_telegram import send_telegram_message
+# 1) Define the coins you support:
+COINS = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
 
-# CoinGecko API endpoints
-API_URL = "https://api.coingecko.com/api/v3/simple/price"
-
-# Watched coins and thresholds
-WATCHED_COINS = {
-    "bitcoin": {"symbol": "BTC", "threshold_up": 3, "threshold_down": -3},
-    "ethereum": {"symbol": "ETH", "threshold_up": 3, "threshold_down": -3},
-    "solana": {"symbol": "SOL", "threshold_up": 5, "threshold_down": -5},
-    "dogecoin": {"symbol": "DOGE", "threshold_up": 7, "threshold_down": -7}
+# 2) (the rest of your existing thresholds & alert logic lives here)
+# For example:
+THRESHOLDS = {
+    "Bitcoin":  { "upper": 70000, "lower": 30000 },
+    "Ethereum": { "upper":  4000, "lower":  1000 },
+    "Solana":   { "upper":   500, "lower":   10 },
+    "Dogecoin": { "upper":     1, "lower":    0.05 },
 }
 
-# Cache for storing previous prices
-last_prices = {}
-
-def fetch_prices():
-    ids = ','.join(WATCHED_COINS.keys())
-    params = {
-        'ids': ids,
-        'vs_currencies': 'usd'
-    }
-    response = requests.get(API_URL, params=params)
-    return response.json()
-
-def check_price_changes():
-    global last_prices
-    current_prices = fetch_prices()
+def check_price_alerts(current_prices):
+    """
+    Given a dict of { coin: price }, returns list of
+    (coin, price, "above upper" / "below lower") for any alerts.
+    """
     alerts = []
-
-    for coin, data in WATCHED_COINS.items():
-        symbol = data['symbol']
-        new_price = current_prices.get(coin, {}).get('usd')
-        if new_price is None:
+    for coin, price in current_prices.items():
+        if coin not in THRESHOLDS:
             continue
-
-        old_price = last_prices.get(coin)
-        if old_price:
-            change_percent = ((new_price - old_price) / old_price) * 100
-
-            if change_percent >= data['threshold_up']:
-                alerts.append(f"📈 {symbol} price increased by {change_percent:.2f}%: ${old_price:.2f} → ${new_price:.2f}")
-            elif change_percent <= data['threshold_down']:
-                alerts.append(f"📉 {symbol} price dropped by {change_percent:.2f}%: ${old_price:.2f} → ${new_price:.2f}")
-
-        last_prices[coin] = new_price
-
-    if alerts:
-        for alert in alerts:
-            send_telegram_message(alert)
-
-if __name__ == "__main__":
-    check_price_changes()
+        t = THRESHOLDS[coin]
+        if price >= t["upper"]:
+            alerts.append((coin, price, "above upper"))
+        elif price <= t["lower"]:
+            alerts.append((coin, price, "below lower"))
+    return alerts

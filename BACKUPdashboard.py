@@ -1,133 +1,124 @@
-# dashboard.py
-from dotenv import load_dotenv
-load_dotenv()
-
-import os, json
-from datetime import datetime, timezone
-import pandas as pd
+import json
 import streamlit as st
-import altair as alt
+import pandas as pd
+import plotly.graph_objs as go
+from datetime import datetime, timedelta
+from dateutil import parser
 
-# ─── CONFIG ────────────────────────────────────────────────────────────────
+from fetch_historical_prices import get_hourly_history
+from fetch_prices import fetch_prices
+from train_price_predictor import predict_prices
+
+# ─── Configuration ─────────────────────────────────────────────────────
 COINS         = ["Bitcoin", "Ethereum", "Solana", "Dogecoin"]
-HIST_CSV      = "sentiment_history.csv"
+HISTORY_DAYS  = 7
 PRED_LOG_JSON = "prediction_log.json"
-LOGO_FILE     = "alpha_logo.jpg"
+SENT_HIST_CSV = "sentiment_history.csv"
+WINDOW_HOURS  = 24
 
-# ─── HELPERS ───────────────────────────────────────────────────────────────
+# ─── Streamlit Setup ───────────────────────────────────────────────────
+st.set_page_config(layout="wide", page_title="AlphaPulse Dashboard")
+
+# ─── Header ────────────────────────────────────────────────────────────
+st.markdown("<div style='text-align:center'>", unsafe_allow_html=True)
+st.image("alpha_logo.jpg", width=200)
+st.markdown("</div>", unsafe_allow_html=True)
+st.markdown("## AlphaPulse: Crypto Sentiment Dashboard")
+st.markdown("Real price history + sentiment trends + next-hour forecasts")
+
+# ─── Load Sentiment Data ───────────────────────────────────────────────
 @st.cache_data
-def load_history() -> pd.DataFrame:
-    if not os.path.exists(HIST_CSV):
-        return pd.DataFrame(columns=[
-            "Timestamp","Coin","Source","Sentiment","PriceUSD","SuggestedAction"
-        ])
-    df = pd.read_csv(HIST_CSV)
-    # force proper datetime & UTC
-    df["Timestamp"] = pd.to_datetime(df["Timestamp"], utc=True, errors="coerce")
-    return df.dropna(subset=["Timestamp"])
-
-@st.cache_data
-def load_predictions() -> dict:
-    if not os.path.exists(PRED_LOG_JSON):
-        return {c: [] for c in COINS}
-    with open(PRED_LOG_JSON,"r",encoding="utf-8") as f:
-        return json.load(f)
-
-# ─── PAGE SETUP ────────────────────────────────────────────────────────────
-st.set_page_config(page_title="AlphaPulse", layout="wide")
-
-# --- logo (centered) ---
-if os.path.exists(LOGO_FILE):
-    st.markdown(
-        f"<div style='text-align:center'>"
-        f"<img src='{LOGO_FILE}' style='max-width:300px'/>"
-        f"</div>",
-        unsafe_allow_html=True
+def load_sentiment():
+    df = pd.read_csv(SENT_HIST_CSV)
+    # Parse ISO8601 and strip timezone
+    df["Timestamp"] = (
+        df["Timestamp"]
+          .apply(parser.isoparse)
+          .apply(lambda dt: dt.replace(tzinfo=None))
     )
+    return df
 
-# ─── SIDEBAR ────────────────────────────────────────────────────────────────
-st.sidebar.header("📌 Sentiment Summary")
+sent_df = load_sentiment()
 
-window = st.sidebar.selectbox(
-    "Summary window",
-    ["Last 24 Hours","Last 7 Days","Last 30 Days"],
-    index=0
-)
-
-hist   = load_history()
-now    = datetime.now(timezone.utc)
-if window=="Last 24 Hours":
-    cutoff = now - pd.Timedelta(hours=24)
-elif window=="Last 7 Days":
-    cutoff = now - pd.Timedelta(days=7)
-else:
-    cutoff = now - pd.Timedelta(days=30)
-
-recent = hist[hist.Timestamp >= cutoff]
-
-if hist.empty:
-    st.sidebar.info("No data yet.")
-else:
-    st.sidebar.info(f"Data newest at {hist.Timestamp.max()}")
-
+# ─── Sidebar: 24h Sentiment Summary ─────────────────────────────────────
+st.sidebar.markdown("### Sentiment Summary (24h)")
+cut24 = datetime.utcnow() - timedelta(hours=24)
 for coin in COINS:
-    dfc   = recent[recent.Coin==coin]
-    avg   = dfc.Sentiment.mean() if not dfc.empty else float("nan")
-    action = "🤝 Hold" if abs(avg)<0.2 else ("📈 Buy" if avg>0 else "📉 Sell")
-    color  = "green" if avg>0 else ("red" if avg<0 else "black")
-    st.sidebar.markdown(
-        f"**{coin}**: <span style='color:{color}'>{avg:+.3f}</span> → {action}",
-        unsafe_allow_html=True
-    )
+    vals = sent_df[(sent_df.Coin == coin) & (sent_df.Timestamp >= cut24)]["Sentiment"]
+    avg  = vals.mean() if not vals.empty else 0.0
+    st.sidebar.metric(label=coin, value=f"{avg:.3f}")
 
-# ─── MAIN ──────────────────────────────────────────────────────────────────
-st.title("📊 AlphaPulse: Crypto Sentiment Dashboard")
+# ─── Cached Loaders ────────────────────────────────────────────────────
+@st.cache_data
+def load_price_history(coin: str) -> pd.DataFrame:
+    df = get_hourly_history(coin, days=HISTORY_DAYS)
+    df["Timestamp"] = df["Timestamp"].apply(lambda dt: dt.replace(tzinfo=None))
+    return df.set_index("Timestamp").resample("1h").ffill().bfill()
 
-# --- Next-Hour Forecasts as cards ---
-st.subheader("🤖 Next-Hour Price Forecasts")
-plog = load_predictions()
-cols = st.columns(len(COINS), gap="small")
-for col, coin in zip(cols, COINS):
-    entries = plog.get(coin, [])
-    if not entries:
-        col.write(f"**{coin}**")  
-        col.info("No data yet")
-        continue
+@st.cache_data(ttl=300)
+def load_current_prices() -> dict:
+    df = fetch_prices(COINS)
+    return df.set_index("Coin")["PriceUSD"].to_dict()
 
-    last      = entries[-1]
-    now_p      = last.get("current", 0.0)
-    pred_p     = last.get("predicted",0.0)
-    ts         = last.get("timestamp","")[-5:]  # hh:mm
-    acc        = last.get("accurate", None)
-    delta_pct  = (pred_p - now_p)/now_p*100 if now_p else 0
-    delta_str  = f"{delta_pct:+.1f}%"
-    delta_color= "normal" if abs(delta_pct)<0.1 else ("positive" if delta_pct>0 else "negative")
+# ─── Load Data ─────────────────────────────────────────────────────────
+with st.spinner("Loading data…"):
+    price_histories = {c: load_price_history(c) for c in COINS}
+    curr_map        = load_current_prices()
 
-    col.metric(
-        label=f"**{coin}** by {ts}",
-        value=f"${pred_p:.2f}",
-        delta=delta_str,
-        delta_color=delta_color
-    )
-    col.caption(f"Now: ${now_p:.2f}  •  {acc*100:.0f}% acc (24h)" if acc is not None else "")
+# ─── Main: Trends Over Time ─────────────────────────────────────────────
+coin = st.selectbox("Select coin for trends", COINS)
+st.markdown(f"### Trends Over Time: {coin}")
 
-# ─── Trends Over Time ░──────────────────────────────────────────────────────
-st.subheader("📈 Trends Over Time")
-sel = st.selectbox("Select coin:", COINS)
-dfc = hist[hist.Coin==sel].sort_values("Timestamp")
-if dfc.empty:
-    st.info("No data for this coin yet.")
-else:
-    base = alt.Chart(dfc).encode(x=alt.X("Timestamp:T", title=None))
-    price_line = base.mark_line(color="#66c2a5").encode(
-        y=alt.Y("PriceUSD:Q", title="Price (USD)")
-    )
-    sent_line = base.mark_line(color="#fc8d62").encode(
-        y=alt.Y("Sentiment:Q", title="Sentiment", axis=alt.Axis(orient="right"))
-    )
-    layered = alt.layer(price_line, sent_line).resolve_scale(y="independent")
-    st.altair_chart(layered, use_container_width=True)
+price_df  = price_histories[coin]
+raw_sent  = sent_df[sent_df.Coin == coin].set_index("Timestamp")["Sentiment"]
+hourly    = raw_sent.resample("1h").mean()
+aligned   = hourly.reindex(price_df.index, fill_value=0)
 
-# ─── FOOTER ────────────────────────────────────────────────────────────────
-if not hist.empty:
-    st.caption(f"Last updated: {hist.Timestamp.max()} UTC")
+chart_df  = price_df.copy()
+chart_df["Sentiment"] = aligned
+
+fig = go.Figure()
+fig.add_trace(go.Scatter(
+    x=chart_df.index, y=chart_df.PriceUSD,
+    name="Price (USD)", yaxis="y1"
+))
+fig.add_trace(go.Scatter(
+    x=chart_df.index, y=chart_df.Sentiment,
+    name="Avg Sentiment", yaxis="y2"
+))
+fig.update_layout(
+    xaxis=dict(rangeslider=dict(visible=True)),
+    yaxis=dict(title="Price (USD)"),
+    yaxis2=dict(
+        title="Avg Sentiment", overlaying="y", side="right",
+        rangemode="tozero"
+    ),
+    margin=dict(l=60, r=60, t=50, b=50)
+)
+st.plotly_chart(fig, use_container_width=True)
+
+# ─── Main: Next-Hour Predictions ────────────────────────────────────────
+st.markdown("### Next-Hour Predictions")
+with open(PRED_LOG_JSON) as f:
+    logs = json.load(f)
+
+records = []
+for c in COINS:
+    entry = (logs.get(c) or [{}])[0]
+    curr  = entry.get("current", curr_map.get(c))
+    pred  = entry.get("predicted")
+    if curr is not None and pred is not None:
+        pct = round((pred - curr) / curr * 100, 2)
+        pct_str = f"{pct:+.2f}%"
+    else:
+        pct_str = "N/A"
+
+    records.append({
+        "Coin":            c,
+        "Current Price":   f"${curr:,.2f}"   if curr is not None else "N/A",
+        "Predicted Price": f"${pred:,.2f}"   if pred is not None else "N/A",
+        "% Change":        pct_str
+    })
+
+df_pred = pd.DataFrame(records).set_index("Coin")
+st.table(df_pred)
