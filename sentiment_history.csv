@@ -3870,3 +3870,7 @@ Timestamp,Coin,Source,Sentiment,PriceUSD,SuggestedAction
 2025-06-07T07:45:01.640515+00:00,Bitcoin,News,0.216,105011.0,📈 Buy
 2025-06-07T07:45:01.640515+00:00,Dogecoin,News,0.0596,0.19,🤝 Hold
 2025-06-07T07:45:01.640515+00:00,Ethereum,News,0.0656,2494.22,🤝 Hold
+2025-06-07T08:45:01.672801+00:00,Bitcoin,Reddit,0.0355,104892.0,🤝 Hold
+2025-06-07T08:45:01.672801+00:00,Ethereum,Reddit,0.0017,2488.8,🤝 Hold
+2025-06-07T08:45:01.672801+00:00,Bitcoin,News,0.216,104892.0,📈 Buy
+2025-06-07T08:45:01.672801+00:00,Dogecoin,News,0.0596,0.19,🤝 Hold
